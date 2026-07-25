@@ -17,10 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from flights.views import AircraftListCreateView
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/flights/', include('flights.urls')),
+    path('api/aircraft/', AircraftListCreateView.as_view(), name='aircraft-list-create'),
     path('api/gates/', include('gates.urls')),
     path('api/tasks/', include('tasks.urls')),
     path('api/analytics/', include('analytics.urls')),

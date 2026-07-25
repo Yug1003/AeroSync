@@ -10,6 +10,8 @@ from flights.mongo_operations import (
     get_aircraft_by_id,
     update_flight_status,
     delete_flight,
+    get_all_aircraft,
+    create_aircraft,
 )
 from gates.services import find_free_gate
 from gates.mongo_operations import update_gate_status
@@ -157,5 +159,24 @@ class FlightDetailView(APIView):
             {"error": "Failed to delete flight."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+class AircraftListCreateView(APIView):
+    """
+    GET /api/aircraft/ - List all aircraft
+    POST /api/aircraft/ - Create aircraft
+    """
+
+    def get(self, request):
+        aircraft = get_all_aircraft()
+        return Response(aircraft, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        try:
+            aircraft = create_aircraft(request.data)
+            return Response(aircraft, status=status.HTTP_201_CREATED)
+        except ValueError as err:
+            return Response({"error": str(err)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 

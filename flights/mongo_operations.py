@@ -95,3 +95,9 @@ def delete_flight(flight_id):
     return result.deleted_count > 0
 
 
+def get_all_aircraft():
+    docs = list(aircraft_col.find({}))
+    return [_format_doc(doc) for doc in docs]
+
+
+
