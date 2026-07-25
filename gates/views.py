@@ -1,3 +1,14 @@
-from django.shortcuts import render
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from gates.mongo_operations import get_all_gates
 
-# Create your views here.
+
+class GateListView(APIView):
+    """
+    GET /api/gates/ - List all gates
+    """
+
+    def get(self, request):
+        gates = get_all_gates()
+        return Response(gates, status=status.HTTP_200_OK)

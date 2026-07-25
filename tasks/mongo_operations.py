@@ -79,3 +79,19 @@ def update_task_status(task_id, status, delay_reason=None):
         return_document=True,
     )
     return _format_doc(result) if result else None
+
+
+def create_tasks_for_flight(flight_id):
+    """Auto-generates 4 default tasks (baggage_unload, cabin_cleaning, refueling, catering) for a flight."""
+    created_tasks = []
+    for task_type in VALID_TASK_TYPES:
+        task_doc = create_task({"flight_id": str(flight_id), "task_type": task_type, "status": "pending"})
+        created_tasks.append(task_doc)
+    return created_tasks
+
+
+def get_all_tasks():
+    """Return all task documents with _id as string."""
+    docs = list(tasks_col.find({}))
+    return [_format_doc(doc) for doc in docs]
+
