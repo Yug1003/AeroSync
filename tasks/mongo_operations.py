@@ -95,3 +95,16 @@ def get_all_tasks():
     docs = list(tasks_col.find({}))
     return [_format_doc(doc) for doc in docs]
 
+
+def update_task_assignment(task_id, staff_id):
+    if not isinstance(task_id, str) or not ObjectId.is_valid(task_id):
+        return None
+
+    result = tasks_col.find_one_and_update(
+        {"_id": ObjectId(task_id)},
+        {"$set": {"assigned_staff_id": str(staff_id) if staff_id else None}},
+        return_document=True,
+    )
+    return _format_doc(result) if result else None
+
+

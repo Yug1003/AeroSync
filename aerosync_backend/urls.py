@@ -26,5 +26,6 @@ urlpatterns = [
     path('api/aircraft/', AircraftListCreateView.as_view(), name='aircraft-list-create'),
     path('api/gates/', include('gates.urls')),
     path('api/tasks/', include('tasks.urls')),
+    path('api/staff/', include('staff_app.urls')),
     path('api/analytics/', include('analytics.urls')),
 ]

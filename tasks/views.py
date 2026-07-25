@@ -7,7 +7,10 @@ from tasks.mongo_operations import (
     get_tasks_by_flight,
     get_task_by_id,
     update_task_status,
+    update_task_assignment,
 )
+from flights.mongo_operations import get_flight_by_id
+from staff_app.services import is_staff_available
 
 
 class TaskListView(APIView):
@@ -76,3 +79,53 @@ class TaskUpdateView(APIView):
             )
 
         return Response(updated_task, status=status.HTTP_200_OK)
+
+
+class AssignStaffView(APIView):
+    """
+    POST /api/tasks/<task_id>/assign_staff/ - Assign staff to task with shift & conflict validation
+    """
+
+    def post(self, request, task_id):
+        if not isinstance(task_id, str) or not ObjectId.is_valid(task_id):
+            return Response(
+                {"error": f"Invalid task_id format: '{task_id}'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        staff_id = request.data.get("staff_id")
+        if not staff_id:
+            return Response(
+                {"error": "Field 'staff_id' is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        task = get_task_by_id(task_id)
+        if not task:
+            return Response(
+                {"error": f"Task with id '{task_id}' not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        flight = get_flight_by_id(task.get("flight_id"))
+        if not flight:
+            return Response(
+                {"error": f"Linked flight for task '{task_id}' not found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        available, reason = is_staff_available(
+            staff_id, flight["arrival_time"], flight["departure_time"]
+        )
+        if not available:
+            return Response({"error": reason}, status=status.HTTP_400_BAD_REQUEST)
+
+        updated_task = update_task_assignment(task_id, staff_id)
+        return Response(
+            {
+                "message": "Staff assigned successfully.",
+                "task": updated_task,
+            },
+            status=status.HTTP_200_OK,
+        )
+
