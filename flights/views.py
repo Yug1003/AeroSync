@@ -9,10 +9,12 @@ from flights.mongo_operations import (
     get_flight_by_id,
     get_aircraft_by_id,
     update_flight_status,
+    delete_flight,
 )
 from gates.services import find_free_gate
 from gates.mongo_operations import update_gate_status
 from tasks.mongo_operations import create_tasks_for_flight, get_tasks_by_flight
+from users.permissions import IsAdminRole
 
 
 class FlightListCreateView(APIView):
@@ -122,4 +124,38 @@ class DepartFlightView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class FlightDetailView(APIView):
+    """
+    DELETE /api/flights/<flight_id>/ - Protected action (Requires IsAdminRole)
+    """
+
+    permission_classes = [IsAdminRole]
+
+    def delete(self, request, flight_id):
+        if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
+            return Response(
+                {"error": f"Invalid flight_id format: '{flight_id}'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        flight = get_flight_by_id(flight_id)
+        if not flight:
+            return Response(
+                {"error": f"Flight with id '{flight_id}' not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        success = delete_flight(flight_id)
+        if success:
+            return Response(
+                {"message": f"Flight '{flight_id}' deleted successfully."},
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            {"error": "Failed to delete flight."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
 

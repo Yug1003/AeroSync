@@ -86,3 +86,12 @@ def update_flight_status(flight_id, status):
     )
     return _format_doc(result) if result else None
 
+
+def delete_flight(flight_id):
+    if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
+        return False
+
+    result = flights_col.delete_one({"_id": ObjectId(flight_id)})
+    return result.deleted_count > 0
+
+
