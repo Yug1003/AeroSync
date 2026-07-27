@@ -1,5 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  Cell,
+} from 'recharts';
 import API from '../api/api';
 import './DashboardPage.css';
 
@@ -228,6 +238,52 @@ export default function DashboardPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </section>
+
+        {/* Analytics & Gate Utilization Chart Section */}
+        <section className="analytics-chart-section">
+          <div className="section-header">
+            <h3>📊 Analytics: Gate Utilization & Workload Distribution (Pandas Computed)</h3>
+          </div>
+
+          {kpis?.problem_gates && kpis.problem_gates.length > 0 && (
+            <div className="alert-banner warning" style={{ marginBottom: '1rem' }}>
+              ⚠️ Warning: Problem gates flagged with high average turnaround time: {kpis.problem_gates.join(', ')}
+            </div>
+          )}
+
+          {loadingKpis ? (
+            <div className="skeleton-row">Loading gate utilization analytics...</div>
+          ) : !kpis?.gate_utilization || kpis.gate_utilization.length === 0 ? (
+            <div className="empty-state">Not enough operational data yet for charts.</div>
+          ) : (
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={kpis.gate_utilization} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="gate" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
+                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#131c2e',
+                      borderColor: 'rgba(255,255,255,0.1)',
+                      borderRadius: '8px',
+                      color: '#f8fafc',
+                    }}
+                    cursor={{ fill: 'rgba(56, 189, 248, 0.08)' }}
+                  />
+                  <Bar dataKey="flights_handled" name="Flights Handled" radius={[6, 6, 0, 0]}>
+                    {kpis.gate_utilization.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.flights_handled > 2 ? '#38bdf8' : '#0284c7'}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </section>

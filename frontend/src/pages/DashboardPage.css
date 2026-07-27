@@ -247,10 +247,28 @@
   font-size: 0.9rem;
 }
 
+.alert-banner.warning {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
 .alert-banner.error {
   background: rgba(244, 63, 94, 0.15);
   border: 1px solid rgba(244, 63, 94, 0.4);
   color: #fb7185;
+}
+
+.analytics-chart-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.chart-wrapper {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
 }
 
 .alert-banner.success {
