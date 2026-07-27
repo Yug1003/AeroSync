@@ -147,6 +147,7 @@ export default function DashboardPage() {
           <h2>AeroSync <span className="badge-live">LIVE Ops</span></h2>
         </div>
         <div className="header-user">
+          <button className="nav-link-btn" onClick={() => navigate('/incidents')}>🚨 Incidents Log</button>
           <span className="user-greeting">Welcome, <strong>{username}</strong></span>
           <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
         </div>
