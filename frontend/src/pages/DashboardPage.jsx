@@ -21,6 +21,9 @@ export default function DashboardPage() {
   const [gateMap, setGateMap] = useState({});
   const [tasksMap, setTasksMap] = useState({});
   
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [loadingGates, setLoadingGates] = useState(true);
   const [loadingFlights, setLoadingFlights] = useState(true);
@@ -30,6 +33,15 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const username = localStorage.getItem('username') || 'Operator';
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await API.get('notifications/');
+      setNotifications(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchKpis = async () => {
     try {
@@ -107,6 +119,16 @@ export default function DashboardPage() {
     fetchAircraft();
     fetchFlights();
     fetchTasks();
+    fetchNotifications();
+  };
+
+  const handleMarkNotificationRead = async (notifId) => {
+    try {
+      await API.patch(`notifications/${notifId}/`, { is_read: true });
+      fetchNotifications();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   useEffect(() => {
@@ -157,6 +179,50 @@ export default function DashboardPage() {
           <h2>AeroSync <span className="badge-live">LIVE Ops</span></h2>
         </div>
         <div className="header-user">
+          {/* Notification Bell Dropdown */}
+          <div className="notif-wrapper">
+            <button
+              className="notif-bell-btn"
+              onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+              title="Alert Notifications"
+            >
+              🔔
+              {notifications.filter((n) => !n.is_read).length > 0 && (
+                <span className="notif-badge">
+                  {notifications.filter((n) => !n.is_read).length}
+                </span>
+              )}
+            </button>
+
+            {showNotifDropdown && (
+              <div className="notif-dropdown">
+                <div className="notif-dropdown-header">
+                  <h4>Alert Notifications</h4>
+                  <span className="notif-count">
+                    {notifications.filter((n) => !n.is_read).length} Unread
+                  </span>
+                </div>
+                <div className="notif-dropdown-body">
+                  {notifications.length === 0 ? (
+                    <div className="notif-empty">No alerts at this time.</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={`notif-item ${n.is_read ? 'read' : 'unread'}`}
+                        onClick={() => handleMarkNotificationRead(n.id)}
+                      >
+                        <span className="notif-type">[{n.notification_type}]</span>
+                        <p className="notif-msg">{n.message}</p>
+                        {!n.is_read && <span className="unread-dot">•</span>}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
           <button className="nav-link-btn" onClick={() => navigate('/incidents')}>🚨 Incidents Log</button>
           <button className="nav-link-btn audit" onClick={() => navigate('/activity-log')}>📜 Activity Log</button>
           <span className="user-greeting">Welcome, <strong>{username}</strong></span>

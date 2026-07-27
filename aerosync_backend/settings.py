@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'incidents',
     'analytics',
     'auditlog',
+    'notifications',
 ]
 
 AUTH_USER_MODEL = 'users.User'

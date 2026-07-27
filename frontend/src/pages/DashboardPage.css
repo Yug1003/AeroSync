@@ -43,11 +43,118 @@
   letter-spacing: 0.5px;
 }
 
-.header-user {
+.notif-wrapper {
+  position: relative;
+}
+
+.notif-bell-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  position: relative;
+}
+
+.notif-bell-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #f43f5e;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.35rem;
+  border-radius: 10px;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 320px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.notif-dropdown-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.notif-dropdown-header h4 {
   font-size: 0.9rem;
+  color: #f8fafc;
+}
+
+.notif-count {
+  font-size: 0.75rem;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.notif-dropdown-body {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.notif-item {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.notif-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.notif-item.unread {
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.notif-type {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fb7185;
+  text-transform: uppercase;
+}
+
+.notif-msg {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  line-height: 1.3;
+}
+
+.unread-dot {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  color: #38bdf8;
+  font-size: 1.2rem;
 }
 
 .nav-link-btn {
