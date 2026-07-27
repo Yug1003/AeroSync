@@ -4,3 +4,5 @@ django-cors-headers
 pymongo
 python-dotenv
 djangorestframework-simplejwt
+pandas
+
