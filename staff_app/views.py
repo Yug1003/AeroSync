@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from staff_app.mongo_operations import create_staff, get_all_staff
+from auditlog.utils import log_action
 
 
 class StaffListCreateView(APIView):
@@ -17,6 +18,13 @@ class StaffListCreateView(APIView):
     def post(self, request):
         try:
             staff_doc = create_staff(request.data)
+            log_action(
+                request.user,
+                "create_staff",
+                "Staff",
+                staff_doc["_id"],
+                {"name": staff_doc.get("name"), "department": staff_doc.get("department")},
+            )
             return Response(staff_doc, status=status.HTTP_201_CREATED)
         except ValueError as err:
             return Response({"error": str(err)}, status=status.HTTP_400_BAD_REQUEST)

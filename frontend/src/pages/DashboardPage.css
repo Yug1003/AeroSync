@@ -60,8 +60,14 @@
   font-weight: 600;
 }
 
-.nav-link-btn:hover {
-  background: rgba(244, 63, 94, 0.2);
+.nav-link-btn.audit {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--primary);
+}
+
+.nav-link-btn.audit:hover {
+  background: rgba(56, 189, 248, 0.2);
 }
 
 .logout-btn {

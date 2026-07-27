@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'staff_app',
     'incidents',
     'analytics',
+    'auditlog',
 ]
 
 AUTH_USER_MODEL = 'users.User'

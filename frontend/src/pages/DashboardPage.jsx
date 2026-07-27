@@ -158,6 +158,7 @@ export default function DashboardPage() {
         </div>
         <div className="header-user">
           <button className="nav-link-btn" onClick={() => navigate('/incidents')}>🚨 Incidents Log</button>
+          <button className="nav-link-btn audit" onClick={() => navigate('/activity-log')}>📜 Activity Log</button>
           <span className="user-greeting">Welcome, <strong>{username}</strong></span>
           <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
         </div>

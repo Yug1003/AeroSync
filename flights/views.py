@@ -17,6 +17,7 @@ from gates.services import find_free_gate
 from gates.mongo_operations import update_gate_status
 from tasks.mongo_operations import create_tasks_for_flight, get_tasks_by_flight
 from users.permissions import IsAdminRole
+from auditlog.utils import log_action
 
 
 class FlightListCreateView(APIView):
@@ -69,6 +70,15 @@ class FlightListCreateView(APIView):
         # 4. Auto-generate 4 tasks
         tasks = create_tasks_for_flight(flight["_id"])
 
+        # Log audit entry
+        log_action(
+            request.user,
+            "create_flight",
+            "Flight",
+            flight["_id"],
+            {"assigned_gate": gate["label"], "aircraft_id": aircraft_id},
+        )
+
         response_data = {
             **flight,
             "assigned_gate": gate,
@@ -118,6 +128,14 @@ class DepartFlightView(APIView):
         if flight.get("gate_id"):
             update_gate_status(flight["gate_id"], "available")
 
+        log_action(
+            request.user,
+            "depart_flight",
+            "Flight",
+            flight_id,
+            {"gate_freed": flight.get("gate_id")},
+        )
+
         return Response(
             {
                 "message": "Flight departed successfully",
@@ -151,6 +169,7 @@ class FlightDetailView(APIView):
 
         success = delete_flight(flight_id)
         if success:
+            log_action(request.user, "delete_flight", "Flight", flight_id)
             return Response(
                 {"message": f"Flight '{flight_id}' deleted successfully."},
                 status=status.HTTP_200_OK,

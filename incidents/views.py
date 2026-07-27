@@ -8,6 +8,7 @@ from incidents.mongo_operations import (
     get_incident_by_id,
     update_incident_status,
 )
+from auditlog.utils import log_action
 
 
 class IncidentListCreateView(APIView):
@@ -23,6 +24,13 @@ class IncidentListCreateView(APIView):
     def post(self, request):
         try:
             incident = create_incident(request.data)
+            log_action(
+                request.user,
+                "create_incident",
+                "Incident",
+                incident["_id"],
+                {"priority": incident.get("priority"), "flight_id": incident.get("flight_id")},
+            )
             return Response(incident, status=status.HTTP_201_CREATED)
         except ValueError as err:
             return Response({"error": str(err)}, status=status.HTTP_400_BAD_REQUEST)
@@ -57,5 +65,13 @@ class IncidentUpdateView(APIView):
                 {"error": f"Incident with id '{incident_id}' not found."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+
+        log_action(
+            request.user,
+            "update_incident_status",
+            "Incident",
+            incident_id,
+            {"status": new_status},
+        )
 
         return Response(updated, status=status.HTTP_200_OK)

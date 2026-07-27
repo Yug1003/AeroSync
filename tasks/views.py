@@ -11,6 +11,7 @@ from tasks.mongo_operations import (
 )
 from flights.mongo_operations import get_flight_by_id
 from staff_app.services import is_staff_available
+from auditlog.utils import log_action
 
 
 class TaskListView(APIView):
@@ -78,6 +79,14 @@ class TaskUpdateView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        log_action(
+            request.user,
+            "update_task_status",
+            "Task",
+            task_id,
+            {"status": new_status, "delay_reason": delay_reason},
+        )
+
         return Response(updated_task, status=status.HTTP_200_OK)
 
 
@@ -121,6 +130,15 @@ class AssignStaffView(APIView):
             return Response({"error": reason}, status=status.HTTP_400_BAD_REQUEST)
 
         updated_task = update_task_assignment(task_id, staff_id)
+
+        log_action(
+            request.user,
+            "assign_staff",
+            "Task",
+            task_id,
+            {"staff_id": staff_id},
+        )
+
         return Response(
             {
                 "message": "Staff assigned successfully.",
