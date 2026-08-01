@@ -138,7 +138,18 @@ export default function DashboardPage() {
     try {
       setLoadingFlights(true);
       const res = await API.get('flights/');
-      setFlights(res.data);
+      
+      // Separate active/upcoming flights from departed flights
+      const activeFlights = res.data.filter((f) => f.status !== 'departed');
+      const departedFlights = res.data.filter((f) => f.status === 'departed');
+
+      // Sort active flights chronologically by arrival_time ascending (soonest arrival first)
+      activeFlights.sort((a, b) => new Date(a.arrival_time) - new Date(b.arrival_time));
+
+      // Sort departed flights by departure_time descending (most recent departures first)
+      departedFlights.sort((a, b) => new Date(b.departure_time) - new Date(a.departure_time));
+
+      setFlights([...activeFlights, ...departedFlights]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -198,10 +209,12 @@ export default function DashboardPage() {
     navigate('/login');
   };
 
-  const formatTime = (isoStr) => {
+  const formatDateTime = (isoStr) => {
     if (!isoStr) return '--:--';
     const date = new Date(isoStr);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const datePart = date.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' });
+    const timePart = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${datePart} (${timePart})`;
   };
 
   return (
@@ -529,7 +542,10 @@ export default function DashboardPage() {
                           </span>
                         </td>
                         <td className="cell-time">
-                          {formatTime(flight.arrival_time)} – {formatTime(flight.departure_time)}
+                          <div className="time-block">
+                            <span>🛬 Arr: <strong>{formatDateTime(flight.arrival_time)}</strong></span>
+                            <span>🛫 Dep: <strong>{formatDateTime(flight.departure_time)}</strong></span>
+                          </div>
                         </td>
                         <td>
                           <span className={`badge-status status-${flight.status}`}>
