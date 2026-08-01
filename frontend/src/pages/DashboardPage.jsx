@@ -11,6 +11,9 @@ import {
   Cell,
 } from 'recharts';
 import API from '../api/api';
+import RadarMapComponent from '../components/RadarMapComponent';
+import GanttTimelineComponent from '../components/GanttTimelineComponent';
+import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
@@ -20,6 +23,7 @@ export default function DashboardPage() {
   const [aircraftMap, setAircraftMap] = useState({});
   const [gateMap, setGateMap] = useState({});
   const [tasksMap, setTasksMap] = useState({});
+  const [currentTime, setCurrentTime] = useState(Date.now());
   
   const [notifications, setNotifications] = useState([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
@@ -178,7 +182,51 @@ export default function DashboardPage() {
 
   useEffect(() => {
     loadAllData();
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
   }, []);
+
+  const handleVoiceCommand = (commandType) => {
+    switch (commandType) {
+      case 'SET_WEATHER_THUNDERSTORM':
+        handleUpdateWeather({
+          condition: 'Severe Thunderstorm ⛈️',
+          temp_c: 18,
+          wind_speed_kts: 45,
+          visibility_miles: 0.5,
+          severity: 'severe',
+        });
+        break;
+      case 'SET_WEATHER_CLEAR':
+        handleUpdateWeather({
+          condition: 'Clear / Fair ☀️',
+          temp_c: 24,
+          wind_speed_kts: 10,
+          visibility_miles: 10.0,
+          severity: 'clear',
+        });
+        break;
+      case 'SET_WEATHER_FOG':
+        handleUpdateWeather({
+          condition: 'Dense Ground Fog 🌫️',
+          temp_c: 12,
+          wind_speed_kts: 5,
+          visibility_miles: 0.2,
+          severity: 'severe',
+        });
+        break;
+      case 'REFRESH_DATA':
+        loadAllData();
+        break;
+      case 'NAVIGATE_INCIDENTS':
+        navigate('/incidents');
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleToggleTask = async (task) => {
     setActionError('');
@@ -378,17 +426,19 @@ export default function DashboardPage() {
         {actionError && <div className="alert-banner error">{actionError}</div>}
         {actionSuccess && <div className="alert-banner success">{actionSuccess}</div>}
 
-        {/* KPI Cards Row */}
+        {/* 🎙️ AI Voice Command Assistant */}
+        <VoiceAssistantComponent onVoiceCommand={handleVoiceCommand} />
+
+        {/* KPI Cards Section */}
         <section className="kpi-section">
-          <h3>Operational Metrics</h3>
           {loadingKpis ? (
-            <div className="skeleton-row">Loading operational metrics...</div>
+            <div className="skeleton-grid">Loading flight KPIs...</div>
           ) : (
             <div className="kpi-grid">
               <div className="kpi-card">
-                <div className="kpi-icon">🛫</div>
+                <div className="kpi-icon">✈️</div>
                 <div className="kpi-info">
-                  <span className="kpi-title">Flights Scheduled Today</span>
+                  <span className="kpi-title">Total Flights Today</span>
                   <span className="kpi-value">{kpis?.total_flights_today ?? 0}</span>
                 </div>
               </div>
@@ -422,6 +472,9 @@ export default function DashboardPage() {
           )}
         </section>
 
+        {/* 🗺️ Live Regional Radar Map Section */}
+        <RadarMapComponent flights={flights} />
+
         {/* Gate Map Grid Section */}
         <section className="gate-map-section">
           <div className="section-header">
@@ -452,6 +505,9 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* 📅 Interactive Gate Schedule Gantt Chart */}
+        <GanttTimelineComponent gates={gates} flights={flights} tasksMap={tasksMap} />
 
         {/* Analytics & Gate Utilization Chart Section */}
         <section className="analytics-chart-section">
@@ -548,9 +604,29 @@ export default function DashboardPage() {
                           </div>
                         </td>
                         <td>
-                          <span className={`badge-status status-${flight.status}`}>
-                            {flight.status.toUpperCase()}
-                          </span>
+                          <div className="status-cell-wrapper">
+                            <span className={`badge-status status-${flight.status}`}>
+                              {flight.status.toUpperCase()}
+                            </span>
+                            {!isDeparted && (
+                              <div className="live-countdown-badge">
+                                {(() => {
+                                  const depTime = new Date(flight.departure_time).getTime();
+                                  const diffMs = depTime - currentTime;
+                                  if (diffMs <= 0) {
+                                    return <span className="timer-overdue">⏱️ OVERDUE</span>;
+                                  }
+                                  const mins = Math.floor(diffMs / 60000);
+                                  const secs = Math.floor((diffMs % 60000) / 1000);
+                                  return (
+                                    <span className="timer-ticking">
+                                      ⏱️ {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
+                            )}
+                          </div>
                         </td>
                         <td className="cell-tasks">
                           <div className="task-chips-container">
