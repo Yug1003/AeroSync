@@ -70,7 +70,7 @@ export default function AirportSimulationCanvas({ selectedAirportCode = 'AMD' })
 
   useEffect(() => {
     fetchGroundSnapshot();
-    const interval = setInterval(fetchGroundSnapshot, 5000); // 5-Second Real-World Snapshot Refresh
+    const interval = setInterval(fetchGroundSnapshot, 2000); // 2-Second Fast Snapshot Refresh
     return () => clearInterval(interval);
   }, [selectedAirportCode]);
 
