@@ -198,4 +198,22 @@ class AircraftListCreateView(APIView):
             return Response({"error": str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+from flights.opensky_service import fetch_live_opensky_flights
+
+
+class LiveOpenSkyRadarView(APIView):
+    """
+    GET /api/flights/live-radar/
+    Fetches real-time ADS-B satellite radar telemetry from OpenSky Network.
+    """
+
+    def get(self, request):
+        live_flights = fetch_live_opensky_flights()
+        return Response({
+            "source": "OpenSky Network ADS-B Satellite Feed",
+            "count": len(live_flights),
+            "flights": live_flights
+        }, status=status.HTTP_200_OK)
+
+
 

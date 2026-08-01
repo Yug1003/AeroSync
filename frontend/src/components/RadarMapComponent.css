@@ -17,6 +17,17 @@
 .radar-map-header h4 {
   font-size: 0.95rem;
   color: #f8fafc;
+  margin: 0;
+}
+
+.radar-subtext {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.feed-tag {
+  color: #00f2fe;
+  font-weight: 700;
 }
 
 .radar-live-badge {
