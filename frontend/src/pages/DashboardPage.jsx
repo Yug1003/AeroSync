@@ -217,11 +217,23 @@ export default function DashboardPage() {
           severity: 'severe',
         });
         break;
+      case 'SET_WEATHER_GALE':
+        handleUpdateWeather({
+          condition: 'Gale Wind Hazard 💨',
+          temp_c: 20,
+          wind_speed_kts: 38,
+          visibility_miles: 8.0,
+          severity: 'caution',
+        });
+        break;
       case 'REFRESH_DATA':
         loadAllData();
         break;
       case 'NAVIGATE_INCIDENTS':
         navigate('/incidents');
+        break;
+      case 'NAVIGATE_ACTIVITY':
+        navigate('/activity-log');
         break;
       default:
         break;

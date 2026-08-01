@@ -53,25 +53,32 @@ export default function VoiceAssistantComponent({ onVoiceCommand }) {
   };
 
   const handleProcessCommand = (command) => {
-    let reply = `Processed command: "${command}"`;
+    let reply = '';
 
-    if (command.includes('thunderstorm') || command.includes('storm')) {
+    if (command.includes('thunderstorm') || command.includes('storm') || command.includes('rain') || command.includes('bad weather')) {
       reply = 'Setting airport weather condition to Severe Thunderstorm.';
       onVoiceCommand && onVoiceCommand('SET_WEATHER_THUNDERSTORM');
-    } else if (command.includes('clear') || command.includes('sun')) {
+    } else if (command.includes('clear') || command.includes('sun') || command.includes('fair') || command.includes('good weather')) {
       reply = 'Setting airport weather condition to Clear and Fair.';
       onVoiceCommand && onVoiceCommand('SET_WEATHER_CLEAR');
-    } else if (command.includes('fog')) {
+    } else if (command.includes('fog') || command.includes('haze') || command.includes('cloud')) {
       reply = 'Setting airport weather condition to Dense Fog.';
       onVoiceCommand && onVoiceCommand('SET_WEATHER_FOG');
-    } else if (command.includes('refresh') || command.includes('reload')) {
-      reply = 'Refreshing all operational data.';
+    } else if (command.includes('wind') || command.includes('gale')) {
+      reply = 'Setting airport weather condition to Gale Wind Hazard.';
+      onVoiceCommand && onVoiceCommand('SET_WEATHER_GALE');
+    } else if (command.includes('refresh') || command.includes('reload') || command.includes('update') || command.includes('data')) {
+      reply = 'Refreshing all flight operations data.';
       onVoiceCommand && onVoiceCommand('REFRESH_DATA');
-    } else if (command.includes('incident') || command.includes('log')) {
+    } else if (command.includes('incident') || command.includes('safety')) {
       reply = 'Navigating to Incidents Management.';
       onVoiceCommand && onVoiceCommand('NAVIGATE_INCIDENTS');
+    } else if (command.includes('activity') || command.includes('audit') || command.includes('history')) {
+      reply = 'Navigating to Audit Activity Log.';
+      onVoiceCommand && onVoiceCommand('NAVIGATE_ACTIVITY');
     } else {
-      reply = `Recognized command: "${command}". Executing request.`;
+      reply = `Command "${command}" processed successfully.`;
+      onVoiceCommand && onVoiceCommand('REFRESH_DATA');
     }
 
     setAssistantResponse(reply);
