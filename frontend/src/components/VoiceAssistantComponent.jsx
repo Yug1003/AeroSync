@@ -55,12 +55,18 @@ export default function VoiceAssistantComponent({ onVoiceCommand }) {
   const handleProcessCommand = (command) => {
     let reply = '';
 
-    if (command.includes('delayed') || command.includes('delay')) {
+    if (command.includes('departed') || command.includes('depart') || command.includes('pushed back') || command.includes('push back')) {
+      reply = 'Filtering flight operations table to show departed flights only.';
+      onVoiceCommand && onVoiceCommand('FILTER_DEPARTED');
+    } else if (command.includes('delayed') || command.includes('delay')) {
       reply = 'Filtering flight operations table to show delayed flights only.';
       onVoiceCommand && onVoiceCommand('FILTER_DELAYED');
     } else if (command.includes('scheduled') || command.includes('upcoming')) {
       reply = 'Filtering flight operations table to show scheduled flights.';
       onVoiceCommand && onVoiceCommand('FILTER_SCHEDULED');
+    } else if (command.includes('progress') || command.includes('active') || command.includes('landing') || command.includes('arriving')) {
+      reply = 'Filtering flight operations table to show flights in progress.';
+      onVoiceCommand && onVoiceCommand('FILTER_IN_PROGRESS');
     } else if (command.includes('all flights') || command.includes('show all')) {
       reply = 'Showing all flight operations.';
       onVoiceCommand && onVoiceCommand('FILTER_ALL');

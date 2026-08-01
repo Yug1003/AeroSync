@@ -192,6 +192,14 @@ export default function DashboardPage() {
 
   const handleVoiceCommand = (commandType) => {
     switch (commandType) {
+      case 'FILTER_DEPARTED':
+        setFlightFilter('departed');
+        setActionSuccess('Filtering table: Showing DEPARTED / PUSHED BACK flights only.');
+        break;
+      case 'FILTER_IN_PROGRESS':
+        setFlightFilter('in_progress');
+        setActionSuccess('Filtering table: Showing IN PROGRESS flights.');
+        break;
       case 'FILTER_DELAYED':
         setFlightFilter('delayed');
         setActionSuccess('Filtering table: Showing DELAYED flights only.');
