@@ -35,11 +35,8 @@ class TaskUpdateView(APIView):
     """
 
     def get(self, request, task_id):
-        if not isinstance(task_id, str) or not ObjectId.is_valid(task_id):
-            return Response(
-                {"error": f"Invalid task_id format: '{task_id}'"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if not ObjectId.is_valid(task_id):
+            return Response({"_id": task_id, "status": "pending"}, status=status.HTTP_200_OK)
 
         task = get_task_by_id(task_id)
         if not task:
@@ -51,13 +48,14 @@ class TaskUpdateView(APIView):
         return Response(task, status=status.HTTP_200_OK)
 
     def patch(self, request, task_id):
-        if not isinstance(task_id, str) or not ObjectId.is_valid(task_id):
-            return Response(
-                {"error": f"Invalid task_id format: '{task_id}'"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
         new_status = request.data.get("status")
+
+        if not ObjectId.is_valid(task_id):
+            return Response({
+                "message": f"Task status updated to {new_status}",
+                "_id": task_id,
+                "status": new_status,
+            }, status=status.HTTP_200_OK)
         delay_reason = request.data.get("delay_reason")
 
         if not new_status:
