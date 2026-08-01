@@ -65,6 +65,10 @@ def test_phase21_weather():
     assert Notification.objects.filter(notification_type="gate_conflict").exists()
     print("AuditLog & Weather Alert Notification verified!")
 
+    # 6. Restore demo seed dataset so dashboard remains populated
+    from seed_demo_data import seed
+    seed()
+
     print("\nPhase 21 Weather Operations tests passed successfully!")
 
 if __name__ == "__main__":

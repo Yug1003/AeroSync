@@ -90,10 +90,8 @@ def seed():
     ac_idx = 0
     for arr, dep, timeframe in slots[:25]:
         ac = created_aircraft[ac_idx % len(created_aircraft)]
+        gate = created_gates[ac_idx % 5] # Distribute evenly across Gates A1, A2, A3, B1, B2
         ac_idx += 1
-        
-        gate = find_free_gate(arr, dep)
-        gate_id = gate["_id"] if gate else created_gates[ac_idx % 5]["_id"]
         
         status = "departed" if timeframe == "past" else ("scheduled" if ac_idx % 4 != 0 else "delayed")
         
@@ -101,7 +99,7 @@ def seed():
             "aircraft_id": ac["_id"],
             "arrival_time": arr,
             "departure_time": dep,
-            "gate_id": gate_id,
+            "gate_id": gate["_id"],
             "status": status,
         })
         created_flights.append(flight)
@@ -119,7 +117,7 @@ def seed():
                     update_task_assignment(t["_id"], dept_staff[0]["_id"])
         
         # Audit log for flight creation
-        log_action(None, "create_flight", "Flight", flight["_id"], {"aircraft": ac["tail_number"], "gate_id": gate_id})
+        log_action(None, "create_flight", "Flight", flight["_id"], {"aircraft": ac["tail_number"], "gate_id": gate["_id"]})
 
     print(f"Created {len(created_flights)} Flights across past 3 days and next 24 hours.")
 
