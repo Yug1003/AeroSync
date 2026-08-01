@@ -603,6 +603,37 @@
   color: #34d399;
 }
 
+.airport-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 0.45rem 0.85rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.search-icon {
+  font-size: 0.9rem;
+}
+
+.airport-select-dropdown {
+  background: transparent;
+  color: #f8fafc;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  max-width: 320px;
+}
+
+.airport-select-dropdown option {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
 /* Flight Table Styling */
 .table-responsive {
   overflow-x: auto;

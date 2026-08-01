@@ -204,18 +204,21 @@ from flights.flightradar_service import fetch_live_flightradar24_flights
 
 class LiveOpenSkyRadarView(APIView):
     """
-    GET /api/flights/live-radar/
-    Fetches real-time ADS-B satellite radar telemetry from Flightradar24 & OpenSky Network.
+    GET /api/flights/live-radar/?airport=DEL
+    Fetches real-time ADS-B satellite radar telemetry from Flightradar24 & OpenSky Network
+    for any selected Indian International Airport (DEL, BOM, BLR, AMD, MAA, etc.).
     """
 
     def get(self, request):
-        fr24_flights = fetch_live_flightradar24_flights()
+        airport_code = request.GET.get("airport", "AMD").upper()
+        fr24_flights = fetch_live_flightradar24_flights(airport_code)
         opensky_flights = fetch_live_opensky_flights()
 
         all_live = fr24_flights + opensky_flights
 
         return Response({
-            "source": "Flightradar24 Live + OpenSky Network Satellite Feed",
+            "airport_code": airport_code,
+            "source": f"Flightradar24 Live ({airport_code}) + OpenSky Satellite Feed",
             "fr24_count": len(fr24_flights),
             "opensky_count": len(opensky_flights),
             "total_count": len(all_live),

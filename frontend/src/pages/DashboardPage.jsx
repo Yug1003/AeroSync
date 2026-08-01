@@ -14,9 +14,29 @@ import API from '../api/api';
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
+import AirportTerminalLayoutComponent from '../components/AirportTerminalLayoutComponent';
 import './DashboardPage.css';
 
+const INDIAN_AIRPORTS = [
+  { code: 'AMD', name: 'Sardar Vallabhbhai Patel International Airport', city: 'Ahmedabad' },
+  { code: 'DEL', name: 'Indira Gandhi International Airport', city: 'New Delhi' },
+  { code: 'BOM', name: 'Chhatrapati Shivaji Maharaj International Airport', city: 'Mumbai' },
+  { code: 'BLR', name: 'Kempegowda International Airport', city: 'Bengaluru' },
+  { code: 'MAA', name: 'Chennai International Airport', city: 'Chennai' },
+  { code: 'HYD', name: 'Rajiv Gandhi International Airport', city: 'Hyderabad' },
+  { code: 'CCU', name: 'Netaji Subhash Chandra Bose International Airport', city: 'Kolkata' },
+  { code: 'COK', name: 'Cochin International Airport', city: 'Kochi' },
+  { code: 'GOI', name: 'Manohar International Airport / Dabolim', city: 'Goa' },
+  { code: 'JAI', name: 'Jaipur International Airport', city: 'Jaipur' },
+  { code: 'LKO', name: 'Chaudhary Charan Singh International Airport', city: 'Lucknow' },
+  { code: 'ATQ', name: 'Sri Guru Ram Dass Jee International Airport', city: 'Amritsar' },
+  { code: 'TRV', name: 'Thiruvananthapuram International Airport', city: 'Trivandrum' },
+  { code: 'IXC', name: 'Chandigarh International Airport', city: 'Chandigarh' },
+  { code: 'VTZ', name: 'Visakhapatnam International Airport', city: 'Visakhapatnam' },
+];
+
 export default function DashboardPage() {
+  const [selectedAirport, setSelectedAirport] = useState('AMD');
   const [kpis, setKpis] = useState(null);
   const [gates, setGates] = useState([]);
   const [flights, setFlights] = useState([]);
@@ -300,13 +320,35 @@ export default function DashboardPage() {
     return `${datePart} (${timePart})`;
   };
 
+  const selectedAirportObj = INDIAN_AIRPORTS.find((a) => a.code === selectedAirport) || INDIAN_AIRPORTS[0];
+
   return (
     <div className="dashboard-container">
       {/* Top Navbar */}
       <header className="dashboard-header">
         <div className="header-brand">
           <span className="brand-logo">✈️</span>
-          <h2>AeroSync <span className="badge-live">AMD Ops — Ahmedabad Airport (AMD / VAAH)</span></h2>
+          <h2>AeroSync <span className="badge-live">{selectedAirportObj.code} Ops — {selectedAirportObj.name}</span></h2>
+        </div>
+
+        {/* 🔍 Multi-Airport Search Selector Dropdown */}
+        <div className="airport-search-box">
+          <span className="search-icon">🔍</span>
+          <select
+            className="airport-select-dropdown"
+            value={selectedAirport}
+            onChange={(e) => {
+              setSelectedAirport(e.target.value);
+              setActionSuccess(`Switched active hub to ${e.target.value} — Loading live Flightradar24 telemetry.`);
+            }}
+            title="Search & select any Indian International Airport"
+          >
+            {INDIAN_AIRPORTS.map((apt) => (
+              <option key={apt.code} value={apt.code}>
+                🇮🇳 [{apt.code}] {apt.city} — {apt.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="header-user">
           {/* Airport METAR Weather Widget */}
@@ -508,7 +550,7 @@ export default function DashboardPage() {
         </section>
 
         {/* 🗺️ Live Regional Radar Map Section */}
-        <RadarMapComponent flights={flights} />
+        <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
 
         {/* Gate Map Grid Section */}
         <section className="gate-map-section">
@@ -720,6 +762,9 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* 🏢 2D Real-World Terminal Gate & Aircraft Ground Layout */}
+        <AirportTerminalLayoutComponent selectedAirportCode={selectedAirport} />
       </main>
     </div>
   );
