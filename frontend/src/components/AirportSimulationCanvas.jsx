@@ -7,6 +7,7 @@ export default function AirportSimulationCanvas({ selectedAirportCode = 'AMD' })
   const [selectedPlane, setSelectedPlane] = useState(null);
   const [lastUpdated, setLastUpdated] = useState('');
   const [liveCount, setLiveCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchGroundSnapshot = async () => {
     try {
@@ -68,6 +69,12 @@ export default function AirportSimulationCanvas({ selectedAirportCode = 'AMD' })
     }
   };
 
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchGroundSnapshot();
+    setTimeout(() => setIsRefreshing(false), 400);
+  };
+
   useEffect(() => {
     fetchGroundSnapshot();
     const interval = setInterval(fetchGroundSnapshot, 2000); // 2-Second Fast Snapshot Refresh
@@ -79,11 +86,20 @@ export default function AirportSimulationCanvas({ selectedAirportCode = 'AMD' })
       <div className="sim-header">
         <div>
           <h4>📷 Real-Time Airfield Ground Snapshot Diagram — {selectedAirportCode} Hub</h4>
-          <span className="sim-subtext">Photo-style real-time ground positions (Auto-refreshes every 5 seconds)</span>
+          <span className="sim-subtext">Photo-style real-time ground positions (Auto-refreshes every 2 seconds)</span>
         </div>
 
-        <div className="snapshot-status-badge">
-          🔴 LIVE 5s SNAPSHOT ({liveCount} PLANES ON GROUND & TAXIWAY) — Updated {lastUpdated}
+        <div className="snapshot-header-actions">
+          <button
+            className={`manual-refresh-btn ${isRefreshing ? 'spinning' : ''}`}
+            onClick={handleManualRefresh}
+            title="Click to force refresh real-world Flightradar24 tracking telemetry"
+          >
+            🔄 {isRefreshing ? 'Refreshing Data...' : 'Refresh View Telemetry'}
+          </button>
+          <span className="snapshot-status-badge">
+            🔴 LIVE ({liveCount} PLANES ON GROUND & TAXIWAY) — {lastUpdated}
+          </span>
         </div>
       </div>
 
