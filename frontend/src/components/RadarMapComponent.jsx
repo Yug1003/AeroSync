@@ -97,19 +97,19 @@ export default function RadarMapComponent({ flights = [] }) {
     <div className="radar-map-wrapper">
       <div className="radar-map-header">
         <div>
-          <h4>🗺️ Real-Time ADS-B Satellite Radar — Ahmedabad Airspace (AMD / VAAH)</h4>
-          <span className="radar-subtext">Live transponder feed directly from satellite ground stations (Updates every 2s)</span>
+          <h4>🗺️ 2,000km Radius Real-Time ADS-B Satellite Radar — Ahmedabad (AMD / VAAH)</h4>
+          <span className="radar-subtext">Live transponders across India, Gulf, & South Asia (Updates every 2s)</span>
         </div>
         <span className="radar-live-badge">
-          {dataSource} ({liveCount} PLANES OVERHEAD)
+          {dataSource} ({liveCount} PLANES TRACKED)
         </span>
       </div>
 
       <div className="leaflet-container-box">
         <MapContainer
           center={AMD_COORDS}
-          zoom={8}
-          scrollWheelZoom={false}
+          zoom={5}
+          scrollWheelZoom={true}
           className="radar-map"
         >
           <TileLayer
@@ -117,11 +117,18 @@ export default function RadarMapComponent({ flights = [] }) {
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
 
-          {/* Airport Location Circle */}
+          {/* 2000km Airspace Boundary Circle */}
           <Circle
             center={AMD_COORDS}
-            radius={12000}
-            pathOptions={{ color: '#00f2fe', fillColor: '#00f2fe', fillOpacity: 0.08, weight: 1.5, dashArray: '6, 6' }}
+            radius={2000000}
+            pathOptions={{ color: '#00f2fe', fillColor: '#00f2fe', fillOpacity: 0.03, weight: 1.5, dashArray: '8, 8' }}
+          />
+
+          {/* Inner Ahmedabad Airport Hub Circle */}
+          <Circle
+            center={AMD_COORDS}
+            radius={30000}
+            pathOptions={{ color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 0.15, weight: 2 }}
           />
 
           {/* Render Aircraft Markers */}
