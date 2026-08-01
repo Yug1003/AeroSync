@@ -13,6 +13,134 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+.weather-widget-wrapper {
+  position: relative;
+}
+
+.weather-badge-btn {
+  background: rgba(11, 15, 25, 0.6);
+  border: 1px solid var(--border-color);
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.2s;
+}
+
+.weather-badge-btn:hover {
+  border-color: var(--primary);
+}
+
+.weather-badge-btn.severity-severe {
+  border-color: rgba(244, 63, 94, 0.5);
+  background: rgba(244, 63, 94, 0.1);
+}
+
+.weather-badge-btn.severity-caution {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.wx-condition {
+  font-weight: 600;
+  color: #f8fafc;
+  font-size: 0.85rem;
+}
+
+.wx-details {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.wx-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.wx-pill.pill-clear {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.wx-pill.pill-severe, .wx-pill.pill-caution {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+}
+
+.weather-modal-dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 380px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 120;
+  padding: 1.25rem;
+}
+
+.wx-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.wx-modal-header h4 {
+  font-size: 0.92rem;
+  color: #f8fafc;
+}
+
+.wx-subtext {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+.wx-preset-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.wx-preset-card {
+  background: rgba(11, 15, 25, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.wx-preset-card:hover {
+  border-color: var(--primary);
+}
+
+.wx-preset-card.severe:hover {
+  border-color: #ef4444;
+}
+
+.preset-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.preset-info {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
 .header-brand {
   display: flex;
   align-items: center;

@@ -24,6 +24,9 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
 
+  const [weather, setWeather] = useState(null);
+  const [showWeatherModal, setShowWeatherModal] = useState(false);
+
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [loadingGates, setLoadingGates] = useState(true);
   const [loadingFlights, setLoadingFlights] = useState(true);
@@ -33,6 +36,36 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   const username = localStorage.getItem('username') || 'Operator';
+
+  const fetchWeather = async () => {
+    try {
+      const res = await API.get('weather/');
+      setWeather(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleUpdateWeather = async (weatherPayload) => {
+    try {
+      setActionError('');
+      setActionSuccess('');
+      const res = await API.post('weather/', weatherPayload);
+      setWeather(res.data.weather);
+      setShowWeatherModal(false);
+
+      if (res.data.automated_delays_applied > 0) {
+        setActionSuccess(
+          `WEATHER ALERT: ${res.data.weather.condition}! ${res.data.automated_delays_applied} active flight(s) automatically marked DELAYED.`
+        );
+      } else {
+        setActionSuccess(`Airport Weather condition updated to '${res.data.weather.condition}'.`);
+      }
+      loadAllData();
+    } catch (err) {
+      setActionError(err.response?.data?.error || 'Failed to update weather.');
+    }
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -120,6 +153,7 @@ export default function DashboardPage() {
     fetchFlights();
     fetchTasks();
     fetchNotifications();
+    fetchWeather();
   };
 
   const handleMarkNotificationRead = async (notifId) => {
@@ -179,6 +213,103 @@ export default function DashboardPage() {
           <h2>AeroSync <span className="badge-live">LIVE Ops</span></h2>
         </div>
         <div className="header-user">
+          {/* Airport METAR Weather Widget */}
+          {weather && (
+            <div className="weather-widget-wrapper">
+              <button
+                className={`weather-badge-btn severity-${weather.severity}`}
+                onClick={() => setShowWeatherModal(!showWeatherModal)}
+                title="Click to simulate airport weather conditions"
+              >
+                <span className="wx-condition">{weather.condition}</span>
+                <span className="wx-details">
+                  {weather.temp_c}°C | {weather.wind_speed_kts} kts | {weather.visibility_miles} mi vis
+                </span>
+                <span className={`wx-pill pill-${weather.severity}`}>
+                  {weather.severity === 'clear' ? 'CLEAR OPS 🟢' : 'WEATHER ALERT 🔴'}
+                </span>
+              </button>
+
+              {showWeatherModal && (
+                <div className="weather-modal-dropdown">
+                  <div className="wx-modal-header">
+                    <h4>🌤️ Simulate Aviation Weather Conditions</h4>
+                    <button className="close-btn" onClick={() => setShowWeatherModal(false)}>×</button>
+                  </div>
+                  <div className="wx-modal-body">
+                    <p className="wx-subtext">Selecting severe weather conditions triggers automated flight delay cascades, audit trail entries, and controller alert notifications.</p>
+
+                    <div className="wx-preset-grid">
+                      <button
+                        className="wx-preset-card clear"
+                        onClick={() =>
+                          handleUpdateWeather({
+                            condition: 'Clear / Fair ☀️',
+                            temp_c: 24,
+                            wind_speed_kts: 10,
+                            visibility_miles: 10.0,
+                            severity: 'clear',
+                          })
+                        }
+                      >
+                        <span className="preset-title">Clear / Fair ☀️</span>
+                        <span className="preset-info">10 kts | 10.0 mi vis</span>
+                      </button>
+
+                      <button
+                        className="wx-preset-card severe"
+                        onClick={() =>
+                          handleUpdateWeather({
+                            condition: 'Severe Thunderstorm ⛈️',
+                            temp_c: 18,
+                            wind_speed_kts: 45,
+                            visibility_miles: 0.5,
+                            severity: 'severe',
+                          })
+                        }
+                      >
+                        <span className="preset-title">Thunderstorm ⛈️</span>
+                        <span className="preset-info">45 kts | 0.5 mi vis</span>
+                      </button>
+
+                      <button
+                        className="wx-preset-card severe"
+                        onClick={() =>
+                          handleUpdateWeather({
+                            condition: 'Dense Ground Fog 🌫️',
+                            temp_c: 12,
+                            wind_speed_kts: 5,
+                            visibility_miles: 0.2,
+                            severity: 'severe',
+                          })
+                        }
+                      >
+                        <span className="preset-title">Dense Fog 🌫️</span>
+                        <span className="preset-info">5 kts | 0.2 mi vis</span>
+                      </button>
+
+                      <button
+                        className="wx-preset-card caution"
+                        onClick={() =>
+                          handleUpdateWeather({
+                            condition: 'Gale Wind Hazard 💨',
+                            temp_c: 20,
+                            wind_speed_kts: 38,
+                            visibility_miles: 8.0,
+                            severity: 'caution',
+                          })
+                        }
+                      >
+                        <span className="preset-title">Gale Winds 💨</span>
+                        <span className="preset-info">38 kts | 8.0 mi vis</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Notification Bell Dropdown */}
           <div className="notif-wrapper">
             <button
