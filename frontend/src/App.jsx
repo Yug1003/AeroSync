@@ -4,7 +4,6 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import IncidentsPage from './pages/IncidentsPage';
 import ActivityLogPage from './pages/ActivityLogPage';
-import SimulationPage from './pages/SimulationPage';
 
 export default function App() {
   return (
@@ -15,7 +14,6 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/incidents" element={<IncidentsPage />} />
         <Route path="/activity-log" element={<ActivityLogPage />} />
-        <Route path="/simulation" element={<SimulationPage />} />
       </Routes>
     </BrowserRouter>
   );

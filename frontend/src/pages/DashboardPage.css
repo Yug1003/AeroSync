@@ -173,14 +173,8 @@
   color: var(--primary);
 }
 
-.nav-link-btn.sim {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34d399;
-}
-
-.nav-link-btn.sim:hover {
-  background: rgba(16, 185, 129, 0.25);
+.nav-link-btn.audit:hover {
+  background: rgba(56, 189, 248, 0.2);
 }
 
 .logout-btn {
