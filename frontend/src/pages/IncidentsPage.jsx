@@ -105,7 +105,7 @@ export default function IncidentsPage() {
       <header className="incidents-header">
         <div className="header-brand">
           <span className="brand-logo">✈️</span>
-          <h2>AeroSync <span className="badge-page">Incident Log</span></h2>
+          <h2>AeroSync <span className="badge-page">AMD Incident Log — Ahmedabad Airport</span></h2>
         </div>
         <button className="back-btn" onClick={() => navigate('/dashboard')}>
           ← Back to Dashboard

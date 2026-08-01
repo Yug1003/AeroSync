@@ -210,7 +210,7 @@ export default function DashboardPage() {
       <header className="dashboard-header">
         <div className="header-brand">
           <span className="brand-logo">✈️</span>
-          <h2>AeroSync <span className="badge-live">LIVE Ops</span></h2>
+          <h2>AeroSync <span className="badge-live">AMD Ops — Ahmedabad Airport (AMD / VAAH)</span></h2>
         </div>
         <div className="header-user">
           {/* Airport METAR Weather Widget */}

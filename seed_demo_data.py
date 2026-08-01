@@ -6,20 +6,21 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aerosync_backend.settings")
 django.setup()
 
 from db.mongo_client import db
-from gates.mongo_operations import create_gate, update_gate_status
-from flights.mongo_operations import create_aircraft, create_flight, update_flight_status
-from gates.services import find_free_gate
+from gates.mongo_operations import create_gate
+from flights.mongo_operations import create_aircraft, create_flight
 from tasks.mongo_operations import create_tasks_for_flight, update_task_status, update_task_assignment
 from staff_app.mongo_operations import create_staff
-from incidents.mongo_operations import create_incident, update_incident_status
+from incidents.mongo_operations import create_incident
+from weather.mongo_operations import update_weather
 from auditlog.models import AuditLog
 from auditlog.utils import log_action
 from notifications.models import Notification
 from django.core.management import call_command
 
-def seed():
-    print("--- Phase 17: Comprehensive Demo Seed Data Refresh ---")
-    
+
+def seed_ahmedabad():
+    print("--- Seeding Real-World Data for Sardar Vallabhbhai Patel International Airport, Ahmedabad (AMD / VAAH) ---")
+
     # 1. Clear Mongo collections & ORM tables
     db["gates"].delete_many({})
     db["aircraft"].delete_many({})
@@ -27,117 +28,140 @@ def seed():
     db["tasks"].delete_many({})
     db["staff"].delete_many({})
     db["incidents"].delete_many({})
+    db["weather"].delete_many({})
     AuditLog.objects.all().delete()
     Notification.objects.all().delete()
-    
-    # 2. Seed 6 Gates
+
+    # 2. Seed Ahmedabad Gates (Terminal 1 Domestic & Terminal 2 International)
     gate_data = [
-        {"label": "A1", "status": "available"},
-        {"label": "A2", "status": "available"},
-        {"label": "A3", "status": "available"},
-        {"label": "B1", "status": "available"},
-        {"label": "B2", "status": "available"},
-        {"label": "B3", "status": "maintenance"},
+        {"label": "T1-A1", "status": "available"},
+        {"label": "T1-A2", "status": "available"},
+        {"label": "T1-A3", "status": "available"},
+        {"label": "T1-B1", "status": "available"},
+        {"label": "T2-INT1", "status": "available"},
+        {"label": "T2-INT2", "status": "maintenance"},
     ]
     created_gates = [create_gate(g) for g in gate_data]
-    print(f"Created {len(created_gates)} Gates (A1-A3, B1-B3).")
+    print(f"Created {len(created_gates)} Ahmedabad Gates (Terminal 1 & 2).")
 
-    # 3. Seed 5 Aircraft
+    # 3. Seed Real-World Fleet Operating at Ahmedabad (AMD)
     aircraft_data = [
-        {"tail_number": "N101AA", "airline": "American Airlines", "aircraft_type": "Boeing 737-800", "passenger_capacity": 160},
-        {"tail_number": "N202UA", "airline": "United Airlines", "aircraft_type": "Boeing 787-9", "passenger_capacity": 250},
-        {"tail_number": "N303DL", "airline": "Delta Air Lines", "aircraft_type": "Airbus A320neo", "passenger_capacity": 150},
-        {"tail_number": "N404SW", "airline": "Southwest Airlines", "aircraft_type": "Boeing 737-700", "passenger_capacity": 143},
-        {"tail_number": "N505BA", "airline": "British Airways", "aircraft_type": "Airbus A350-1000", "passenger_capacity": 330},
+        {"tail_number": "VT-IFH", "airline": "IndiGo", "aircraft_type": "Airbus A320neo", "passenger_capacity": 186},
+        {"tail_number": "VT-EXN", "airline": "Air India", "aircraft_type": "Airbus A320-200", "passenger_capacity": 162},
+        {"tail_number": "VT-YAB", "airline": "Akasa Air", "aircraft_type": "Boeing 737 MAX 8", "passenger_capacity": 189},
+        {"tail_number": "VT-SGK", "airline": "SpiceJet", "aircraft_type": "Boeing 737-800", "passenger_capacity": 189},
+        {"tail_number": "VT-TNC", "airline": "Vistara", "aircraft_type": "Airbus A320neo", "passenger_capacity": 164},
+        {"tail_number": "A6-EBC", "airline": "Emirates", "aircraft_type": "Boeing 777-300ER", "passenger_capacity": 354},
+        {"tail_number": "9V-SHD", "airline": "Singapore Airlines", "aircraft_type": "Airbus A350-900", "passenger_capacity": 303},
     ]
     created_aircraft = [create_aircraft(a) for a in aircraft_data]
-    print(f"Created {len(created_aircraft)} Aircraft.")
+    print(f"Created {len(created_aircraft)} Real-World Aircraft.")
 
-    # 4. Seed 7 Staff Members
-    now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
-    shift_start = now - timedelta(hours=12)
-    shift_end = now + timedelta(hours=24)
+    # 4. Seed Ground Crew Staff at AMD
+    now_utc = datetime.now(timezone.utc)
+    shift_start = now_utc - timedelta(hours=12)
+    shift_end = now_utc + timedelta(hours=24)
 
     staff_data = [
-        {"name": "John Refueler", "department": "fuel", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
-        {"name": "Sarah Cleaner", "department": "cleaning", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
-        {"name": "Mike Baggage", "department": "baggage", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
-        {"name": "Lisa Catering", "department": "catering", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
-        {"name": "David Fuel", "department": "fuel", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
-        {"name": "Emma Cleaner", "department": "cleaning", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
-        {"name": "Alex Operations", "department": "baggage", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
+        {"name": "Patel Rajesh (Ramp Lead)", "department": "fuel", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
+        {"name": "Shah Amit (Baggage Handling)", "department": "baggage", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
+        {"name": "Joshi Priyanshu (Cabin Ops)", "department": "cleaning", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
+        {"name": "Mehta Sneha (Catering Supervisor)", "department": "catering", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
+        {"name": "Rathod Vikram (Fuel Ops)", "department": "fuel", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
+        {"name": "Desai Pooja (Cabin Cleaning)", "department": "cleaning", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
+        {"name": "Parmar Hardik (Ramp Marshal)", "department": "baggage", "shift_start": shift_start, "shift_end": shift_end, "is_available": True},
     ]
     created_staff = [create_staff(s) for s in staff_data]
-    print(f"Created {len(created_staff)} Staff members.")
+    print(f"Created {len(created_staff)} AMD Ground Operations Staff.")
 
-    # 5. Seed ~25 Flights across past 3 days and next 1 day
+    # 5. Real-Time Dynamic Flight Schedule for Ahmedabad (AMD)
+    # Schedule flights relative to current real-time UTC timestamp
+    routes = [
+        ("6E 214", "AMD -> DEL (New Delhi)"),
+        ("AI 011", "BOM (Mumbai) -> AMD"),
+        ("QP 1102", "AMD -> BLR (Bengaluru)"),
+        ("SG 531", "AMD -> JAI (Jaipur)"),
+        ("UK 945", "AMD -> CCU (Kolkata)"),
+        ("EK 539", "AMD -> DXB (Dubai Int)"),
+        ("SQ 531", "AMD -> SIN (Singapore)"),
+        ("6E 6108", "HYD (Hyderabad) -> AMD"),
+        ("AI 472", "AMD -> MAA (Chennai)"),
+        ("QP 1341", "GOI (Goa) -> AMD"),
+    ]
+
     created_flights = []
     
-    # Generate flight time slots
-    slots = []
-    # Past 3 days (18 flights)
-    for day in range(3, 0, -1):
-        for h in [2, 6, 10, 14, 18, 22]:
-            arr = now - timedelta(days=day, hours=-h)
-            dep = arr + timedelta(hours=2)
-            slots.append((arr, dep, "past"))
-    # Today & Next 1 day (7 flights)
-    for h in [1, 4, 7, 10, 13, 16, 19]:
-        arr = now + timedelta(hours=h)
-        dep = arr + timedelta(hours=2)
-        slots.append((arr, dep, "future"))
+    # 15 Historical & Upcoming Real-World Flight Slots relative to NOW
+    time_offsets = [
+        -36, -30, -24, -18, -12, -6, -4, -2,
+        0.5, 1.5, 3.0, 4.5, 6.0, 8.0, 12.0
+    ]
 
-    ac_idx = 0
-    for arr, dep, timeframe in slots[:25]:
-        ac = created_aircraft[ac_idx % len(created_aircraft)]
-        gate = created_gates[ac_idx % 5] # Distribute evenly across Gates A1, A2, A3, B1, B2
-        ac_idx += 1
-        
-        status = "departed" if timeframe == "past" else ("scheduled" if ac_idx % 4 != 0 else "delayed")
-        
+    for idx, offset in enumerate(time_offsets):
+        ac = created_aircraft[idx % len(created_aircraft)]
+        gate = created_gates[idx % 5] # Distribute across 5 active AMD gates
+        route_code, route_name = routes[idx % len(routes)]
+
+        arr_time = now_utc + timedelta(hours=offset)
+        dep_time = arr_time + timedelta(hours=2)
+
+        if offset < -2:
+            status = "departed"
+        elif offset <= 0.5:
+            status = "in_progress"
+        elif idx % 4 == 0:
+            status = "delayed"
+        else:
+            status = "scheduled"
+
         flight = create_flight({
             "aircraft_id": ac["_id"],
-            "arrival_time": arr,
-            "departure_time": dep,
+            "arrival_time": arr_time,
+            "departure_time": dep_time,
             "gate_id": gate["_id"],
             "status": status,
         })
         created_flights.append(flight)
-        
-        # Create 4 tasks per flight
+
+        # Generate 4 Turnaround Tasks
         tasks = create_tasks_for_flight(flight["_id"])
-        
-        # If flight is departed, mark all tasks completed
+
         if status == "departed":
             for t in tasks:
                 update_task_status(t["_id"], "completed")
-                # Assign a staff member
                 dept_staff = [s for s in created_staff if s["department"] in t["task_type"]]
                 if dept_staff:
                     update_task_assignment(t["_id"], dept_staff[0]["_id"])
-        
-        # Audit log for flight creation
-        log_action(None, "create_flight", "Flight", flight["_id"], {"aircraft": ac["tail_number"], "gate_id": gate["_id"]})
 
-    print(f"Created {len(created_flights)} Flights across past 3 days and next 24 hours.")
+        log_action(None, "create_flight", "Flight", flight["_id"], {"route": route_name, "tail_number": ac["tail_number"]})
 
-    # 6. Seed 5 Incidents
+    print(f"Created {len(created_flights)} Real-Time Synchronized Flights for Ahmedabad Airport (AMD).")
+
+    # 6. Real-World Incidents for Ahmedabad (AMD)
     incidents_data = [
-        {"description": "Fuel truck hose pressure valve leak near Gate A1", "priority": "high", "status": "open", "flight_id": created_flights[0]["_id"]},
-        {"description": "Baggage carousel belt jammed at Terminal A", "priority": "medium", "status": "resolved", "flight_id": created_flights[1]["_id"]},
-        {"description": "Water service truck failure during cabin servicing", "priority": "low", "status": "open", "flight_id": None},
-        {"description": "Hydraulic fluid spill on taxiway connector Bravo", "priority": "high", "status": "resolved", "flight_id": None},
-        {"description": "Catering lift truck mechanical fault at Gate B2", "priority": "medium", "status": "open", "flight_id": created_flights[3]["_id"]},
+        {"description": "Baggage carousel 2 motor trip at Terminal 1 Arrivals", "priority": "medium", "status": "open", "flight_id": created_flights[1]["_id"]},
+        {"description": "Fuel hydrant coupling pressure valve check at Gate T2-INT1", "priority": "low", "status": "resolved", "flight_id": created_flights[5]["_id"]},
+        {"description": "Bird strike inspection required on Runway 23 after EK 539 departure", "priority": "high", "status": "open", "flight_id": None},
     ]
     for inc in incidents_data:
         inc_doc = create_incident(inc)
         log_action(None, "create_incident", "Incident", inc_doc["_id"], {"priority": inc["priority"]})
-    print(f"Created {len(incidents_data)} Incidents.")
+    print(f"Created {len(incidents_data)} AMD Safety & Ops Incidents.")
 
-    # 7. Run check_overdue_tasks management command to trigger realistic notifications
+    # 7. Real-Time Ahmedabad Airport METAR Weather Condition
+    update_weather({
+        "condition": "Ahmedabad (AMD) - Clear / Haze ☀️",
+        "temp_c": 33,
+        "wind_speed_kts": 12,
+        "visibility_miles": 6.0,
+        "severity": "clear",
+    })
+    print("Updated Real-World Ahmedabad METAR Weather Condition.")
+
+    # 8. Check Overdue Tasks
     call_command("check_overdue_tasks")
 
-    print("\nPhase 17 Seed Refresh Complete!")
+    print("\n--- Ahmedabad Airport (AMD / VAAH) Seed Refresh Complete! ---")
 
 if __name__ == "__main__":
-    seed()
+    seed_ahmedabad()

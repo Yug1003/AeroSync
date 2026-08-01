@@ -41,7 +41,7 @@ export default function ActivityLogPage() {
       <header className="activity-header">
         <div className="header-brand">
           <span className="brand-logo">✈️</span>
-          <h2>AeroSync <span className="badge-page">Audit & Activity Log</span></h2>
+          <h2>AeroSync <span className="badge-page">AMD Activity Log — Ahmedabad Airport</span></h2>
         </div>
         <button className="back-btn" onClick={() => navigate('/dashboard')}>
           ← Back to Dashboard
