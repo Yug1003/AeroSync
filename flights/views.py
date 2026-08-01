@@ -199,20 +199,27 @@ class AircraftListCreateView(APIView):
 
 
 from flights.opensky_service import fetch_live_opensky_flights
+from flights.flightradar_service import fetch_live_flightradar24_flights
 
 
 class LiveOpenSkyRadarView(APIView):
     """
     GET /api/flights/live-radar/
-    Fetches real-time ADS-B satellite radar telemetry from OpenSky Network.
+    Fetches real-time ADS-B satellite radar telemetry from Flightradar24 & OpenSky Network.
     """
 
     def get(self, request):
-        live_flights = fetch_live_opensky_flights()
+        fr24_flights = fetch_live_flightradar24_flights()
+        opensky_flights = fetch_live_opensky_flights()
+
+        all_live = fr24_flights + opensky_flights
+
         return Response({
-            "source": "OpenSky Network ADS-B Satellite Feed",
-            "count": len(live_flights),
-            "flights": live_flights
+            "source": "Flightradar24 Live + OpenSky Network Satellite Feed",
+            "fr24_count": len(fr24_flights),
+            "opensky_count": len(opensky_flights),
+            "total_count": len(all_live),
+            "flights": all_live
         }, status=status.HTTP_200_OK)
 
 

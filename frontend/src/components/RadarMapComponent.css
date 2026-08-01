@@ -30,6 +30,16 @@
   font-weight: 700;
 }
 
+.ground-tag {
+  color: #fbbf24;
+  font-weight: 700;
+}
+
+.airborne-tag {
+  color: #34d399;
+  font-weight: 700;
+}
+
 .radar-live-badge {
   font-size: 0.72rem;
   font-weight: 700;

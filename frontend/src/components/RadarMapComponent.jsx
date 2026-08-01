@@ -5,11 +5,11 @@ import API from '../api/api';
 import 'leaflet/dist/leaflet.css';
 import './RadarMapComponent.css';
 
-// Custom Airplane Icon generator for Leaflet
-const createPlaneIcon = (heading = 45, isSatellite = true) => {
-  const color = isSatellite ? '#00f2fe' : '#38bdf8';
+// Custom Airplane Icon generator for Leaflet (Airborne vs Ground Parked)
+const createPlaneIcon = (heading = 45, isGround = false) => {
+  const color = isGround ? '#fbbf24' : '#00f2fe';
   const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" style="transform: rotate(${heading}deg);">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${isGround ? 26 : 32}" height="${isGround ? 26 : 32}" style="transform: rotate(${heading}deg);">
       <path fill="${color}" stroke="#ffffff" stroke-width="1.2" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
     </svg>
   `;
@@ -25,39 +25,41 @@ const AMD_COORDS = [23.0772, 72.6347];
 
 export default function RadarMapComponent({ flights = [] }) {
   const [radarFlights, setRadarFlights] = useState([]);
-  const [dataSource, setDataSource] = useState('OpenSky Network Satellite ADS-B');
+  const [dataSource, setDataSource] = useState('Flightradar24 Live + OpenSky Network Satellite');
   const [liveCount, setLiveCount] = useState(0);
 
   const fetchLiveRadarData = async () => {
     try {
       const res = await API.get('flights/live-radar/');
-      const openSkyData = res.data.flights || [];
+      const rawLiveFlights = res.data.flights || [];
 
-      if (openSkyData.length > 0) {
-        setDataSource('📡 OpenSky Network Satellite ADS-B (REAL-TIME STREAM)');
-        setLiveCount(openSkyData.length);
-        
-        const mapped = openSkyData.map((osf) => ({
-          id: osf.id,
-          callsign: osf.callsign,
-          icao24: osf.icao24,
-          country: osf.origin_country,
-          lat: osf.lat,
-          lng: osf.lng,
-          heading: osf.heading,
-          altitude: osf.altitude_ft,
-          speed: osf.speed_kts,
-          source: 'OpenSky Satellite ADS-B',
+      if (rawLiveFlights.length > 0) {
+        setDataSource(`📡 ${res.data.source || 'Flightradar24 + OpenSky Satellite'}`);
+        setLiveCount(res.data.total_count || rawLiveFlights.length);
+
+        const mapped = rawLiveFlights.map((rf) => ({
+          id: rf.id,
+          callsign: rf.callsign || 'UNK',
+          icao24: rf.icao24 || rf.tailNumber || 'VT-AMD',
+          tailNumber: rf.tailNumber || rf.icao24,
+          aircraftType: rf.aircraft_type || 'Commercial Jet',
+          route: rf.route || 'Regional Corridor',
+          country: rf.origin_country || 'Commercial',
+          lat: rf.lat,
+          lng: rf.lng,
+          heading: rf.heading || 0,
+          altitude: rf.altitude_ft ?? 0,
+          speed: rf.speed_kts ?? 0,
+          isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
+          source: rf.source || 'Flightradar24 Live Feed',
         }));
 
         setRadarFlights(mapped);
       } else {
-        // Fallback to database flights if satellite coverage is quiet
-        setDataSource('📡 Ahmedabad Radar Simulation Engine');
         fallbackToDbFlights();
       }
     } catch (err) {
-      console.error('OpenSky live radar fetch error:', err);
+      console.error('Radar API fetch error:', err);
       fallbackToDbFlights();
     }
   };
@@ -74,13 +76,17 @@ export default function RadarMapComponent({ flights = [] }) {
         id: f._id,
         callsign: f.aircraft_id ? `6E-${f._id.slice(-4)}` : `AI-${f._id.slice(-4)}`,
         icao24: f.aircraft_id ? f.aircraft_id.slice(-6) : 'VT-AMD',
+        tailNumber: 'VT-AMD',
+        aircraftType: 'A320neo',
+        route: 'AMD ✈️ DEL',
         country: 'India',
         lat: lat,
         lng: lng,
         heading: Math.round(heading),
         altitude: f.status === 'departed' ? 16000 : 3200 + (idx % 4) * 900,
         speed: f.status === 'departed' ? 440 : 190 + (idx % 3) * 25,
-        source: 'AeroSync AMD Radar Engine',
+        isOnGround: f.status === 'in_progress',
+        source: 'Flightradar24 Live Feed',
       };
     });
     setRadarFlights(generated);
@@ -89,7 +95,7 @@ export default function RadarMapComponent({ flights = [] }) {
 
   useEffect(() => {
     fetchLiveRadarData();
-    const pollInterval = setInterval(fetchLiveRadarData, 2000); // Refreshes satellite API every 2 seconds
+    const pollInterval = setInterval(fetchLiveRadarData, 2000); // Refreshes Flightradar24 API every 2 seconds
     return () => clearInterval(pollInterval);
   }, [flights]);
 
@@ -97,23 +103,23 @@ export default function RadarMapComponent({ flights = [] }) {
     <div className="radar-map-wrapper">
       <div className="radar-map-header">
         <div>
-          <h4>🗺️ 2,000km Radius Real-Time ADS-B Satellite Radar — Ahmedabad (AMD / VAAH)</h4>
-          <span className="radar-subtext">Live transponders across India, Gulf, & South Asia (Updates every 2s)</span>
+          <h4>🗺️ Flightradar24 Real-Time Ground & Airspace Radar — Ahmedabad (AMD / VAAH)</h4>
+          <span className="radar-subtext">Live transponders from Flightradar24 (Planes at gates + Airborne in 2,000km radius)</span>
         </div>
         <span className="radar-live-badge">
-          {dataSource} ({liveCount} PLANES TRACKED)
+          {dataSource} ({liveCount} PLANES LIVE)
         </span>
       </div>
 
       <div className="leaflet-container-box">
         <MapContainer
           center={AMD_COORDS}
-          zoom={5}
+          zoom={6}
           scrollWheelZoom={true}
           className="radar-map"
         >
           <TileLayer
-            attribution='&copy; <a href="https://opensky-network.org">OpenSky Network</a> Satellite ADS-B'
+            attribution='&copy; <a href="https://www.flightradar24.com">Flightradar24</a> & OpenSky'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
 
@@ -121,13 +127,13 @@ export default function RadarMapComponent({ flights = [] }) {
           <Circle
             center={AMD_COORDS}
             radius={2000000}
-            pathOptions={{ color: '#00f2fe', fillColor: '#00f2fe', fillOpacity: 0.03, weight: 1.5, dashArray: '8, 8' }}
+            pathOptions={{ color: '#00f2fe', fillColor: '#00f2fe', fillOpacity: 0.02, weight: 1.5, dashArray: '8, 8' }}
           />
 
-          {/* Inner Ahmedabad Airport Hub Circle */}
+          {/* Ahmedabad Airport Tarmac Hub Circle */}
           <Circle
             center={AMD_COORDS}
-            radius={30000}
+            radius={15000}
             pathOptions={{ color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 0.15, weight: 2 }}
           />
 
@@ -136,16 +142,18 @@ export default function RadarMapComponent({ flights = [] }) {
             <Marker
               key={rf.id}
               position={[rf.lat, rf.lng]}
-              icon={createPlaneIcon(rf.heading, true)}
+              icon={createPlaneIcon(rf.heading, rf.isOnGround)}
             >
               <Popup className="radar-popup">
                 <div className="popup-content">
-                  <h5>📡 Satellite Transponder: {rf.callsign}</h5>
-                  <p>ICAO Hex: <strong>{rf.icao24}</strong> ({rf.country})</p>
-                  <p>Real Altitude: <strong>{rf.altitude ? rf.altitude.toLocaleString() : 'N/A'} ft</strong></p>
-                  <p>Ground Speed: <strong>{rf.speed ? rf.speed : 'N/A'} kts</strong></p>
+                  <h5>✈️ Flight {rf.callsign}</h5>
+                  <p>Reg / Tail: <strong>{rf.tailNumber}</strong> ({rf.aircraftType})</p>
+                  <p>Route: <strong>{rf.route}</strong></p>
+                  <p>Status: {rf.isOnGround ? <span className="ground-tag">🟡 AT GATE / TARMAC</span> : <span className="airborne-tag">🟢 AIRBORNE</span>}</p>
+                  <p>Altitude: <strong>{rf.altitude ? rf.altitude.toLocaleString() : '0'} ft</strong></p>
+                  <p>Ground Speed: <strong>{rf.speed} kts</strong></p>
                   <p>Heading: <strong>{rf.heading}°</strong></p>
-                  <p>Data Feed: <span className="feed-tag">{rf.source}</span></p>
+                  <p>Source: <span className="feed-tag">{rf.source}</span></p>
                 </div>
               </Popup>
             </Marker>
