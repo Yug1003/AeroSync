@@ -25,7 +25,7 @@ const AMD_COORDS = [23.0772, 72.6347];
 
 export default function RadarMapComponent({ flights = [] }) {
   const [radarFlights, setRadarFlights] = useState([]);
-  const [dataSource, setDataSource] = useState('Flightradar24 Live + OpenSky Network Satellite');
+  const [dataSource, setDataSource] = useState('Flightradar24 Live + Ahmedabad Operations Hub');
   const [liveCount, setLiveCount] = useState(0);
 
   const fetchLiveRadarData = async () => {
@@ -33,69 +33,63 @@ export default function RadarMapComponent({ flights = [] }) {
       const res = await API.get('flights/live-radar/');
       const rawLiveFlights = res.data.flights || [];
 
-      if (rawLiveFlights.length > 0) {
-        setDataSource(`📡 ${res.data.source || 'Flightradar24 + OpenSky Satellite'}`);
-        setLiveCount(res.data.total_count || rawLiveFlights.length);
+      // 1. Process Flightradar24 live API planes
+      const fr24Mapped = rawLiveFlights.map((rf) => ({
+        id: rf.id,
+        callsign: rf.callsign || 'UNK',
+        icao24: rf.icao24 || rf.tailNumber || 'VT-AMD',
+        tailNumber: rf.tailNumber || rf.icao24,
+        aircraftType: rf.aircraft_type || 'Commercial Jet',
+        route: rf.route || 'Regional Corridor',
+        country: rf.origin_country || 'Commercial',
+        lat: rf.lat,
+        lng: rf.lng,
+        heading: rf.heading || 0,
+        altitude: rf.altitude_ft ?? 0,
+        speed: rf.speed_kts ?? 0,
+        isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
+        source: rf.source || 'Flightradar24 Live Feed 📡',
+      }));
 
-        const mapped = rawLiveFlights.map((rf) => ({
-          id: rf.id,
-          callsign: rf.callsign || 'UNK',
-          icao24: rf.icao24 || rf.tailNumber || 'VT-AMD',
-          tailNumber: rf.tailNumber || rf.icao24,
-          aircraftType: rf.aircraft_type || 'Commercial Jet',
-          route: rf.route || 'Regional Corridor',
-          country: rf.origin_country || 'Commercial',
-          lat: rf.lat,
-          lng: rf.lng,
-          heading: rf.heading || 0,
-          altitude: rf.altitude_ft ?? 0,
-          speed: rf.speed_kts ?? 0,
-          isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
-          source: rf.source || 'Flightradar24 Live Feed',
-        }));
+      // 2. Generate stable AMD database flight vectors around Ahmedabad tarmac & corridors
+      const dbMapped = flights.map((f, idx) => {
+        const angle = (idx * 55) * (Math.PI / 180);
+        const radius = 0.05 + (idx % 3) * 0.035;
+        const lat = AMD_COORDS[0] + Math.sin(angle) * radius;
+        const lng = AMD_COORDS[1] + Math.cos(angle) * radius;
+        const heading = Math.round((Math.atan2(AMD_COORDS[1] - lng, AMD_COORDS[0] - lat) * 180) / Math.PI);
 
-        setRadarFlights(mapped);
-      } else {
-        fallbackToDbFlights();
-      }
+        return {
+          id: `db_${f._id}`,
+          callsign: f.aircraft_id ? `6E-${f._id.slice(-4)}` : `AI-${f._id.slice(-4)}`,
+          icao24: f._id.slice(-6).toUpperCase(),
+          tailNumber: 'VT-AMD',
+          aircraftType: 'A320neo',
+          route: 'AMD ✈️ INT',
+          country: 'India',
+          lat: lat,
+          lng: lng,
+          heading: heading,
+          altitude: f.status === 'departed' ? 14000 : f.status === 'in_progress' ? 0 : 3500,
+          speed: f.status === 'departed' ? 420 : f.status === 'in_progress' ? 0 : 180,
+          isOnGround: f.status === 'in_progress',
+          source: 'AeroSync AMD Operations 🏢',
+        };
+      });
+
+      // Combine both datasets for a rich, stable, packed radar view
+      const combined = [...fr24Mapped, ...dbMapped];
+      setRadarFlights(combined);
+      setLiveCount(combined.length);
+      setDataSource('Flightradar24 Live Feed + AMD Hub');
     } catch (err) {
       console.error('Radar API fetch error:', err);
-      fallbackToDbFlights();
     }
-  };
-
-  const fallbackToDbFlights = () => {
-    const generated = flights.map((f, idx) => {
-      const angle = (idx * 50) * (Math.PI / 180);
-      const radius = 0.07 + (idx % 4) * 0.03;
-      const lat = AMD_COORDS[0] + Math.sin(angle) * radius;
-      const lng = AMD_COORDS[1] + Math.cos(angle) * radius;
-      const heading = (Math.atan2(AMD_COORDS[1] - lng, AMD_COORDS[0] - lat) * 180) / Math.PI;
-
-      return {
-        id: f._id,
-        callsign: f.aircraft_id ? `6E-${f._id.slice(-4)}` : `AI-${f._id.slice(-4)}`,
-        icao24: f.aircraft_id ? f.aircraft_id.slice(-6) : 'VT-AMD',
-        tailNumber: 'VT-AMD',
-        aircraftType: 'A320neo',
-        route: 'AMD ✈️ DEL',
-        country: 'India',
-        lat: lat,
-        lng: lng,
-        heading: Math.round(heading),
-        altitude: f.status === 'departed' ? 16000 : 3200 + (idx % 4) * 900,
-        speed: f.status === 'departed' ? 440 : 190 + (idx % 3) * 25,
-        isOnGround: f.status === 'in_progress',
-        source: 'Flightradar24 Live Feed',
-      };
-    });
-    setRadarFlights(generated);
-    setLiveCount(generated.length);
   };
 
   useEffect(() => {
     fetchLiveRadarData();
-    const pollInterval = setInterval(fetchLiveRadarData, 2000); // Refreshes Flightradar24 API every 2 seconds
+    const pollInterval = setInterval(fetchLiveRadarData, 3000);
     return () => clearInterval(pollInterval);
   }, [flights]);
 
@@ -104,17 +98,17 @@ export default function RadarMapComponent({ flights = [] }) {
       <div className="radar-map-header">
         <div>
           <h4>🗺️ Flightradar24 Real-Time Ground & Airspace Radar — Ahmedabad (AMD / VAAH)</h4>
-          <span className="radar-subtext">Live transponders from Flightradar24 (Planes at gates + Airborne in 2,000km radius)</span>
+          <span className="radar-subtext">Unified live transponder feed (Planes at gates + Airborne in AMD Corridor)</span>
         </div>
         <span className="radar-live-badge">
-          {dataSource} ({liveCount} PLANES LIVE)
+          📡 {dataSource} ({liveCount} PLANES ACTIVE)
         </span>
       </div>
 
       <div className="leaflet-container-box">
         <MapContainer
           center={AMD_COORDS}
-          zoom={6}
+          zoom={7}
           scrollWheelZoom={true}
           className="radar-map"
         >
@@ -123,17 +117,17 @@ export default function RadarMapComponent({ flights = [] }) {
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
 
-          {/* 2000km Airspace Boundary Circle */}
+          {/* Airspace Boundary Circle */}
           <Circle
             center={AMD_COORDS}
-            radius={2000000}
-            pathOptions={{ color: '#00f2fe', fillColor: '#00f2fe', fillOpacity: 0.02, weight: 1.5, dashArray: '8, 8' }}
+            radius={150000}
+            pathOptions={{ color: '#00f2fe', fillColor: '#00f2fe', fillOpacity: 0.03, weight: 1.5, dashArray: '8, 8' }}
           />
 
           {/* Ahmedabad Airport Tarmac Hub Circle */}
           <Circle
             center={AMD_COORDS}
-            radius={15000}
+            radius={20000}
             pathOptions={{ color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 0.15, weight: 2 }}
           />
 
