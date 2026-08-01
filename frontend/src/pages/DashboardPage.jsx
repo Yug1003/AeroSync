@@ -678,17 +678,20 @@ export default function DashboardPage() {
                         </td>
                         <td className="cell-tasks">
                           <div className="task-chips-container">
-                            {flightTasks.map((t) => (
-                              <button
-                                key={t._id}
-                                className={`task-chip ${t.status}`}
-                                onClick={() => handleToggleTask(t)}
-                                title={`Click to set task as ${t.status === 'completed' ? 'pending' : 'completed'}`}
-                              >
-                                {t.status === 'completed' ? '✓ ' : '○ '}
-                                {t.task_type.replace('_', ' ')}
-                              </button>
-                            ))}
+                            {flightTasks.map((t) => {
+                              const estTime = t.task_type === 'refuel' ? '25m' : t.task_type === 'cleaning' ? '20m' : '15m';
+                              return (
+                                <button
+                                  key={t._id}
+                                  className={`task-chip ${t.status}`}
+                                  onClick={() => handleToggleTask(t)}
+                                  title={`${t.task_type.replace('_', ' ')}: Standard Duration ${estTime}. Click to set task as ${t.status === 'completed' ? 'pending' : 'completed'}`}
+                                >
+                                  {t.status === 'completed' ? '✓ ' : '○ '}
+                                  {t.task_type.replace('_', ' ')} <span className="task-time-badge">⏱️ {estTime}</span>
+                                </button>
+                              );
+                            })}
                           </div>
                         </td>
                         <td>

@@ -444,6 +444,16 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+.task-time-badge {
+  font-size: 0.68rem;
+  opacity: 0.85;
+  font-weight: 700;
+  margin-left: 0.25rem;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+
 .kpi-title {
   font-size: 0.8rem;
   color: var(--text-muted);
