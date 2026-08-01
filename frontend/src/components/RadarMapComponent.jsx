@@ -89,7 +89,7 @@ export default function RadarMapComponent({ flights = [] }) {
 
   useEffect(() => {
     fetchLiveRadarData();
-    const pollInterval = setInterval(fetchLiveRadarData, 10000); // Refreshes satellite API every 10 seconds
+    const pollInterval = setInterval(fetchLiveRadarData, 2000); // Refreshes satellite API every 2 seconds
     return () => clearInterval(pollInterval);
   }, [flights]);
 
@@ -98,7 +98,7 @@ export default function RadarMapComponent({ flights = [] }) {
       <div className="radar-map-header">
         <div>
           <h4>🗺️ Real-Time ADS-B Satellite Radar — Ahmedabad Airspace (AMD / VAAH)</h4>
-          <span className="radar-subtext">Live transponder feed directly from satellite ground stations</span>
+          <span className="radar-subtext">Live transponder feed directly from satellite ground stations (Updates every 2s)</span>
         </div>
         <span className="radar-live-badge">
           {dataSource} ({liveCount} PLANES OVERHEAD)
@@ -108,7 +108,7 @@ export default function RadarMapComponent({ flights = [] }) {
       <div className="leaflet-container-box">
         <MapContainer
           center={AMD_COORDS}
-          zoom={10}
+          zoom={8}
           scrollWheelZoom={false}
           className="radar-map"
         >

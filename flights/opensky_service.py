@@ -2,8 +2,8 @@ import urllib.request
 import json
 from datetime import datetime, timezone
 
-# OpenSky Network Bounding Box for Ahmedabad (AMD / VAAH) Airspace
-OPENSKY_URL = "https://opensky-network.org/api/states/all?lamin=22.2&lamax=23.8&lomin=71.8&lomax=73.4"
+# OpenSky Network Regional Airspace Bounding Box feeding Ahmedabad (AMD)
+OPENSKY_URL = "https://opensky-network.org/api/states/all?lamin=19.0&lamax=27.0&lomin=69.0&lomax=77.0"
 
 
 def fetch_live_opensky_flights():
