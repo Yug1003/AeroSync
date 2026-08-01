@@ -26,11 +26,10 @@ export default function RadarMapComponent({ flights = [] }) {
   const [radarFlights, setRadarFlights] = useState([]);
 
   useEffect(() => {
-    // Generate synthetic radar approach vectors for active flights around Ahmedabad
-    const generated = flights.map((f, idx) => {
-      // Calculate approach offsets around Ahmedabad airport
-      const angle = (idx * 45) * (Math.PI / 180);
-      const radius = 0.08 + (idx % 3) * 0.04;
+    // Generate initial approach vectors for active flights around Ahmedabad
+    const initial = flights.map((f, idx) => {
+      const angle = (idx * 50) * (Math.PI / 180);
+      const radius = 0.07 + (idx % 4) * 0.03;
       const lat = AMD_COORDS[0] + Math.sin(angle) * radius;
       const lng = AMD_COORDS[1] + Math.cos(angle) * radius;
       const heading = (Math.atan2(AMD_COORDS[1] - lng, AMD_COORDS[0] - lat) * 180) / Math.PI;
@@ -42,19 +41,55 @@ export default function RadarMapComponent({ flights = [] }) {
         status: f.status,
         lat: lat,
         lng: lng,
+        angle: angle,
+        radius: radius,
         heading: Math.round(heading),
-        altitude: f.status === 'departed' ? 14000 : 3500 + (idx % 4) * 800,
-        speed: f.status === 'departed' ? 420 : 180 + (idx % 3) * 20,
+        altitude: f.status === 'departed' ? 16000 : 3200 + (idx % 4) * 900,
+        speed: f.status === 'departed' ? 440 : 190 + (idx % 3) * 25,
       };
     });
-    setRadarFlights(generated);
+
+    setRadarFlights(initial);
   }, [flights]);
+
+  // Live Position Motion Loop (Updates plane positions & headings every 200ms)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRadarFlights((prevFlights) =>
+        prevFlights.map((rf) => {
+          // Increment angle (orbiting approach path into AMD)
+          const isDeparting = rf.status === 'departed';
+          const angleStep = isDeparting ? -0.008 : 0.006;
+          const newAngle = rf.angle + angleStep;
+          
+          // Compute new latitude & longitude coordinates
+          const newLat = AMD_COORDS[0] + Math.sin(newAngle) * rf.radius;
+          const newLng = AMD_COORDS[1] + Math.cos(newAngle) * rf.radius;
+
+          // Compute new heading angle pointing along motion vector
+          const dLat = newLat - rf.lat;
+          const dLng = newLng - rf.lng;
+          const newHeading = (Math.atan2(dLng, dLat) * 180) / Math.PI;
+
+          return {
+            ...rf,
+            lat: newLat,
+            lng: newLng,
+            angle: newAngle,
+            heading: Math.round(newHeading),
+          };
+        })
+      );
+    }, 200);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="radar-map-wrapper">
       <div className="radar-map-header">
         <h4>🗺️ Live Regional Radar — Ahmedabad Airspace (AMD / VAAH)</h4>
-        <span className="radar-live-badge">📡 LIVE RADAR (23.07° N, 72.63° E)</span>
+        <span className="radar-live-badge">📡 LIVE MOTION RADAR (23.07° N, 72.63° E)</span>
       </div>
 
       <div className="leaflet-container-box">
@@ -76,7 +111,7 @@ export default function RadarMapComponent({ flights = [] }) {
             pathOptions={{ color: '#38bdf8', fillColor: '#38bdf8', fillOpacity: 0.08, weight: 1, dashArray: '5, 5' }}
           />
 
-          {/* Render Aircraft Markers */}
+          {/* Render Moving Aircraft Markers */}
           {radarFlights.map((rf) => (
             <Marker
               key={rf.id}
