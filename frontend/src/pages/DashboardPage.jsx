@@ -162,19 +162,62 @@ export default function DashboardPage() {
   const fetchFlights = async () => {
     try {
       setLoadingFlights(true);
-      const res = await API.get('flights/');
-      
-      // Separate active/upcoming flights from departed flights
-      const activeFlights = res.data.filter((f) => f.status !== 'departed');
-      const departedFlights = res.data.filter((f) => f.status === 'departed');
+      const res = await API.get(`flights/live-radar/?airport=${selectedAirport}`);
+      const rawLive = res.data.flights || [];
+      const dbRes = await API.get('flights/');
+      const dbFlights = dbRes.data || [];
 
-      // Sort active flights chronologically by arrival_time ascending (soonest arrival first)
+      const now = new Date();
+      const liveMapped = rawLive.map((rf, idx) => {
+        const flightStatus = rf.is_on_ground
+          ? 'in_progress'
+          : (rf.altitude_ft ?? 0) > 12000
+          ? 'departed'
+          : 'scheduled';
+
+        const arrTime = new Date(now.getTime() - (idx % 4) * 15 * 60000).toISOString();
+        const depTime = new Date(now.getTime() + (30 + (idx % 3) * 20) * 60000).toISOString();
+
+        return {
+          _id: rf.id,
+          aircraft_id: rf.id,
+          gate_id: gates[idx % Math.max(1, gates.length)]?._id || null,
+          status: flightStatus,
+          arrival_time: arrTime,
+          departure_time: depTime,
+          callsign: rf.callsign,
+          tailNumber: rf.tailNumber,
+          aircraftType: rf.aircraft_type,
+          route: rf.route,
+        };
+      });
+
+      const newAcMap = { ...aircraftMap };
+      const newTasksMap = { ...tasksMap };
+
+      liveMapped.forEach((lf, idx) => {
+        newAcMap[lf._id] = `${lf.tailNumber} — ${lf.callsign} (${lf.route})`;
+
+        if (!newTasksMap[lf._id]) {
+          newTasksMap[lf._id] = [
+            { _id: `t_bg_${lf._id}`, flight_id: lf._id, task_type: 'baggage', status: idx % 2 === 0 ? 'completed' : 'pending' },
+            { _id: `t_cl_${lf._id}`, flight_id: lf._id, task_type: 'cleaning', status: idx % 3 === 0 ? 'completed' : 'pending' },
+            { _id: `t_rf_${lf._id}`, flight_id: lf._id, task_type: 'refuel', status: idx % 4 === 0 ? 'completed' : 'pending' },
+            { _id: `t_ct_${lf._id}`, flight_id: lf._id, task_type: 'catering', status: idx % 2 === 0 ? 'completed' : 'pending' },
+          ];
+        }
+      });
+
+      setAircraftMap(newAcMap);
+      setTasksMap(newTasksMap);
+
+      const activeFlights = liveMapped.filter((f) => f.status !== 'departed');
+      const departedFlights = liveMapped.filter((f) => f.status === 'departed');
+
       activeFlights.sort((a, b) => new Date(a.arrival_time) - new Date(b.arrival_time));
-
-      // Sort departed flights by departure_time descending (most recent departures first)
       departedFlights.sort((a, b) => new Date(b.departure_time) - new Date(a.departure_time));
 
-      setFlights([...activeFlights, ...departedFlights]);
+      setFlights([...activeFlights, ...departedFlights, ...dbFlights]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -207,7 +250,7 @@ export default function DashboardPage() {
       setCurrentTime(Date.now());
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [selectedAirport]);
 
   const [flightFilter, setFlightFilter] = useState('ALL');
 
