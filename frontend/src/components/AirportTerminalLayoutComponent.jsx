@@ -83,7 +83,7 @@ export default function AirportTerminalLayoutComponent({ selectedAirportCode = '
           <span className="layout-subtitle">{currentLayout.name} — {currentLayout.runway}</span>
         </div>
         <div className="layout-live-badge">
-          🔴 LIVE TARMAC TELEMETRY ({currentLayout.samplePlanes.length} PLANES ON STAND)
+          🔴 LIVE AeroSync TELEMETRY ({currentLayout.samplePlanes.length} PLANES ON STAND)
         </div>
       </div>
 
