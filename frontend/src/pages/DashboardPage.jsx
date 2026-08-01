@@ -15,6 +15,7 @@ import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
 import AirportTerminalLayoutComponent from '../components/AirportTerminalLayoutComponent';
+import AirportSimulationCanvas from '../components/AirportSimulationCanvas';
 import './DashboardPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -762,6 +763,9 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+
+        {/* 🛫 2D Real-World Airport Simulation (Runways, Taxiways, & Moving Aircraft) */}
+        <AirportSimulationCanvas selectedAirportCode={selectedAirport} />
 
         {/* 🏢 2D Real-World Terminal Gate & Aircraft Ground Layout */}
         <AirportTerminalLayoutComponent selectedAirportCode={selectedAirport} />
