@@ -106,7 +106,7 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
 
   useEffect(() => {
     fetchLiveRadarData();
-    const pollInterval = setInterval(fetchLiveRadarData, 3000);
+    const pollInterval = setInterval(fetchLiveRadarData, 5000);
     return () => clearInterval(pollInterval);
   }, [flights, selectedAirportCode]);
 

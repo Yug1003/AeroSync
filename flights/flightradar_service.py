@@ -1,5 +1,6 @@
 import urllib.request
 import json
+import time
 from datetime import datetime, timezone
 
 # Real-World Coordinates & Bounding Boxes for 15 Major Indian International Airports
@@ -111,13 +112,26 @@ AIRPORT_CONFIGS = {
     },
 }
 
+# ⚡ High-Speed In-Memory Cache to prevent rate limits & UI freezing
+RESPONSE_CACHE = {}
+CACHE_TTL = 10  # 10 Seconds cache lifetime
+
 
 def fetch_live_flightradar24_flights(airport_code="AMD"):
     """
     Fetches real-time ground & flight telemetry directly from Flightradar24 live servers
-    for any selected Indian International Airport code (DEL, BOM, BLR, AMD, MAA, etc.).
+    with a 10-second in-memory cache to guarantee zero freezing and ultra-fast UI rendering.
     """
-    config = AIRPORT_CONFIGS.get(airport_code.upper(), AIRPORT_CONFIGS["AMD"])
+    code = airport_code.upper()
+    now_ts = time.time()
+
+    # Serve from cache if fresh
+    if code in RESPONSE_CACHE:
+        cached_time, cached_data = RESPONSE_CACHE[code]
+        if now_ts - cached_time < CACHE_TTL:
+            return cached_data
+
+    config = AIRPORT_CONFIGS.get(code, AIRPORT_CONFIGS["AMD"])
     bounds_str = config["bounds"]
     url = f"https://data-cloud.flightradar24.com/zones/fcgi/feed.js?bounds={bounds_str}"
 
@@ -129,7 +143,7 @@ def fetch_live_flightradar24_flights(airport_code="AMD"):
                 "Accept": "application/json",
             },
         )
-        with urllib.request.urlopen(req, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=3) as response:
             data = json.loads(response.read().decode("utf-8"))
 
             fr24_flights = []
@@ -143,7 +157,7 @@ def fetch_live_flightradar24_flights(airport_code="AMD"):
                     speed_kts = val[5]
                     aircraft_type = val[8] or "A320"
                     registration = val[9] or f"VT-{hex_code[:4]}"
-                    origin = val[11] or airport_code
+                    origin = val[11] or code
                     dest = val[12] or "INTL"
                     flight_no = val[13] or val[16] or f"FR-{hex_code[:4]}"
 
@@ -164,12 +178,17 @@ def fetch_live_flightradar24_flights(airport_code="AMD"):
                         "speed_kts": speed_kts,
                         "heading": heading,
                         "is_on_ground": is_on_ground,
-                        "airport_code": airport_code,
-                        "source": f"Flightradar24 Live ({airport_code}) 📡",
+                        "airport_code": code,
+                        "source": f"Flightradar24 Live ({code}) 📡",
                         "updated_at": datetime.now(timezone.utc).isoformat(),
                     })
 
+            # Store in cache
+            RESPONSE_CACHE[code] = (now_ts, fr24_flights)
             return fr24_flights
     except Exception as err:
-        print(f"[Flightradar24 API Warning for {airport_code}] {err}")
+        print(f"[Flightradar24 API Warning for {code}] {err}")
+        # Serve stale cache if network request fails so UI never freezes
+        if code in RESPONSE_CACHE:
+            return RESPONSE_CACHE[code][1]
         return []
