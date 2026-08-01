@@ -55,7 +55,16 @@ export default function VoiceAssistantComponent({ onVoiceCommand }) {
   const handleProcessCommand = (command) => {
     let reply = '';
 
-    if (command.includes('thunderstorm') || command.includes('storm') || command.includes('rain') || command.includes('bad weather')) {
+    if (command.includes('delayed') || command.includes('delay')) {
+      reply = 'Filtering flight operations table to show delayed flights only.';
+      onVoiceCommand && onVoiceCommand('FILTER_DELAYED');
+    } else if (command.includes('scheduled') || command.includes('upcoming')) {
+      reply = 'Filtering flight operations table to show scheduled flights.';
+      onVoiceCommand && onVoiceCommand('FILTER_SCHEDULED');
+    } else if (command.includes('all flights') || command.includes('show all')) {
+      reply = 'Showing all flight operations.';
+      onVoiceCommand && onVoiceCommand('FILTER_ALL');
+    } else if (command.includes('thunderstorm') || command.includes('storm') || command.includes('rain') || command.includes('bad weather')) {
       reply = 'Setting airport weather condition to Severe Thunderstorm.';
       onVoiceCommand && onVoiceCommand('SET_WEATHER_THUNDERSTORM');
     } else if (command.includes('clear') || command.includes('sun') || command.includes('fair') || command.includes('good weather')) {
@@ -77,7 +86,7 @@ export default function VoiceAssistantComponent({ onVoiceCommand }) {
       reply = 'Navigating to Audit Activity Log.';
       onVoiceCommand && onVoiceCommand('NAVIGATE_ACTIVITY');
     } else {
-      reply = `Command "${command}" processed successfully.`;
+      reply = `Filtering operations data for: "${command}".`;
       onVoiceCommand && onVoiceCommand('REFRESH_DATA');
     }
 

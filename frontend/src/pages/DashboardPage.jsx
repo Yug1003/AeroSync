@@ -188,8 +188,22 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
+  const [flightFilter, setFlightFilter] = useState('ALL');
+
   const handleVoiceCommand = (commandType) => {
     switch (commandType) {
+      case 'FILTER_DELAYED':
+        setFlightFilter('delayed');
+        setActionSuccess('Filtering table: Showing DELAYED flights only.');
+        break;
+      case 'FILTER_SCHEDULED':
+        setFlightFilter('scheduled');
+        setActionSuccess('Filtering table: Showing SCHEDULED flights.');
+        break;
+      case 'FILTER_ALL':
+        setFlightFilter('ALL');
+        setActionSuccess('Showing ALL flight operations.');
+        break;
       case 'SET_WEATHER_THUNDERSTORM':
         handleUpdateWeather({
           condition: 'Severe Thunderstorm ⛈️',
@@ -227,6 +241,7 @@ export default function DashboardPage() {
         });
         break;
       case 'REFRESH_DATA':
+        setFlightFilter('ALL');
         loadAllData();
         break;
       case 'NAVIGATE_INCIDENTS':
@@ -570,7 +585,17 @@ export default function DashboardPage() {
         {/* Flight List & Task Checklist Section */}
         <section className="flight-list-section">
           <div className="section-header">
-            <h3>Active Flight Operations & Task Checklists</h3>
+            <h3>
+              Active Flight Operations & Task Checklists{' '}
+              {flightFilter !== 'ALL' && (
+                <span className="filter-active-tag">
+                  (Filtered: {flightFilter.toUpperCase()}{' '}
+                  <button className="clear-filter-btn" onClick={() => setFlightFilter('ALL')}>
+                    Show All ✕
+                  </button>
+                </span>
+              )}
+            </h3>
           </div>
 
           {loadingFlights ? (
@@ -591,7 +616,10 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {flights.map((flight) => {
+                  {(flightFilter === 'ALL'
+                    ? flights
+                    : flights.filter((f) => f.status === flightFilter.toLowerCase())
+                  ).map((flight) => {
                     const flightTasks = tasksMap[flight._id] || [];
                     const allTasksCompleted =
                       flightTasks.length === 4 &&
