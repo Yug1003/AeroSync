@@ -223,6 +223,7 @@ export default function DashboardPage() {
             )}
           </div>
 
+          <button className="nav-link-btn sim" onClick={() => navigate('/simulation')}>🎬 2D Flight Sim</button>
           <button className="nav-link-btn" onClick={() => navigate('/incidents')}>🚨 Incidents Log</button>
           <button className="nav-link-btn audit" onClick={() => navigate('/activity-log')}>📜 Activity Log</button>
           <span className="user-greeting">Welcome, <strong>{username}</strong></span>
