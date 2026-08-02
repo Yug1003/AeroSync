@@ -113,13 +113,36 @@ export default function DashboardPage() {
     }
   };
 
+  const AIRPORT_GATE_PRESETS = {
+    AMD: ['T1-G1 (Domestic)', 'T1-G2 (Domestic)', 'T1-G3 (Domestic)', 'T1-G4 (Domestic)', 'T2-INT1 (Intl)', 'T2-INT2 (Intl)'],
+    DEL: ['T1-01 (Indigo Hub)', 'T1-02 (Akasa Hub)', 'T2-04 (Air India)', 'T3-A12 (JFK Line)', 'T3-A14 (British Airways)', 'T3-B22 (Emirates A380)'],
+    BOM: ['T1A-1 (Santacruz)', 'T1A-2 (Santacruz)', 'T2-G45 (Sahar Intl)', 'T2-G47 (Lufthansa Line)', 'T2-G49 (Qatar Airways)'],
+    BLR: ['T1-08 (Garden Pier)', 'T1-09 (Air India)', 'T2-201 (Air France)', 'T2-203 (Singapore Airlines)'],
+    MAA: ['M-11 (Kamaraj Dom)', 'M-12 (Kamaraj Dom)', 'M-21 (Anna Intl)', 'M-22 (Anna Intl)'],
+    HYD: ['H-01 (Concourse A)', 'H-03 (Concourse A)', 'H-21 (International)', 'H-23 (International)'],
+    CCU: ['K-04 (Terminal 2)', 'K-06 (Terminal 2)', 'K-08 (Terminal 2)', 'K-12 (Thai Airways Line)'],
+    COK: ['C-02 (Terminal 1)', 'C-04 (Air India Exp)', 'C-14 (Emirates Line)', 'C-16 (Oman Air)'],
+    GOI: ['G-01 (Dabolim Airfield)', 'G-02 (Dabolim Airfield)', 'G-03 (Dabolim Airfield)'],
+  };
+
   const fetchGates = async () => {
     try {
       setLoadingGates(true);
       const res = await API.get('gates/');
-      setGates(res.data);
+      const dbGates = res.data || [];
+      const presets = AIRPORT_GATE_PRESETS[selectedAirport] || [`${selectedAirport}-G1`, `${selectedAirport}-G2`, `${selectedAirport}-G3`];
+
+      const airportGates = presets.map((label, idx) => ({
+        _id: `g_${selectedAirport.toLowerCase()}_${idx}`,
+        label: label,
+        status: idx % 2 === 0 ? 'occupied' : 'available',
+      }));
+
+      const finalGates = selectedAirport === 'AMD' ? [...dbGates, ...airportGates] : airportGates;
+      setGates(finalGates);
+
       const gMap = {};
-      res.data.forEach((g) => {
+      finalGates.forEach((g) => {
         gMap[g._id] = g.label;
       });
       setGateMap(gMap);
@@ -217,7 +240,12 @@ export default function DashboardPage() {
       activeFlights.sort((a, b) => new Date(a.arrival_time) - new Date(b.arrival_time));
       departedFlights.sort((a, b) => new Date(b.departure_time) - new Date(a.departure_time));
 
-      setFlights([...activeFlights, ...departedFlights, ...dbFlights]);
+      // ONLY include initial DB flights if AMD is selected, otherwise show strictly selected airport flights
+      if (selectedAirport === 'AMD') {
+        setFlights([...activeFlights, ...departedFlights, ...dbFlights]);
+      } else {
+        setFlights([...activeFlights, ...departedFlights]);
+      }
     } catch (err) {
       console.error(err);
     } finally {
