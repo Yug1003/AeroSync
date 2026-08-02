@@ -1,25 +1,44 @@
 """
 URL configuration for aerosync_backend project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
 
 from flights.views import AircraftListCreateView
 
+
+class APIRootView(APIView):
+    """
+    GET /api/ & /
+    Returns a clean JSON endpoint directory for AeroSync REST Backend.
+    """
+    def get(self, request):
+        return Response({
+            "service": "AeroSync Command & Control System Backend",
+            "status": "HEALTHY 🟢",
+            "endpoints": {
+                "auth": "/api/auth/login/",
+                "flights": "/api/flights/",
+                "live_radar": "/api/flights/live-radar/?airport=AMD",
+                "aircraft": "/api/aircraft/",
+                "gates": "/api/gates/",
+                "tasks": "/api/tasks/",
+                "staff": "/api/staff/",
+                "incidents": "/api/incidents/",
+                "audit_log": "/api/audit-log/",
+                "notifications": "/api/notifications/",
+                "weather": "/api/weather/",
+                "analytics": "/api/analytics/kpis/",
+            }
+        }, status=status.HTTP_200_OK)
+
+
 urlpatterns = [
+    path('', APIRootView.as_view(), name='root-view'),
+    path('api/', APIRootView.as_view(), name='api-root-view'),
     path('admin/', admin.site.urls),
     path('api/auth/', include('users.urls')),
     path('api/flights/', include('flights.urls')),
