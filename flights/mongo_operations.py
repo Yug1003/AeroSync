@@ -87,6 +87,18 @@ def update_flight_status(flight_id, status):
     return _format_doc(result) if result else None
 
 
+def update_flight_gate(flight_id, gate_id):
+    if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
+        return None
+
+    result = flights_col.find_one_and_update(
+        {"_id": ObjectId(flight_id)},
+        {"$set": {"gate_id": str(gate_id) if gate_id else None}},
+        return_document=True,
+    )
+    return _format_doc(result) if result else None
+
+
 def delete_flight(flight_id):
     if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
         return False

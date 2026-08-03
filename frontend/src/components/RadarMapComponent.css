@@ -6,6 +6,9 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: relative;
+  isolation: isolate;
+  z-index: 1;
 }
 
 .radar-map-header {
@@ -57,12 +60,29 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border-color);
+  position: relative;
+  isolation: isolate;
+  z-index: 1;
 }
 
 .radar-map {
   height: 100%;
   width: 100%;
   background: #09090b !important;
+  z-index: 1 !important;
+}
+
+.radar-map .leaflet-pane {
+  z-index: 2 !important;
+}
+
+.radar-map .leaflet-top,
+.radar-map .leaflet-bottom {
+  z-index: 3 !important;
+}
+
+.radar-map .leaflet-control {
+  z-index: 4 !important;
 }
 
 .leaflet-plane-icon {

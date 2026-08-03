@@ -148,12 +148,36 @@ class DepartFlightView(APIView):
 
 class FlightDetailView(APIView):
     """
+    PATCH /api/flights/<flight_id>/ - Update flight gate or details
     DELETE /api/flights/<flight_id>/ - Protected action (Requires IsAdminRole)
     """
 
-    permission_classes = [IsAdminRole]
+    def patch(self, request, flight_id):
+        if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
+            return Response(
+                {"error": f"Invalid flight_id format: '{flight_id}'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        flight = get_flight_by_id(flight_id)
+        if not flight:
+            return Response(
+                {"error": f"Flight with id '{flight_id}' not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        gate_id = request.data.get("gate_id")
+        if gate_id:
+            from flights.mongo_operations import update_flight_gate
+            updated = update_flight_gate(flight_id, gate_id)
+            log_action(request.user, "reassign_gate", "Flight", flight_id, {"new_gate_id": gate_id})
+            return Response(updated, status=status.HTTP_200_OK)
+
+        return Response({"error": "No update fields provided."}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, flight_id):
+        if not request.user or getattr(request.user, 'role', None) != 'admin':
+            return Response({"error": "Admin permission required."}, status=status.HTTP_403_FORBIDDEN)
         if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
             return Response(
                 {"error": f"Invalid flight_id format: '{flight_id}'"},

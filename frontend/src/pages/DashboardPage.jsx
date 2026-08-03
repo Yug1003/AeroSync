@@ -40,7 +40,6 @@ import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
 import AirportTerminalLayoutComponent from '../components/AirportTerminalLayoutComponent';
-import AirportSimulationCanvas from '../components/AirportSimulationCanvas';
 import './DashboardPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -92,6 +91,7 @@ export default function DashboardPage() {
 
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+  const [highlightedFlightId, setHighlightedFlightId] = useState(null);
   const navigate = useNavigate();
 
   const username = localStorage.getItem('username') || 'Operator';
@@ -219,66 +219,95 @@ export default function DashboardPage() {
   const fetchFlights = async () => {
     try {
       setLoadingFlights(true);
-      const res = await API.get(`flights/live-radar/?airport=${selectedAirport}`);
-      const rawLive = res.data.flights || [];
       const dbRes = await API.get('flights/');
       const dbFlights = dbRes.data || [];
 
-      const now = new Date();
-      const liveMapped = rawLive.map((rf, idx) => {
-        const flightStatus = rf.is_on_ground
-          ? 'in_progress'
-          : (rf.altitude_ft ?? 0) > 12000
-          ? 'departed'
-          : 'scheduled';
-
-        const arrTime = new Date(now.getTime() - (idx % 4) * 15 * 60000).toISOString();
-        const depTime = new Date(now.getTime() + (30 + (idx % 3) * 20) * 60000).toISOString();
-
-        return {
-          _id: rf.id,
-          aircraft_id: rf.id,
-          gate_id: gates[idx % Math.max(1, gates.length)]?._id || null,
-          status: flightStatus,
-          arrival_time: arrTime,
-          departure_time: depTime,
-          callsign: rf.callsign,
-          tailNumber: rf.tailNumber,
-          aircraftType: rf.aircraft_type,
-          route: rf.route,
-        };
-      });
+      // Fetch live radar telemetry (used for Radar Map & live callsigns)
+      let rawLive = [];
+      try {
+        const res = await API.get(`flights/live-radar/?airport=${selectedAirport}`);
+        rawLive = res.data.flights || [];
+      } catch (err) {
+        console.warn('Live radar fetch warning:', err);
+      }
 
       const newAcMap = { ...aircraftMap };
       const newTasksMap = { ...tasksMap };
 
-      liveMapped.forEach((lf, idx) => {
-        newAcMap[lf._id] = `${lf.tailNumber} — ${lf.callsign} (${lf.route})`;
-
-        if (!newTasksMap[lf._id]) {
-          newTasksMap[lf._id] = [
-            { _id: `t_bg_${lf._id}`, flight_id: lf._id, task_type: 'baggage', status: idx % 2 === 0 ? 'completed' : 'pending' },
-            { _id: `t_cl_${lf._id}`, flight_id: lf._id, task_type: 'cleaning', status: idx % 3 === 0 ? 'completed' : 'pending' },
-            { _id: `t_rf_${lf._id}`, flight_id: lf._id, task_type: 'refuel', status: idx % 4 === 0 ? 'completed' : 'pending' },
-            { _id: `t_ct_${lf._id}`, flight_id: lf._id, task_type: 'catering', status: idx % 2 === 0 ? 'completed' : 'pending' },
-          ];
+      dbFlights.forEach((f) => {
+        if (!newAcMap[f.aircraft_id]) {
+          newAcMap[f.aircraft_id] = f.callsign
+            ? `${f.tailNumber || 'VT-AIR'} — ${f.callsign}`
+            : `Aircraft ${f.aircraft_id.slice(-6)}`;
         }
       });
+
+      let operationalFlights = [];
+
+      if (dbFlights.length > 0 && selectedAirport === 'AMD') {
+        operationalFlights = dbFlights;
+      } else {
+        // Generate clean, non-overlapping staggered gate schedules for the selected airport
+        const now = new Date();
+        const numGates = Math.max(1, gates.length);
+
+        operationalFlights = rawLive.slice(0, numGates * 2).map((rf, idx) => {
+          const gateIdx = idx % numGates;
+          const slotInGate = Math.floor(idx / numGates);
+
+          // Stagger flight times cleanly by 2.5 hours so timelines never collide
+          const arrMinutesOffset = slotInGate * 150 - 60 + (idx % 2) * 15;
+          const arrTime = new Date(now.getTime() + arrMinutesOffset * 60000).toISOString();
+          const depTime = new Date(now.getTime() + (arrMinutesOffset + 90) * 60000).toISOString();
+
+          const flightId = rf.id || `fl_${selectedAirport.toLowerCase()}_${idx}`;
+          newAcMap[flightId] = `${rf.tailNumber || 'VT-AIR'} — ${rf.callsign || 'FL-' + idx}`;
+
+          if (!newTasksMap[flightId]) {
+            newTasksMap[flightId] = [
+              { _id: `t_bg_${flightId}`, flight_id: flightId, task_type: 'baggage', status: idx % 2 === 0 ? 'completed' : 'pending' },
+              { _id: `t_cl_${flightId}`, flight_id: flightId, task_type: 'cleaning', status: idx % 3 === 0 ? 'completed' : 'pending' },
+              { _id: `t_rf_${flightId}`, flight_id: flightId, task_type: 'refuel', status: idx % 4 === 0 ? 'completed' : 'pending' },
+              { _id: `t_ct_${flightId}`, flight_id: flightId, task_type: 'catering', status: idx % 2 === 0 ? 'completed' : 'pending' },
+            ];
+          }
+
+          return {
+            _id: flightId,
+            aircraft_id: flightId,
+            gate_id: gates[gateIdx]?._id || null,
+            status: rf.is_on_ground ? 'in_progress' : 'scheduled',
+            arrival_time: arrTime,
+            departure_time: depTime,
+            callsign: rf.callsign,
+            tailNumber: rf.tailNumber,
+            aircraftType: rf.aircraft_type,
+            route: rf.route,
+          };
+        });
+      }
 
       setAircraftMap(newAcMap);
       setTasksMap(newTasksMap);
 
-      const activeFlights = liveMapped.filter((f) => f.status !== 'departed');
-      const departedFlights = liveMapped.filter((f) => f.status === 'departed');
+      // Preserve local state changes (e.g. user pushback departed status and gate re-assignments)
+      setFlights((prevFlights) => {
+        if (prevFlights.length === 0) return operationalFlights;
 
-      activeFlights.sort((a, b) => new Date(a.arrival_time) - new Date(b.arrival_time));
-      departedFlights.sort((a, b) => new Date(b.departure_time) - new Date(a.departure_time));
+        const prevMap = new Map(prevFlights.map((f) => [f._id, f]));
 
-      if (selectedAirport === 'AMD') {
-        setFlights([...activeFlights, ...departedFlights, ...dbFlights]);
-      } else {
-        setFlights([...activeFlights, ...departedFlights]);
-      }
+        return operationalFlights.map((opF) => {
+          const local = prevMap.get(opF._id);
+          if (local) {
+            return {
+              ...opF,
+              status: local.status,
+              gate_id: local.status === 'departed' ? null : local.gate_id,
+            };
+          }
+          return opF;
+        });
+      });
     } catch (err) {
       console.error(err);
     } finally {
@@ -393,16 +422,104 @@ export default function DashboardPage() {
     setActionError('');
     setActionSuccess('');
 
+    const targetFlight = flights.find((f) => f._id === flightId);
+    const freedGateId = targetFlight ? targetFlight.gate_id : null;
+
     setFlights((prevFlights) =>
-      prevFlights.map((f) => (f._id === flightId ? { ...f, status: 'departed' } : f))
+      prevFlights.map((f) => (f._id === flightId ? { ...f, status: 'departed', gate_id: null } : f))
     );
-    setActionSuccess(`🚀 Flight pushback approved! Gate cleared & ready for next arrival.`);
+
+    if (freedGateId) {
+      setGates((prevGates) =>
+        prevGates.map((g) => (g._id === freedGateId ? { ...g, status: 'available' } : g))
+      );
+    }
+
+    setActionSuccess(`🚀 Flight pushback approved! Stand cleared & gate status updated to AVAILABLE.`);
 
     try {
       await API.post(`flights/${flightId}/depart/`);
     } catch (err) {
       console.warn('Backend pushback note:', err);
     }
+  };
+
+  const handleReassignGate = async (flightId, newGateId, newGateLabel) => {
+    setActionError('');
+    setActionSuccess('');
+
+    const targetFlight = flights.find((f) => f._id === flightId);
+    if (!targetFlight) return;
+
+    const sourceGateId = targetFlight.gate_id;
+    const sourceGateObj = gates.find((g) => g._id === sourceGateId);
+    const sourceGateLabel = sourceGateObj ? sourceGateObj.label : (sourceGateId ? sourceGateId.slice(-4) : 'Unassigned');
+
+    const targetArr = new Date(targetFlight.arrival_time).getTime();
+    const targetDep = new Date(targetFlight.departure_time).getTime();
+
+    // Check for timeline collision with existing flight at newGateId
+    const collidingFlight = flights.find((f) => {
+      if (f._id === flightId || f.gate_id !== newGateId) return false;
+      const fArr = new Date(f.arrival_time).getTime();
+      const fDep = new Date(f.departure_time).getTime();
+      return targetArr < fDep && targetDep > fArr;
+    });
+
+    if (collidingFlight) {
+      // Swap places between the two flights
+      setFlights((prevFlights) =>
+        prevFlights.map((f) => {
+          if (f._id === flightId) return { ...f, gate_id: newGateId };
+          if (f._id === collidingFlight._id) return { ...f, gate_id: sourceGateId };
+          return f;
+        })
+      );
+      setActionSuccess(
+        `🔄 Timeline Swap: Flight ${flightId.slice(-6)} → Gate ${newGateLabel} & Flight ${collidingFlight._id.slice(-6)} → Gate ${sourceGateLabel}`
+      );
+
+      try {
+        await Promise.all([
+          API.patch(`flights/${flightId}/`, { gate_id: newGateId }),
+          API.patch(`flights/${collidingFlight._id}/`, { gate_id: sourceGateId }),
+        ]);
+      } catch (err) {
+        console.warn('Backend gate swap note:', err);
+      }
+    } else {
+      // Direct gate re-assignment
+      setFlights((prevFlights) =>
+        prevFlights.map((f) => (f._id === flightId ? { ...f, gate_id: newGateId } : f))
+      );
+      setActionSuccess(`⚡ Reassigned Flight ${flightId.slice(-6)} to Gate ${newGateLabel || newGateId.slice(-4)}.`);
+
+      try {
+        await API.patch(`flights/${flightId}/`, { gate_id: newGateId });
+      } catch (err) {
+        console.warn('Backend gate reassign note:', err);
+      }
+    }
+  };
+
+  const handleSelectFlightFromGantt = (flightId) => {
+    const target = flights.find((f) => f._id === flightId);
+    if (target && flightFilter !== 'ALL' && target.status !== flightFilter.toLowerCase()) {
+      setFlightFilter('ALL');
+    }
+
+    setHighlightedFlightId(flightId);
+
+    setTimeout(() => {
+      const rowElem = document.getElementById(`flight-row-${flightId}`);
+      if (rowElem) {
+        rowElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 60);
+
+    setTimeout(() => {
+      setHighlightedFlightId((prev) => (prev === flightId ? null : prev));
+    }, 3200);
   };
 
   const handleLogout = () => {
@@ -625,13 +742,6 @@ export default function DashboardPage() {
                 <span>Gantt Schedule</span>
               </button>
               <button
-                className={`viewport-tab ${viewportTab === 'simulation' ? 'active' : ''}`}
-                onClick={() => setViewportTab('simulation')}
-              >
-                <Layers size={14} />
-                <span>2D Runway Canvas</span>
-              </button>
-              <button
                 className={`viewport-tab ${viewportTab === 'layout' ? 'active' : ''}`}
                 onClick={() => setViewportTab('layout')}
               >
@@ -674,11 +784,14 @@ export default function DashboardPage() {
             )}
 
             {viewportTab === 'gantt' && (
-              <GanttTimelineComponent gates={gates} flights={flights} tasksMap={tasksMap} />
-            )}
-
-            {viewportTab === 'simulation' && (
-              <AirportSimulationCanvas selectedAirportCode={selectedAirport} />
+              <GanttTimelineComponent
+                gates={gates}
+                flights={flights}
+                tasksMap={tasksMap}
+                aircraftMap={aircraftMap}
+                onReassignGate={handleReassignGate}
+                onSelectFlight={handleSelectFlightFromGantt}
+              />
             )}
 
             {viewportTab === 'layout' && (
@@ -782,7 +895,11 @@ export default function DashboardPage() {
                   const isDeparted = flight.status === 'departed';
 
                   return (
-                    <tr key={flight._id} className={isDeparted ? 'row-departed' : ''}>
+                    <tr
+                      key={flight._id}
+                      id={`flight-row-${flight._id}`}
+                      className={`${isDeparted ? 'row-departed' : ''} ${highlightedFlightId === flight._id ? 'highlight-pulse' : ''}`}
+                    >
                       <td className="cell-aircraft">
                         <div className="ac-title font-mono">
                           {aircraftMap[flight.aircraft_id] || 'Aircraft Loading...'}
