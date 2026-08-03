@@ -34,6 +34,7 @@ import {
   Layers,
   BarChart2,
   SlidersHorizontal,
+  User,
   UserCheck,
   UserX,
   UserPlus,
