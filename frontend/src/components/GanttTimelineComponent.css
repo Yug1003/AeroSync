@@ -1,8 +1,8 @@
 .gantt-wrapper {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  padding: 1.15rem 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -16,42 +16,45 @@
 
 .gantt-header h4 {
   font-size: 0.95rem;
-  color: #f8fafc;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
 }
 
 .gantt-badge {
   font-size: 0.72rem;
-  font-weight: 700;
-  color: #fbbf24;
-  background: rgba(245, 158, 11, 0.1);
+  font-weight: 500;
+  color: var(--accent-amber);
+  background: rgba(245, 158, 11, 0.12);
   border: 1px solid rgba(245, 158, 11, 0.3);
   padding: 0.2rem 0.6rem;
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
 }
 
 .gantt-grid-container {
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   overflow-x: auto;
-  background: #0b1326;
+  background: var(--bg-surface);
 }
 
 .gantt-time-scale {
   display: flex;
-  background: #0f172a;
+  background: #09090b;
   border-bottom: 1px solid var(--border-color);
 }
 
 .gate-column-head {
-  width: 110px;
-  min-width: 110px;
+  width: 120px;
+  min-width: 120px;
   padding: 0.75rem 1rem;
-  font-weight: 700;
-  font-size: 0.8rem;
+  font-weight: 600;
+  font-size: 0.75rem;
   color: var(--text-muted);
   border-right: 1px solid var(--border-color);
+  text-transform: uppercase;
 }
 
 .timeline-scale-head {
@@ -64,7 +67,7 @@
 .time-mark {
   font-size: 0.75rem;
   color: var(--text-muted);
-  font-weight: 600;
+  font-family: var(--font-mono);
 }
 
 .gantt-rows {
@@ -74,7 +77,7 @@
 
 .gantt-row {
   display: flex;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-subtle);
   height: 52px;
 }
 
@@ -83,31 +86,32 @@
 }
 
 .gate-label-cell {
-  width: 110px;
-  min-width: 110px;
+  width: 120px;
+  min-width: 120px;
   padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-right: 1px solid var(--border-color);
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--bg-surface);
 }
 
 .gantt-gate-name {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--text-main);
+  font-family: var(--font-mono);
 }
 
 .status-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
 }
 
-.status-dot.dot-available { background: #34d399; }
-.status-dot.dot-occupied { background: #38bdf8; }
-.status-dot.dot-maintenance { background: #ef4444; }
+.status-dot.dot-available { background: var(--status-available); }
+.status-dot.dot-occupied { background: var(--accent-cyan); }
+.status-dot.dot-maintenance { background: var(--status-maintenance); }
 
 .timeline-track-cell {
   flex: 1;
@@ -119,16 +123,16 @@
   position: absolute;
   top: 8px;
   height: 36px;
-  background: rgba(56, 189, 248, 0.2);
-  border: 1px solid rgba(56, 189, 248, 0.5);
-  border-radius: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
   padding: 0.25rem 0.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s;
+  box-shadow: var(--shadow-subtle);
+  transition: transform 0.15s ease;
 }
 
 .gantt-block:hover {
@@ -138,13 +142,12 @@
 
 .gantt-block.status-departed {
   opacity: 0.5;
-  background: rgba(100, 116, 139, 0.2);
-  border-color: rgba(100, 116, 139, 0.4);
+  background: var(--bg-muted);
 }
 
 .gantt-block.status-delayed {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(244, 63, 94, 0.15);
+  border-color: rgba(244, 63, 94, 0.4);
 }
 
 .block-content {
@@ -152,22 +155,22 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.72rem;
-  color: #f8fafc;
+  color: var(--text-main);
 }
 
 .block-title {
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .block-progress {
   font-size: 0.65rem;
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .gantt-progress-bar {
   position: absolute;
   bottom: 0;
   left: 0;
-  height: 3px;
-  background: #34d399;
+  height: 2px;
+  background: var(--status-available);
 }

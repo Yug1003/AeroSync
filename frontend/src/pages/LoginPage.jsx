@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api';
+import { Plane, Shield, User, Key, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -33,49 +34,114 @@ export default function LoginPage() {
     }
   };
 
+  const fillDemoAccount = (u, p) => {
+    setUsername(u);
+    setPassword(p);
+    setError('');
+  };
+
   return (
-    <div className="login-container">
-      <div className="login-card">
+    <div className="shadcn-login-wrapper">
+      <div className="login-glow" />
+
+      <div className="shadcn-login-card">
         <div className="brand-header">
-          <div className="brand-icon">✈️</div>
-          <h1>AeroSync</h1>
-          <p className="brand-subtitle">Smart Airport Operations & Gate Management</p>
+          <div className="brand-icon-box">
+            <Plane className="brand-plane-icon" size={24} />
+          </div>
+          <h1 className="brand-title">AeroSync</h1>
+          <p className="brand-subtitle">Airport Ramp Operations & Gate Management Control</p>
         </div>
 
-        {error && <div className="error-banner">{error}</div>}
+        {error && (
+          <div className="login-error-alert">
+            <span className="error-dot" />
+            <span>{error}</span>
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="login-form">
-          <div className="form-group">
+          <div className="form-field">
             <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              type="text"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
+            <div className="input-with-icon">
+              <User className="field-icon" size={16} />
+              <input
+                id="username"
+                type="text"
+                className="shadcn-input"
+                placeholder="e.g. admin"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          <div className="form-field">
+            <div className="field-header">
+              <label htmlFor="password">Password</label>
+            </div>
+            <div className="input-with-icon">
+              <Key className="field-icon" size={16} />
+              <input
+                id="password"
+                type="password"
+                className="shadcn-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
           </div>
 
-          <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
+          <button type="submit" className="shadcn-btn-primary login-submit-btn" disabled={loading}>
+            {loading ? (
+              <span>Authenticating...</span>
+            ) : (
+              <>
+                <span>Sign In to Terminal</span>
+                <ArrowRight size={16} />
+              </>
+            )}
           </button>
         </form>
 
+        <div className="demo-accounts-section">
+          <div className="demo-header">
+            <Lock size={12} />
+            <span>Quick Select Demo Role</span>
+          </div>
+          <div className="demo-btn-group">
+            <button
+              type="button"
+              className="demo-chip"
+              onClick={() => fillDemoAccount('admin', 'admin123')}
+            >
+              <Shield size={12} className="text-violet" />
+              <span>Admin</span>
+            </button>
+            <button
+              type="button"
+              className="demo-chip"
+              onClick={() => fillDemoAccount('ops', 'admin123')}
+            >
+              <Plane size={12} className="text-cyan" />
+              <span>Ops Manager</span>
+            </button>
+            <button
+              type="button"
+              className="demo-chip"
+              onClick={() => fillDemoAccount('crew', 'admin123')}
+            >
+              <CheckCircle2 size={12} className="text-emerald" />
+              <span>Ground Crew</span>
+            </button>
+          </div>
+        </div>
+
         <div className="login-footer">
-          <span>Demo Credentials: <b>admin_user</b> / <b>adminpassword</b></span>
+          <span>AeroSync Operations v2.4 • Secured via SimpleJWT & PyMongo Engine</span>
         </div>
       </div>
     </div>

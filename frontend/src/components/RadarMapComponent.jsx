@@ -117,9 +117,6 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
           <h4>🗺️ Flightradar24 Real-Time Ground & Airspace Radar — {selectedAirportCode} Hub</h4>
           <span className="radar-subtext">Unified live transponder feed (Planes at gates + Airborne in {selectedAirportCode} Corridor)</span>
         </div>
-        <span className="radar-live-badge">
-          📡 {dataSource} ({liveCount} PLANES ACTIVE)
-        </span>
       </div>
 
       <div className="leaflet-container-box">

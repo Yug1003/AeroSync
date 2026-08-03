@@ -11,6 +11,31 @@ import {
   Cell,
 } from 'recharts';
 import API from '../api/api';
+import {
+  Plane,
+  Search,
+  CloudSun,
+  Bell,
+  LogOut,
+  RefreshCw,
+  AlertTriangle,
+  Clock,
+  Shield,
+  Activity,
+  CheckCircle2,
+  ChevronDown,
+  Sparkles,
+  MapPin,
+  ListFilter,
+  Check,
+  Zap,
+  Mic,
+  LayoutGrid,
+  Calendar,
+  Layers,
+  BarChart2,
+  SlidersHorizontal,
+} from 'lucide-react';
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
@@ -19,21 +44,21 @@ import AirportSimulationCanvas from '../components/AirportSimulationCanvas';
 import './DashboardPage.css';
 
 const INDIAN_AIRPORTS = [
-  { code: 'AMD', name: 'Sardar Vallabhbhai Patel International Airport', city: 'Ahmedabad' },
-  { code: 'DEL', name: 'Indira Gandhi International Airport', city: 'New Delhi' },
-  { code: 'BOM', name: 'Chhatrapati Shivaji Maharaj International Airport', city: 'Mumbai' },
-  { code: 'BLR', name: 'Kempegowda International Airport', city: 'Bengaluru' },
-  { code: 'MAA', name: 'Chennai International Airport', city: 'Chennai' },
-  { code: 'HYD', name: 'Rajiv Gandhi International Airport', city: 'Hyderabad' },
-  { code: 'CCU', name: 'Netaji Subhash Chandra Bose International Airport', city: 'Kolkata' },
-  { code: 'COK', name: 'Cochin International Airport', city: 'Kochi' },
-  { code: 'GOI', name: 'Manohar International Airport / Dabolim', city: 'Goa' },
-  { code: 'JAI', name: 'Jaipur International Airport', city: 'Jaipur' },
-  { code: 'LKO', name: 'Chaudhary Charan Singh International Airport', city: 'Lucknow' },
-  { code: 'ATQ', name: 'Sri Guru Ram Dass Jee International Airport', city: 'Amritsar' },
-  { code: 'TRV', name: 'Thiruvananthapuram International Airport', city: 'Trivandrum' },
-  { code: 'IXC', name: 'Chandigarh International Airport', city: 'Chandigarh' },
-  { code: 'VTZ', name: 'Visakhapatnam International Airport', city: 'Visakhapatnam' },
+  { code: 'AMD', name: 'Sardar Vallabhbhai Patel Intl', city: 'Ahmedabad' },
+  { code: 'DEL', name: 'Indira Gandhi Intl', city: 'New Delhi' },
+  { code: 'BOM', name: 'Chhatrapati Shivaji Maharaj Intl', city: 'Mumbai' },
+  { code: 'BLR', name: 'Kempegowda Intl', city: 'Bengaluru' },
+  { code: 'MAA', name: 'Chennai Intl', city: 'Chennai' },
+  { code: 'HYD', name: 'Rajiv Gandhi Intl', city: 'Hyderabad' },
+  { code: 'CCU', name: 'Netaji Subhash Chandra Bose Intl', city: 'Kolkata' },
+  { code: 'COK', name: 'Cochin Intl', city: 'Kochi' },
+  { code: 'GOI', name: 'Manohar Intl / Dabolim', city: 'Goa' },
+  { code: 'JAI', name: 'Jaipur Intl', city: 'Jaipur' },
+  { code: 'LKO', name: 'Chaudhary Charan Singh Intl', city: 'Lucknow' },
+  { code: 'ATQ', name: 'Sri Guru Ram Dass Jee Intl', city: 'Amritsar' },
+  { code: 'TRV', name: 'Thiruvananthapuram Intl', city: 'Trivandrum' },
+  { code: 'IXC', name: 'Chandigarh Intl', city: 'Chandigarh' },
+  { code: 'VTZ', name: 'Visakhapatnam Intl', city: 'Visakhapatnam' },
 ];
 
 export default function DashboardPage() {
@@ -45,7 +70,16 @@ export default function DashboardPage() {
   const [gateMap, setGateMap] = useState({});
   const [tasksMap, setTasksMap] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
-  
+
+  // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt' | 'simulation' | 'layout'
+  const [viewportTab, setViewportTab] = useState('radar');
+
+  // Toggle for Floating Voice Assistant Drawer
+  const [showVoiceDrawer, setShowVoiceDrawer] = useState(false);
+
+  // Analytics Collapsible Toggle
+  const [showAnalyticsPanel, setShowAnalyticsPanel] = useState(false);
+
   const [notifications, setNotifications] = useState([]);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
 
@@ -55,7 +89,7 @@ export default function DashboardPage() {
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [loadingGates, setLoadingGates] = useState(true);
   const [loadingFlights, setLoadingFlights] = useState(true);
-  
+
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
   const navigate = useNavigate();
@@ -240,7 +274,6 @@ export default function DashboardPage() {
       activeFlights.sort((a, b) => new Date(a.arrival_time) - new Date(b.arrival_time));
       departedFlights.sort((a, b) => new Date(b.departure_time) - new Date(a.departure_time));
 
-      // ONLY include initial DB flights if AMD is selected, otherwise show strictly selected airport flights
       if (selectedAirport === 'AMD') {
         setFlights([...activeFlights, ...departedFlights, ...dbFlights]);
       } else {
@@ -286,19 +319,19 @@ export default function DashboardPage() {
     switch (commandType) {
       case 'FILTER_DEPARTED':
         setFlightFilter('departed');
-        setActionSuccess('Filtering table: Showing DEPARTED / PUSHED BACK flights only.');
+        setActionSuccess('Filtered table: Showing DEPARTED flights only.');
         break;
       case 'FILTER_IN_PROGRESS':
         setFlightFilter('in_progress');
-        setActionSuccess('Filtering table: Showing IN PROGRESS flights.');
+        setActionSuccess('Filtered table: Showing IN PROGRESS flights.');
         break;
       case 'FILTER_DELAYED':
         setFlightFilter('delayed');
-        setActionSuccess('Filtering table: Showing DELAYED flights only.');
+        setActionSuccess('Filtered table: Showing DELAYED flights only.');
         break;
       case 'FILTER_SCHEDULED':
         setFlightFilter('scheduled');
-        setActionSuccess('Filtering table: Showing SCHEDULED flights.');
+        setActionSuccess('Filtered table: Showing SCHEDULED flights.');
         break;
       case 'FILTER_ALL':
         setFlightFilter('ALL');
@@ -322,24 +355,6 @@ export default function DashboardPage() {
           severity: 'clear',
         });
         break;
-      case 'SET_WEATHER_FOG':
-        handleUpdateWeather({
-          condition: 'Dense Ground Fog 🌫️',
-          temp_c: 12,
-          wind_speed_kts: 5,
-          visibility_miles: 0.2,
-          severity: 'severe',
-        });
-        break;
-      case 'SET_WEATHER_GALE':
-        handleUpdateWeather({
-          condition: 'Gale Wind Hazard 💨',
-          temp_c: 20,
-          wind_speed_kts: 38,
-          visibility_miles: 8.0,
-          severity: 'caution',
-        });
-        break;
       case 'REFRESH_DATA':
         setFlightFilter('ALL');
         loadAllData();
@@ -360,13 +375,12 @@ export default function DashboardPage() {
     setActionSuccess('');
     const newStatus = task.status === 'completed' ? 'pending' : 'completed';
 
-    // Optimistically update React tasksMap state
     const flightId = task.flight_id;
     const currentTasks = tasksMap[flightId] || [];
     const updatedTasks = currentTasks.map((t) => (t._id === task._id ? { ...t, status: newStatus } : t));
 
     setTasksMap((prevMap) => ({ ...prevMap, [flightId]: updatedTasks }));
-    setActionSuccess(`Task "${task.task_type.replace('_', ' ')}" set to ${newStatus.toUpperCase()}.`);
+    setActionSuccess(`Task "${task.task_type.replace('_', ' ')}" updated to ${newStatus.toUpperCase()}.`);
 
     try {
       await API.patch(`tasks/${task._id}/`, { status: newStatus });
@@ -379,11 +393,10 @@ export default function DashboardPage() {
     setActionError('');
     setActionSuccess('');
 
-    // Optimistically mark flight as departed in UI
     setFlights((prevFlights) =>
       prevFlights.map((f) => (f._id === flightId ? { ...f, status: 'departed' } : f))
     );
-    setActionSuccess(`🚀 Pushback initiated! Gate is now clear and available.`);
+    setActionSuccess(`🚀 Flight pushback approved! Gate cleared & ready for next arrival.`);
 
     try {
       await API.post(`flights/${flightId}/depart/`);
@@ -400,175 +413,150 @@ export default function DashboardPage() {
   const formatDateTime = (isoStr) => {
     if (!isoStr) return '--:--';
     const date = new Date(isoStr);
-    const datePart = date.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' });
+    const datePart = date.toLocaleDateString([], { day: '2-digit', month: 'short' });
     const timePart = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    return `${datePart} (${timePart})`;
+    return `${datePart}, ${timePart}`;
   };
 
   const selectedAirportObj = INDIAN_AIRPORTS.find((a) => a.code === selectedAirport) || INDIAN_AIRPORTS[0];
 
   return (
-    <div className="dashboard-container">
-      {/* Top Navbar */}
-      <header className="dashboard-header">
-        <div className="header-brand">
-          <span className="brand-logo">✈️</span>
-          <h2>AeroSync <span className="badge-live">{selectedAirportObj.code} Ops — {selectedAirportObj.name}</span></h2>
+    <div className="shadcn-dashboard-wrapper">
+      {/* Top Navigation Bar */}
+      <header className="shadcn-header">
+        <div className="header-left">
+          <div className="brand-badge">
+            <div className="brand-logo-small">
+              <Plane size={16} />
+            </div>
+            <span className="brand-name">AeroSync</span>
+          </div>
+
+          <div className="airport-selector-box">
+            <MapPin size={14} className="selector-icon" />
+            <select
+              className="airport-select-native"
+              value={selectedAirport}
+              onChange={(e) => {
+                setSelectedAirport(e.target.value);
+                setActionSuccess(`Airport switched to ${e.target.value} — Telemetry updated.`);
+              }}
+            >
+              {INDIAN_AIRPORTS.map((apt) => (
+                <option key={apt.code} value={apt.code}>
+                  [{apt.code}] {apt.city} — {apt.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={14} className="selector-arrow" />
+          </div>
         </div>
 
-        {/* 🔍 Multi-Airport Search Selector Dropdown */}
-        <div className="airport-search-box">
-          <span className="search-icon">🔍</span>
-          <select
-            className="airport-select-dropdown"
-            value={selectedAirport}
-            onChange={(e) => {
-              setSelectedAirport(e.target.value);
-              setActionSuccess(`Switched active hub to ${e.target.value} — Loading live Flightradar24 telemetry.`);
-            }}
-            title="Search & select any Indian International Airport"
-          >
-            {INDIAN_AIRPORTS.map((apt) => (
-              <option key={apt.code} value={apt.code}>
-                🇮🇳 [{apt.code}] {apt.city} — {apt.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="header-user">
-          {/* Airport METAR Weather Widget */}
+        <div className="header-right">
+          {/* Weather Pill */}
           {weather && (
-            <div className="weather-widget-wrapper">
+            <div className="weather-dropdown-container">
               <button
-                className={`weather-badge-btn severity-${weather.severity}`}
+                className={`weather-pill-btn severity-${weather.severity}`}
                 onClick={() => setShowWeatherModal(!showWeatherModal)}
-                title="Click to simulate airport weather conditions"
               >
-                <span className="wx-condition">{weather.condition}</span>
-                <span className="wx-details">
-                  {weather.temp_c}°C | {weather.wind_speed_kts} kts | {weather.visibility_miles} mi vis
-                </span>
-                <span className={`wx-pill pill-${weather.severity}`}>
-                  {weather.severity === 'clear' ? 'CLEAR OPS 🟢' : 'WEATHER ALERT 🔴'}
-                </span>
+                <CloudSun size={14} />
+                <span>{weather.temp_c}°C</span>
+                <span className="weather-desc">{weather.condition}</span>
+                <span className={`wx-dot ${weather.severity}`} />
               </button>
 
               {showWeatherModal && (
-                <div className="weather-modal-dropdown">
-                  <div className="wx-modal-header">
-                    <h4>🌤️ Simulate Aviation Weather Conditions</h4>
-                    <button className="close-btn" onClick={() => setShowWeatherModal(false)}>×</button>
+                <div className="weather-popover shadcn-card">
+                  <div className="popover-header">
+                    <h4>Simulate METAR Weather</h4>
+                    <button className="icon-close" onClick={() => setShowWeatherModal(false)}>✕</button>
                   </div>
-                  <div className="wx-modal-body">
-                    <p className="wx-subtext">Selecting severe weather conditions triggers automated flight delay cascades, audit trail entries, and controller alert notifications.</p>
-
-                    <div className="wx-preset-grid">
-                      <button
-                        className="wx-preset-card clear"
-                        onClick={() =>
-                          handleUpdateWeather({
-                            condition: 'Clear / Fair ☀️',
-                            temp_c: 24,
-                            wind_speed_kts: 10,
-                            visibility_miles: 10.0,
-                            severity: 'clear',
-                          })
-                        }
-                      >
-                        <span className="preset-title">Clear / Fair ☀️</span>
-                        <span className="preset-info">10 kts | 10.0 mi vis</span>
-                      </button>
-
-                      <button
-                        className="wx-preset-card severe"
-                        onClick={() =>
-                          handleUpdateWeather({
-                            condition: 'Severe Thunderstorm ⛈️',
-                            temp_c: 18,
-                            wind_speed_kts: 45,
-                            visibility_miles: 0.5,
-                            severity: 'severe',
-                          })
-                        }
-                      >
-                        <span className="preset-title">Thunderstorm ⛈️</span>
-                        <span className="preset-info">45 kts | 0.5 mi vis</span>
-                      </button>
-
-                      <button
-                        className="wx-preset-card severe"
-                        onClick={() =>
-                          handleUpdateWeather({
-                            condition: 'Dense Ground Fog 🌫️',
-                            temp_c: 12,
-                            wind_speed_kts: 5,
-                            visibility_miles: 0.2,
-                            severity: 'severe',
-                          })
-                        }
-                      >
-                        <span className="preset-title">Dense Fog 🌫️</span>
-                        <span className="preset-info">5 kts | 0.2 mi vis</span>
-                      </button>
-
-                      <button
-                        className="wx-preset-card caution"
-                        onClick={() =>
-                          handleUpdateWeather({
-                            condition: 'Gale Wind Hazard 💨',
-                            temp_c: 20,
-                            wind_speed_kts: 38,
-                            visibility_miles: 8.0,
-                            severity: 'caution',
-                          })
-                        }
-                      >
-                        <span className="preset-title">Gale Winds 💨</span>
-                        <span className="preset-info">38 kts | 8.0 mi vis</span>
-                      </button>
-                    </div>
+                  <p className="popover-sub">Triggering severe weather automatically updates flight delays and logs audit entries.</p>
+                  <div className="weather-presets">
+                    <button
+                      className="wx-preset-btn clear"
+                      onClick={() =>
+                        handleUpdateWeather({
+                          condition: 'Clear / Fair ☀️',
+                          temp_c: 24,
+                          wind_speed_kts: 10,
+                          visibility_miles: 10.0,
+                          severity: 'clear',
+                        })
+                      }
+                    >
+                      Clear / Fair ☀️ (10 kts)
+                    </button>
+                    <button
+                      className="wx-preset-btn severe"
+                      onClick={() =>
+                        handleUpdateWeather({
+                          condition: 'Severe Thunderstorm ⛈️',
+                          temp_c: 18,
+                          wind_speed_kts: 45,
+                          visibility_miles: 0.5,
+                          severity: 'severe',
+                        })
+                      }
+                    >
+                      Thunderstorm ⛈️ (45 kts)
+                    </button>
+                    <button
+                      className="wx-preset-btn severe"
+                      onClick={() =>
+                        handleUpdateWeather({
+                          condition: 'Dense Ground Fog 🌫️',
+                          temp_c: 12,
+                          wind_speed_kts: 5,
+                          visibility_miles: 0.2,
+                          severity: 'severe',
+                        })
+                      }
+                    >
+                      Dense Fog 🌫️ (0.2 mi)
+                    </button>
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Notification Bell Dropdown */}
-          <div className="notif-wrapper">
+          {/* Notification Bell */}
+          <div className="notif-dropdown-container">
             <button
-              className="notif-bell-btn"
+              className="notif-btn"
               onClick={() => setShowNotifDropdown(!showNotifDropdown)}
-              title="Alert Notifications"
             >
-              🔔
+              <Bell size={16} />
               {notifications.filter((n) => !n.is_read).length > 0 && (
-                <span className="notif-badge">
-                  {notifications.filter((n) => !n.is_read).length}
-                </span>
+                <span className="notif-badge-dot" />
               )}
             </button>
 
             {showNotifDropdown && (
-              <div className="notif-dropdown">
-                <div className="notif-dropdown-header">
+              <div className="notif-popover shadcn-card">
+                <div className="popover-header">
                   <h4>Alert Notifications</h4>
-                  <span className="notif-count">
+                  <span className="notif-unread-count">
                     {notifications.filter((n) => !n.is_read).length} Unread
                   </span>
                 </div>
-                <div className="notif-dropdown-body">
+                <div className="notif-list">
                   {notifications.length === 0 ? (
-                    <div className="notif-empty">No alerts at this time.</div>
+                    <div className="notif-empty">No unread alerts.</div>
                   ) : (
                     notifications.map((n) => (
                       <div
                         key={n.id}
-                        className={`notif-item ${n.is_read ? 'read' : 'unread'}`}
+                        className={`notif-row ${n.is_read ? 'read' : 'unread'}`}
                         onClick={() => handleMarkNotificationRead(n.id)}
                       >
-                        <span className="notif-type">[{n.notification_type}]</span>
-                        <p className="notif-msg">{n.message}</p>
-                        {!n.is_read && <span className="unread-dot">•</span>}
+                        <AlertTriangle size={14} className="notif-row-icon" />
+                        <div className="notif-row-content">
+                          <span className="notif-tag">[{n.notification_type}]</span>
+                          <p>{n.message}</p>
+                        </div>
                       </div>
                     ))
                   )}
@@ -577,283 +565,305 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <button className="nav-link-btn" onClick={() => navigate('/incidents')}>🚨 Incidents Log</button>
-          <button className="nav-link-btn audit" onClick={() => navigate('/activity-log')}>📜 Activity Log</button>
-          <span className="user-greeting">Welcome, <strong>{username}</strong></span>
-          <button className="logout-btn" onClick={handleLogout}>Sign Out</button>
+          <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/incidents')}>
+            <AlertTriangle size={14} />
+            <span>Incidents</span>
+          </button>
+          <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/activity-log')}>
+            <Activity size={14} />
+            <span>Activity Log</span>
+          </button>
+
+          <div className="user-profile-pill">
+            <Shield size={14} className="user-icon" />
+            <span>{username}</span>
+          </div>
+
+          <button className="shadcn-btn-ghost icon-btn" onClick={handleLogout} title="Sign Out">
+            <LogOut size={16} />
+          </button>
         </div>
       </header>
 
-      <main className="dashboard-main">
-        {actionError && <div className="alert-banner error">{actionError}</div>}
-        {actionSuccess && <div className="alert-banner success">{actionSuccess}</div>}
+      {/* Main Dashboard Canvas */}
+      <main className="dashboard-content">
+        {actionError && (
+          <div className="alert-bar error">
+            <AlertTriangle size={16} />
+            <span>{actionError}</span>
+          </div>
+        )}
+        {actionSuccess && (
+          <div className="alert-bar success">
+            <CheckCircle2 size={16} />
+            <span>{actionSuccess}</span>
+          </div>
+        )}
 
-        {/* 🎙️ AI Voice Command Assistant */}
-        <VoiceAssistantComponent onVoiceCommand={handleVoiceCommand} />
-
-        {/* KPI Cards Section */}
-        <section className="kpi-section">
-          {loadingKpis ? (
-            <div className="skeleton-grid">Loading flight KPIs...</div>
-          ) : (
-            <div className="kpi-grid">
-              <div className="kpi-card">
-                <div className="kpi-icon">✈️</div>
-                <div className="kpi-info">
-                  <span className="kpi-title">Total Flights Today</span>
-                  <span className="kpi-value">{kpis?.total_flights_today ?? 0}</span>
-                </div>
-              </div>
-
-              <div className="kpi-card">
-                <div className="kpi-icon">🚪</div>
-                <div className="kpi-info">
-                  <span className="kpi-title">Gate Occupancy</span>
-                  <span className="kpi-value">
-                    {kpis?.occupied_gates ?? 0} / {kpis?.total_active_gates ?? 0}
-                  </span>
-                </div>
-              </div>
-
-              <div className="kpi-card warning">
-                <div className="kpi-icon">⚠️</div>
-                <div className="kpi-info">
-                  <span className="kpi-title">Delayed Flights</span>
-                  <span className="kpi-value">{kpis?.delayed_flights ?? 0}</span>
-                </div>
-              </div>
-
-              <div className="kpi-card highlight">
-                <div className="kpi-icon">⏱️</div>
-                <div className="kpi-info">
-                  <span className="kpi-title">Avg Turnaround Time</span>
-                  <span className="kpi-value">{kpis?.avg_turnaround_minutes ?? 0} <small>mins</small></span>
-                </div>
-              </div>
+        <section className="shadcn-card viewport-card">
+          <div className="viewport-tab-bar">
+            <div className="tab-group">
+              <button
+                className={`viewport-tab ${viewportTab === 'radar' ? 'active' : ''}`}
+                onClick={() => setViewportTab('radar')}
+              >
+                <Plane size={14} />
+                <span>Live Radar</span>
+              </button>
+              <button
+                className={`viewport-tab ${viewportTab === 'gates' ? 'active' : ''}`}
+                onClick={() => setViewportTab('gates')}
+              >
+                <LayoutGrid size={14} />
+                <span>Gate Status Grid</span>
+              </button>
+              <button
+                className={`viewport-tab ${viewportTab === 'gantt' ? 'active' : ''}`}
+                onClick={() => setViewportTab('gantt')}
+              >
+                <Calendar size={14} />
+                <span>Gantt Schedule</span>
+              </button>
+              <button
+                className={`viewport-tab ${viewportTab === 'simulation' ? 'active' : ''}`}
+                onClick={() => setViewportTab('simulation')}
+              >
+                <Layers size={14} />
+                <span>2D Runway Canvas</span>
+              </button>
+              <button
+                className={`viewport-tab ${viewportTab === 'layout' ? 'active' : ''}`}
+                onClick={() => setViewportTab('layout')}
+              >
+                <SlidersHorizontal size={14} />
+                <span>2D Terminal Inspector</span>
+              </button>
             </div>
-          )}
-        </section>
 
-        {/* 🗺️ Live Regional Radar Map Section */}
-        <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
-
-        {/* Gate Map Grid Section */}
-        <section className="gate-map-section">
-          <div className="section-header">
-            <h3>Terminal Gate Status Map</h3>
-            <button className="refresh-btn" onClick={loadAllData}>↻ Refresh All Data</button>
+            <button className="shadcn-btn-secondary btn-compact" onClick={loadAllData}>
+              <RefreshCw size={13} />
+              <span>Refresh</span>
+            </button>
           </div>
 
-          {loadingGates ? (
-            <div className="skeleton-grid">Loading terminal gates...</div>
-          ) : (
-            <div className="gate-grid">
-              {gates.map((gate) => {
-                const gateStatus = gate.status || 'available';
-                return (
-                  <div key={gate._id} className={`gate-box status-${gateStatus}`}>
-                    <div className="gate-header">
-                      <span className="gate-label">Gate {gate.label}</span>
-                      <span className={`status-pill pill-${gateStatus}`}>
-                        {gateStatus.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="gate-body">
-                      <span className="gate-id-tag">ID: {gate._id.slice(-6)}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+          <div className="viewport-body">
+            {viewportTab === 'radar' && (
+              <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
+            )}
 
-        {/* 📅 Interactive Gate Schedule Gantt Chart */}
-        <GanttTimelineComponent gates={gates} flights={flights} tasksMap={tasksMap} />
+            {viewportTab === 'gates' && (
+              <div className="gate-boxes-grid">
+                {gates.map((gate) => {
+                  const gateStatus = gate.status || 'available';
+                  return (
+                    <div key={gate._id} className={`gate-item status-${gateStatus}`}>
+                      <div className="gate-item-header">
+                        <span className="gate-name font-mono">{gate.label}</span>
+                        <span className={`shadcn-badge badge-${gateStatus}`}>
+                          <span className="shadcn-badge-dot" />
+                          {gateStatus}
+                        </span>
+                      </div>
+                      <div className="gate-item-footer">
+                        <span className="gate-id font-mono">ID: {gate._id.slice(-6)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-        {/* Analytics & Gate Utilization Chart Section */}
-        <section className="analytics-chart-section">
-          <div className="section-header">
-            <h3>📊 Analytics: Gate Utilization & Workload Distribution (Pandas Computed)</h3>
+            {viewportTab === 'gantt' && (
+              <GanttTimelineComponent gates={gates} flights={flights} tasksMap={tasksMap} />
+            )}
+
+            {viewportTab === 'simulation' && (
+              <AirportSimulationCanvas selectedAirportCode={selectedAirport} />
+            )}
+
+            {viewportTab === 'layout' && (
+              <AirportTerminalLayoutComponent selectedAirportCode={selectedAirport} />
+            )}
           </div>
-
-          {kpis?.problem_gates && kpis.problem_gates.length > 0 && (
-            <div className="alert-banner warning" style={{ marginBottom: '1rem' }}>
-              ⚠️ Warning: Problem gates flagged with high average turnaround time: {kpis.problem_gates.join(', ')}
-            </div>
-          )}
-
-          {loadingKpis ? (
-            <div className="skeleton-row">Loading gate utilization analytics...</div>
-          ) : !kpis?.gate_utilization || kpis.gate_utilization.length === 0 ? (
-            <div className="empty-state">Not enough operational data yet for charts.</div>
-          ) : (
-            <div className="chart-wrapper">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={kpis.gate_utilization} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="gate" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                  <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#131c2e',
-                      borderColor: 'rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                      color: '#f8fafc',
-                    }}
-                    cursor={{ fill: 'rgba(56, 189, 248, 0.08)' }}
-                  />
-                  <Bar dataKey="flights_handled" name="Flights Handled" radius={[6, 6, 0, 0]}>
-                    {kpis.gate_utilization.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.flights_handled > 2 ? '#38bdf8' : '#0284c7'}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
         </section>
 
-        {/* Flight List & Task Checklist Section */}
-        <section className="flight-list-section">
-          <div className="section-header">
-            <h3>
-              Active Flight Operations & Task Checklists{' '}
-              {flightFilter !== 'ALL' && (
-                <span className="filter-active-tag">
-                  (Filtered: {flightFilter.toUpperCase()}{' '}
-                  <button className="clear-filter-btn" onClick={() => setFlightFilter('ALL')}>
-                    Show All ✕
+        <section className="shadcn-card table-section">
+          <div className="section-title-bar">
+            <div>
+              <h3 className="section-title">Active Flight Turnaround Schedule</h3>
+              <p className="section-subtitle">Click task chips to toggle progress. Pushback unlocks when all 4 tasks are complete.</p>
+            </div>
+
+            <div className="header-actions">
+              <button
+                className={`shadcn-btn-secondary btn-compact ${showAnalyticsPanel ? 'active-analytics' : ''}`}
+                onClick={() => setShowAnalyticsPanel(!showAnalyticsPanel)}
+              >
+                <BarChart2 size={14} />
+                <span>{showAnalyticsPanel ? 'Hide Analytics' : 'Show Analytics'}</span>
+              </button>
+
+              <div className="table-filter-chips">
+                <ListFilter size={14} className="text-muted" />
+                {['ALL', 'scheduled', 'in_progress', 'delayed', 'departed'].map((fKey) => (
+                  <button
+                    key={fKey}
+                    className={`filter-tab ${flightFilter === fKey ? 'active' : ''}`}
+                    onClick={() => setFlightFilter(fKey)}
+                  >
+                    {fKey === 'ALL' ? 'All' : fKey.replace('_', ' ')}
                   </button>
-                </span>
-              )}
-            </h3>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {loadingFlights ? (
-            <div className="skeleton-row">Loading active flight operations...</div>
-          ) : flights.length === 0 ? (
-            <div className="empty-state">No flights scheduled.</div>
-          ) : (
-            <div className="table-responsive">
-              <table className="flight-table">
-                <thead>
-                  <tr>
-                    <th>Flight / Aircraft</th>
-                    <th>Assigned Gate</th>
-                    <th>Time Window</th>
-                    <th>Status</th>
-                    <th>Turnaround Tasks Checklist (Click to Toggle)</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(flightFilter === 'ALL'
-                    ? flights
-                    : flights.filter((f) => f.status === flightFilter.toLowerCase())
-                  ).map((flight) => {
-                    const flightTasks = tasksMap[flight._id] || [];
-                    const allTasksCompleted =
-                      flightTasks.length === 4 &&
-                      flightTasks.every((t) => t.status === 'completed');
-                    const isDeparted = flight.status === 'departed';
+          {showAnalyticsPanel && (
+            <div className="analytics-collapsible-panel">
+              {kpis?.problem_gates && kpis.problem_gates.length > 0 && (
+                <div className="problem-alert-banner">
+                  <AlertTriangle size={14} />
+                  <span>Flagged Problem Gates (&gt;1 std dev avg turnaround): <b>{kpis.problem_gates.join(', ')}</b></span>
+                </div>
+              )}
 
-                    return (
-                      <tr key={flight._id} className={isDeparted ? 'row-departed' : ''}>
-                        <td className="cell-flight">
-                          <strong>{aircraftMap[flight.aircraft_id] || 'Aircraft Info Loading...'}</strong>
-                          <span className="sub-tag">ID: {flight._id.slice(-6)}</span>
-                        </td>
-                        <td className="cell-gate">
-                          <span className="gate-badge">
-                            {flight.gate_id ? `Gate ${gateMap[flight.gate_id] || flight.gate_id.slice(-4)}` : 'Unassigned'}
-                          </span>
-                        </td>
-                        <td className="cell-time">
-                          <div className="time-block">
-                            <span>🛬 Arr: <strong>{formatDateTime(flight.arrival_time)}</strong></span>
-                            <span>🛫 Dep: <strong>{formatDateTime(flight.departure_time)}</strong></span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="status-cell-wrapper">
-                            <span className={`badge-status status-${flight.status}`}>
-                              {flight.status.toUpperCase()}
-                            </span>
-                            {!isDeparted && (
-                              <div className="live-countdown-badge">
-                                {(() => {
-                                  const depTime = new Date(flight.departure_time).getTime();
-                                  const diffMs = depTime - currentTime;
-                                  if (diffMs <= 0) {
-                                    return <span className="timer-overdue">⏱️ OVERDUE</span>;
-                                  }
-                                  const mins = Math.floor(diffMs / 60000);
-                                  const secs = Math.floor((diffMs % 60000) / 1000);
-                                  return (
-                                    <span className="timer-ticking">
-                                      ⏱️ {mins.toString().padStart(2, '0')}:{secs.toString().padStart(2, '0')}
-                                    </span>
-                                  );
-                                })()}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="cell-tasks">
-                          <div className="task-chips-container">
-                            {flightTasks.map((t) => {
-                              const estTime = t.task_type === 'refuel' ? '25m' : t.task_type === 'cleaning' ? '20m' : '15m';
-                              return (
-                                <button
-                                  key={t._id}
-                                  className={`task-chip ${t.status}`}
-                                  onClick={() => handleToggleTask(t)}
-                                  title={`${t.task_type.replace('_', ' ')}: Standard Duration ${estTime}. Click to set task as ${t.status === 'completed' ? 'pending' : 'completed'}`}
-                                >
-                                  {t.status === 'completed' ? '✓ ' : '○ '}
-                                  {t.task_type.replace('_', ' ')} <span className="task-time-badge">⏱️ {estTime}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </td>
-                        <td>
-                          {isDeparted ? (
-                            <span className="text-departed">✓ Departed</span>
-                          ) : (
-                            <button
-                              className="pushback-btn"
-                              disabled={!allTasksCompleted}
-                              onClick={() => handlePushback(flight._id)}
-                              title={
-                                !allTasksCompleted
-                                  ? 'All 4 tasks must be marked as completed before pushback.'
-                                  : 'Trigger flight pushback'
-                              }
-                            >
-                              🚀 Push Back
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              {!kpis?.gate_utilization || kpis.gate_utilization.length === 0 ? (
+                <div className="analytics-empty">Not enough flight operational data yet for analytics.</div>
+              ) : (
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={kpis.gate_utilization} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                      <XAxis dataKey="gate" stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 12 }} />
+                      <YAxis stroke="#71717a" tick={{ fill: '#a1a1aa', fontSize: 12 }} allowDecimals={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: '#18181b',
+                          borderColor: 'rgba(255,255,255,0.1)',
+                          borderRadius: '8px',
+                          color: '#fafafa',
+                          fontSize: '12px',
+                        }}
+                        cursor={{ fill: 'rgba(255, 255, 255, 0.04)' }}
+                      />
+                      <Bar dataKey="flights_handled" name="Flights Handled" radius={[4, 4, 0, 0]}>
+                        {kpis.gate_utilization.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.flights_handled > 2 ? '#fafafa' : '#71717a'} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
           )}
+
+          <div className="shadcn-table-wrapper">
+            <table className="shadcn-table">
+              <thead>
+                <tr>
+                  <th>Flight</th>
+                  <th>Gate</th>
+                  <th>Schedule</th>
+                  <th>Status</th>
+                  <th>Turnaround Tasks</th>
+                  <th style={{ textAlign: 'right' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(flightFilter === 'ALL'
+                  ? flights
+                  : flights.filter((f) => f.status === flightFilter.toLowerCase())
+                ).map((flight) => {
+                  const flightTasks = tasksMap[flight._id] || [];
+                  const allTasksCompleted =
+                    flightTasks.length === 4 &&
+                    flightTasks.every((t) => t.status === 'completed');
+                  const isDeparted = flight.status === 'departed';
+
+                  return (
+                    <tr key={flight._id} className={isDeparted ? 'row-departed' : ''}>
+                      <td className="cell-aircraft">
+                        <div className="ac-title font-mono">
+                          {aircraftMap[flight.aircraft_id] || 'Aircraft Loading...'}
+                        </div>
+                      </td>
+
+                      <td className="cell-gate font-mono">
+                        <span className="gate-pill">
+                          {flight.gate_id ? `${gateMap[flight.gate_id] || flight.gate_id.slice(-4)}` : 'Unassigned'}
+                        </span>
+                      </td>
+
+                      <td className="cell-times font-mono">
+                        <div className="time-row">{formatDateTime(flight.arrival_time)} → {formatDateTime(flight.departure_time)}</div>
+                      </td>
+
+                      <td>
+                        <span className={`status-badge-flight badge-${flight.status}`}>
+                          {flight.status.toUpperCase()}
+                        </span>
+                      </td>
+
+                      <td className="cell-tasks">
+                        <div className="task-chip-list">
+                          {flightTasks.map((t) => (
+                            <button
+                              key={t._id}
+                              className={`task-chip ${t.status}`}
+                              onClick={() => handleToggleTask(t)}
+                              title={`Click to set ${t.task_type} to ${t.status === 'completed' ? 'pending' : 'completed'}`}
+                            >
+                              {t.status === 'completed' ? <Check size={12} /> : <span className="chip-dot" />}
+                              <span>{t.task_type.replace('_', ' ')}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </td>
+
+                      <td style={{ textAlign: 'right' }}>
+                        {isDeparted ? (
+                          <span className="text-departed-done">Departed</span>
+                        ) : (
+                          <button
+                            className="shadcn-btn-primary pushback-action-btn"
+                            disabled={!allTasksCompleted}
+                            onClick={() => handlePushback(flight._id)}
+                          >
+                            Push Back
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </section>
-
-        {/* 🛫 2D Real-World Airport Simulation (Runways, Taxiways, & Moving Aircraft) */}
-        <AirportSimulationCanvas selectedAirportCode={selectedAirport} />
-
-        {/* 🏢 2D Real-World Terminal Gate & Aircraft Ground Layout */}
-        <AirportTerminalLayoutComponent selectedAirportCode={selectedAirport} />
       </main>
+
+      {/* Floating AI Voice Assistant Drawer Toggle */}
+      <div className="floating-voice-widget">
+        {showVoiceDrawer ? (
+          <div className="voice-drawer-panel shadcn-card">
+            <div className="drawer-header">
+              <span className="drawer-title">🎙️ AI Voice Command Assistant</span>
+              <button className="drawer-close-btn" onClick={() => setShowVoiceDrawer(false)}>✕</button>
+            </div>
+            <VoiceAssistantComponent onVoiceCommand={handleVoiceCommand} />
+          </div>
+        ) : (
+          <button
+            className="floating-voice-btn"
+            onClick={() => setShowVoiceDrawer(true)}
+            title="Open AI Voice Assistant"
+          >
+            <Mic size={16} />
+            <span>AI Voice Command</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }

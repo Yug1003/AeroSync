@@ -1,6 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api';
+import {
+  Plane,
+  ArrowLeft,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Shield,
+  Plus,
+  Filter,
+  Check,
+  RotateCcw,
+} from 'lucide-react';
 import './IncidentsPage.css';
 
 export default function IncidentsPage() {
@@ -94,66 +106,96 @@ export default function IncidentsPage() {
     if (!isoStr) return '';
     const date = new Date(isoStr);
     return date.toLocaleString([], {
-      dateStyle: 'short',
+      dateStyle: 'medium',
       timeStyle: 'short',
     });
   };
 
   return (
-    <div className="incidents-container">
-      {/* Top Navbar */}
-      <header className="incidents-header">
-        <div className="header-brand">
-          <span className="brand-logo">✈️</span>
-          <h2>AeroSync <span className="badge-page">AMD Incident Log — Ahmedabad Airport</span></h2>
+    <div className="shadcn-incidents-wrapper">
+      {/* Header */}
+      <header className="shadcn-header">
+        <div className="header-left">
+          <div className="brand-badge">
+            <div className="brand-logo-small">
+              <Plane size={16} />
+            </div>
+            <span className="brand-name">AeroSync</span>
+          </div>
+          <span className="header-divider">/</span>
+          <span className="header-title">Incidents Management</span>
         </div>
-        <button className="back-btn" onClick={() => navigate('/dashboard')}>
-          ← Back to Dashboard
+
+        <button className="shadcn-btn-secondary" onClick={() => navigate('/dashboard')}>
+          <ArrowLeft size={14} />
+          <span>Return to Dashboard</span>
         </button>
       </header>
 
-      <main className="incidents-main">
-        {error && <div className="alert-banner error">{error}</div>}
-        {success && <div className="alert-banner success">{success}</div>}
+      <main className="incidents-content">
+        {error && (
+          <div className="alert-bar error">
+            <AlertTriangle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
+        {success && (
+          <div className="alert-bar success">
+            <CheckCircle2 size={16} />
+            <span>{success}</span>
+          </div>
+        )}
 
-        {/* Report New Incident Form */}
-        <section className="form-section">
-          <h3>🚨 Report New Safety / Ground Incident</h3>
-          <form onSubmit={handleCreateIncident} className="incident-form">
-            <div className="form-row">
-              <div className="form-group flex-2">
+        {/* Form Card */}
+        <section className="shadcn-card incident-form-card">
+          <div className="card-title-bar">
+            <div className="title-box">
+              <AlertTriangle size={18} className="title-icon text-rose" />
+              <div>
+                <h3 className="card-heading">Report Operational Incident</h3>
+                <p className="card-subheading">Log ground safety occurrences, equipment faults, or ramp hazards</p>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleCreateIncident} className="inc-form-body">
+            <div className="form-grid">
+              <div className="form-field field-wide">
                 <label htmlFor="description">Incident Description</label>
                 <input
                   id="description"
                   type="text"
-                  placeholder="Describe the incident (e.g. Fuel spill at Gate A1, Baggage belt jam)"
+                  className="shadcn-input"
+                  placeholder="e.g. Fuel truck hose pressure valve leak near Gate A1"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="priority">Priority</label>
+              <div className="form-field">
+                <label htmlFor="priority">Priority Level</label>
                 <select
                   id="priority"
+                  className="shadcn-input"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
                 >
-                  <option value="high">High Priority 🔴</option>
-                  <option value="medium">Medium Priority 🟡</option>
-                  <option value="low">Low Priority ⚪</option>
+                  <option value="high">High Priority</option>
+                  <option value="medium">Medium Priority</option>
+                  <option value="low">Low Priority</option>
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="form-field">
                 <label htmlFor="flight">Linked Flight (Optional)</label>
                 <select
                   id="flight"
+                  className="shadcn-input"
                   value={selectedFlightId}
                   onChange={(e) => setSelectedFlightId(e.target.value)}
                 >
-                  <option value="">-- General Ground Incident --</option>
+                  <option value="">-- General Ramp Incident --</option>
                   {flights.map((f) => (
                     <option key={f._id} value={f._id}>
                       Flight ID: {f._id.slice(-6)} - {aircraftMap[f.aircraft_id] || 'Aircraft'}
@@ -163,57 +205,78 @@ export default function IncidentsPage() {
               </div>
             </div>
 
-            <button type="submit" className="submit-btn" disabled={submitting}>
-              {submitting ? 'Submitting Report...' : 'Log Incident Report'}
-            </button>
+            <div className="form-actions">
+              <button type="submit" className="shadcn-btn-primary" disabled={submitting}>
+                <Plus size={14} />
+                <span>{submitting ? 'Logging Incident...' : 'Submit Incident Report'}</span>
+              </button>
+            </div>
           </form>
         </section>
 
-        {/* Incidents List Section */}
-        <section className="list-section">
-          <h3>Reported Operational Incidents</h3>
+        {/* Incidents Feed */}
+        <section className="shadcn-card incident-list-card">
+          <div className="card-title-bar">
+            <div>
+              <h3 className="card-heading">Reported Ground Incidents Feed</h3>
+              <p className="card-subheading">Real-time status updates from ramp safety log</p>
+            </div>
+          </div>
 
-          {loading ? (
-            <div className="empty-card">Loading incident history...</div>
-          ) : incidents.length === 0 ? (
-            <div className="empty-card">No incidents reported yet. All ground operations normal!</div>
-          ) : (
-            <div className="incidents-list">
-              {incidents.map((inc) => (
-                <div key={inc._id} className={`incident-card status-${inc.status}`}>
-                  <div className="card-header">
-                    <div className="header-badges">
-                      <span className={`badge-priority priority-${inc.priority}`}>
-                        {inc.priority.toUpperCase()} PRIORITY
+          <div className="incidents-feed">
+            {loading ? (
+              <div className="feed-empty">Loading incident feed...</div>
+            ) : incidents.length === 0 ? (
+              <div className="feed-empty">No incidents reported yet. All ground operations nominal.</div>
+            ) : (
+              incidents.map((inc) => (
+                <div key={inc._id} className={`incident-row status-${inc.status}`}>
+                  <div className="row-main">
+                    <div className="row-meta">
+                      <span className={`shadcn-badge priority-${inc.priority}`}>
+                        {inc.priority} priority
                       </span>
-                      <span className={`badge-status status-${inc.status}`}>
-                        {inc.status.toUpperCase()}
+                      <span className={`shadcn-badge badge-${inc.status}`}>
+                        <span className="shadcn-badge-dot" />
+                        {inc.status}
+                      </span>
+                      <span className="inc-timestamp font-mono">
+                        <Clock size={12} />
+                        {formatDate(inc.reported_at)}
                       </span>
                     </div>
-                    <span className="inc-time">{formatDate(inc.reported_at)}</span>
-                  </div>
 
-                  <div className="card-body">
-                    <p className="inc-desc">{inc.description}</p>
+                    <p className="inc-description-text">{inc.description}</p>
+
                     {inc.flight_id && (
-                      <span className="linked-flight">
-                        🔗 Linked to Flight: {inc.flight_id.slice(-6)}
+                      <span className="linked-tag font-mono">
+                        ✈️ Linked Flight: {inc.flight_id.slice(-6)}
                       </span>
                     )}
                   </div>
 
-                  <div className="card-footer">
+                  <div className="row-action">
                     <button
-                      className={`toggle-btn ${inc.status === 'open' ? 'btn-resolve' : 'btn-reopen'}`}
+                      className={inc.status === 'open' ? 'shadcn-btn-primary' : 'shadcn-btn-secondary'}
                       onClick={() => handleToggleStatus(inc)}
                     >
-                      {inc.status === 'open' ? 'Mark as Resolved ✓' : 'Re-open Incident ↺'}
+                      {inc.status === 'open' ? (
+                        <>
+                          <Check size={14} />
+                          <span>Resolve</span>
+                        </>
+                      ) : (
+                        <>
+                          <RotateCcw size={14} />
+                          <span>Re-open</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </section>
       </main>
     </div>
