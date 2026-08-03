@@ -442,10 +442,48 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [selectedAirport]);
 
-  const [flightFilter, setFlightFilter] = useState('ALL');
-
-  const handleVoiceCommand = (commandType) => {
+  const handleVoiceCommand = (commandType, payload) => {
     switch (commandType) {
+      case 'switch_airport':
+        if (payload) {
+          setSelectedAirport(payload);
+          setActionSuccess(`⚡ [VOICE DISPATCH]: Switched Airport Hub to ${payload}. Loading live radar & flight telemetry.`);
+        }
+        break;
+      case 'ai_disruption':
+        handleRunAiDisruptionRecovery();
+        break;
+      case 'nav_staff_roster':
+        navigate('/staff-roster');
+        break;
+      case 'nav_analytics':
+        navigate('/analytics');
+        break;
+      case 'nav_incidents':
+      case 'NAVIGATE_INCIDENTS':
+        navigate('/incidents');
+        break;
+      case 'NAVIGATE_ACTIVITY':
+        navigate('/activity-log');
+        break;
+      case 'switch_radar':
+        setViewportTab('radar');
+        setActionSuccess('⚡ [VOICE DISPATCH]: Viewport switched to Live Radar Map.');
+        break;
+      case 'switch_gates':
+        setViewportTab('gates');
+        setActionSuccess('⚡ [VOICE DISPATCH]: Viewport switched to Gate Occupancy Matrix.');
+        break;
+      case 'switch_gantt':
+        setViewportTab('gantt');
+        setActionSuccess('⚡ [VOICE DISPATCH]: Viewport switched to Gantt Timeline Schedule.');
+        break;
+      case 'refresh_data':
+      case 'REFRESH_DATA':
+        setFlightFilter('ALL');
+        loadAllData();
+        setActionSuccess('⚡ [VOICE DISPATCH]: All live telemetry, gates, and flights refreshed.');
+        break;
       case 'FILTER_DEPARTED':
         setFlightFilter('departed');
         setActionSuccess('Filtered table: Showing DEPARTED flights only.');
@@ -484,17 +522,10 @@ export default function DashboardPage() {
           severity: 'clear',
         });
         break;
-      case 'REFRESH_DATA':
-        setFlightFilter('ALL');
-        loadAllData();
-        break;
-      case 'NAVIGATE_INCIDENTS':
-        navigate('/incidents');
-        break;
-      case 'NAVIGATE_ACTIVITY':
-        navigate('/activity-log');
-        break;
       default:
+        if (payload) {
+          setActionSuccess(`⚡ [VOICE DISPATCH EXECUTED]: "${payload}"`);
+        }
         break;
     }
   };
@@ -826,7 +857,7 @@ export default function DashboardPage() {
         )}
 
         {/* AI Voice Command Center */}
-        <VoiceCommandCenter onRunCommand={handleVoiceCommand} />
+        <VoiceCommandCenter onRunCommand={handleVoiceCommand} selectedAirport={selectedAirport} />
 
         <section className="shadcn-card viewport-card">
           <div className="viewport-tab-bar">
