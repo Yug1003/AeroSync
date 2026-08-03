@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import API from '../api/api';
@@ -39,36 +39,74 @@ const AIRPORT_COORDS = {
   VTZ: [17.7211, 83.2245],
 };
 
-export default function RadarMapComponent({ selectedAirportCode = 'AMD' }) {
+export default function RadarMapComponent({ flights = [], selectedAirportCode = 'AMD' }) {
   const [radarFlights, setRadarFlights] = useState([]);
   const airportCode = selectedAirportCode.toUpperCase();
   const centerCoords = AIRPORT_COORDS[airportCode] || AIRPORT_COORDS['AMD'];
 
   const fetchLiveRadarData = async () => {
     try {
-      const res = await API.get(`flights/live-radar/?airport=${airportCode}`);
-      const rawLiveFlights = res.data.flights || [];
+      let fr24Mapped = [];
+      try {
+        const res = await API.get(`flights/live-radar/?airport=${airportCode}`);
+        const rawLiveFlights = res.data.flights || [];
 
-      const fr24Mapped = rawLiveFlights
-        .filter((rf) => rf.lat && rf.lng && !isNaN(rf.lat) && !isNaN(rf.lng))
-        .map((rf) => ({
-          id: rf.id,
-          callsign: rf.callsign || 'UNK',
-          icao24: rf.icao24 || rf.tailNumber || 'VT-AIR',
-          tailNumber: rf.tailNumber || rf.icao24,
-          aircraftType: rf.aircraft_type || 'Commercial Jet',
-          route: rf.route || 'Regional Corridor',
-          country: rf.origin_country || 'Commercial',
-          lat: Number(rf.lat),
-          lng: Number(rf.lng),
-          heading: rf.heading || 0,
-          altitude: rf.altitude_ft ?? 0,
-          speed: rf.speed_kts ?? 0,
-          isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
-          source: rf.source || `Flightradar24 Live (${airportCode}) 📡`,
-        }));
+        fr24Mapped = rawLiveFlights
+          .filter((rf) => rf.lat && rf.lng && !isNaN(rf.lat) && !isNaN(rf.lng))
+          .map((rf) => ({
+            id: rf.id,
+            callsign: rf.callsign || 'UNK',
+            icao24: rf.icao24 || rf.tailNumber || 'VT-AIR',
+            tailNumber: rf.tailNumber || rf.icao24,
+            aircraftType: rf.aircraft_type || 'Commercial Jet',
+            route: rf.route || 'Regional Corridor',
+            country: rf.origin_country || 'Commercial',
+            lat: Number(rf.lat),
+            lng: Number(rf.lng),
+            heading: rf.heading || 0,
+            altitude: rf.altitude_ft ?? 0,
+            speed: rf.speed_kts ?? 0,
+            isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
+            source: rf.source || `Flightradar24 Live (${airportCode}) 📡`,
+          }));
+      } catch (e) {
+        console.warn('FR24 Live Radar fetch note:', e);
+      }
 
-      setRadarFlights(fr24Mapped);
+      // Generate airport active flight vectors around selected airport center
+      const dbMapped = (flights || []).map((f, idx) => {
+        const angle = (idx * 55) * (Math.PI / 180);
+        const radius = 0.05 + (idx % 3) * 0.035;
+        const lat = centerCoords[0] + Math.sin(angle) * radius;
+        const lng = centerCoords[1] + Math.cos(angle) * radius;
+        const heading = Math.round((Math.atan2(centerCoords[1] - lng, centerCoords[0] - lat) * 180) / Math.PI);
+
+        return {
+          id: `db_${f._id}`,
+          callsign: f.callsign ? f.callsign : `6E-${String(f._id).slice(-4)}`,
+          icao24: String(f._id).slice(-6).toUpperCase(),
+          tailNumber: f.tailNumber || 'VT-AIR',
+          aircraftType: f.aircraftType || 'A320neo',
+          route: f.route || `${airportCode} ✈️ INTL`,
+          country: 'India',
+          lat: lat,
+          lng: lng,
+          heading: heading,
+          altitude: f.status === 'departed' ? 14000 : f.status === 'in_progress' ? 0 : 3500,
+          speed: f.status === 'departed' ? 420 : f.status === 'in_progress' ? 0 : 180,
+          isOnGround: f.status === 'in_progress',
+          source: `AeroSync ${airportCode} Hub 🏢`,
+        };
+      });
+
+      // Merge live radar and database active flights
+      const combinedMap = new Map();
+      [...fr24Mapped, ...dbMapped].forEach((item) => {
+        combinedMap.set(item.id, item);
+      });
+
+      const combinedList = Array.from(combinedMap.values());
+      setRadarFlights(combinedList);
     } catch (err) {
       console.error('Radar API fetch error:', err);
     }
@@ -76,9 +114,9 @@ export default function RadarMapComponent({ selectedAirportCode = 'AMD' }) {
 
   useEffect(() => {
     fetchLiveRadarData();
-    const pollInterval = setInterval(fetchLiveRadarData, 5000);
+    const pollInterval = setInterval(fetchLiveRadarData, 2000);
     return () => clearInterval(pollInterval);
-  }, [selectedAirportCode]);
+  }, [selectedAirportCode, flights.length]);
 
   return (
     <div className="leaflet-container-box">
