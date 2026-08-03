@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import API from '../api/api';
@@ -39,66 +39,36 @@ const AIRPORT_COORDS = {
   VTZ: [17.7211, 83.2245],
 };
 
-export default function RadarMapComponent({ flights = [], selectedAirportCode = 'AMD' }) {
+export default function RadarMapComponent({ selectedAirportCode = 'AMD' }) {
   const [radarFlights, setRadarFlights] = useState([]);
-  const [dataSource, setDataSource] = useState('Flightradar24 Live');
-  const [liveCount, setLiveCount] = useState(0);
-
-  const centerCoords = AIRPORT_COORDS[selectedAirportCode.toUpperCase()] || AIRPORT_COORDS['AMD'];
+  const airportCode = selectedAirportCode.toUpperCase();
+  const centerCoords = AIRPORT_COORDS[airportCode] || AIRPORT_COORDS['AMD'];
 
   const fetchLiveRadarData = async () => {
     try {
-      const res = await API.get(`flights/live-radar/?airport=${selectedAirportCode}`);
+      const res = await API.get(`flights/live-radar/?airport=${airportCode}`);
       const rawLiveFlights = res.data.flights || [];
 
-      // 1. Process Flightradar24 live API planes
-      const fr24Mapped = rawLiveFlights.map((rf) => ({
-        id: rf.id,
-        callsign: rf.callsign || 'UNK',
-        icao24: rf.icao24 || rf.tailNumber || 'VT-AIR',
-        tailNumber: rf.tailNumber || rf.icao24,
-        aircraftType: rf.aircraft_type || 'Commercial Jet',
-        route: rf.route || 'Regional Corridor',
-        country: rf.origin_country || 'Commercial',
-        lat: rf.lat,
-        lng: rf.lng,
-        heading: rf.heading || 0,
-        altitude: rf.altitude_ft ?? 0,
-        speed: rf.speed_kts ?? 0,
-        isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
-        source: rf.source || `Flightradar24 Live (${selectedAirportCode}) 📡`,
-      }));
+      const fr24Mapped = rawLiveFlights
+        .filter((rf) => rf.lat && rf.lng && !isNaN(rf.lat) && !isNaN(rf.lng))
+        .map((rf) => ({
+          id: rf.id,
+          callsign: rf.callsign || 'UNK',
+          icao24: rf.icao24 || rf.tailNumber || 'VT-AIR',
+          tailNumber: rf.tailNumber || rf.icao24,
+          aircraftType: rf.aircraft_type || 'Commercial Jet',
+          route: rf.route || 'Regional Corridor',
+          country: rf.origin_country || 'Commercial',
+          lat: Number(rf.lat),
+          lng: Number(rf.lng),
+          heading: rf.heading || 0,
+          altitude: rf.altitude_ft ?? 0,
+          speed: rf.speed_kts ?? 0,
+          isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
+          source: rf.source || `Flightradar24 Live (${airportCode}) 📡`,
+        }));
 
-      // 2. Generate airport database flight vectors centered at current airport
-      const dbMapped = flights.map((f, idx) => {
-        const angle = (idx * 55) * (Math.PI / 180);
-        const radius = 0.05 + (idx % 3) * 0.035;
-        const lat = centerCoords[0] + Math.sin(angle) * radius;
-        const lng = centerCoords[1] + Math.cos(angle) * radius;
-        const heading = Math.round((Math.atan2(centerCoords[1] - lng, centerCoords[0] - lat) * 180) / Math.PI);
-
-        return {
-          id: `db_${f._id}`,
-          callsign: f.aircraft_id ? `6E-${f._id.slice(-4)}` : `AI-${f._id.slice(-4)}`,
-          icao24: f._id.slice(-6).toUpperCase(),
-          tailNumber: 'VT-AIR',
-          aircraftType: 'A320neo',
-          route: `${selectedAirportCode} ✈️ INTL`,
-          country: 'India',
-          lat: lat,
-          lng: lng,
-          heading: heading,
-          altitude: f.status === 'departed' ? 14000 : f.status === 'in_progress' ? 0 : 3500,
-          speed: f.status === 'departed' ? 420 : f.status === 'in_progress' ? 0 : 180,
-          isOnGround: f.status === 'in_progress',
-          source: `AeroSync ${selectedAirportCode} Hub 🏢`,
-        };
-      });
-
-      const combined = [...fr24Mapped, ...dbMapped];
-      setRadarFlights(combined);
-      setLiveCount(combined.length);
-      setDataSource(`Flightradar24 Live (${selectedAirportCode})`);
+      setRadarFlights(fr24Mapped);
     } catch (err) {
       console.error('Radar API fetch error:', err);
     }
@@ -106,14 +76,14 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
 
   useEffect(() => {
     fetchLiveRadarData();
-    const pollInterval = setInterval(fetchLiveRadarData, 2000);
+    const pollInterval = setInterval(fetchLiveRadarData, 5000);
     return () => clearInterval(pollInterval);
-  }, [flights, selectedAirportCode]);
+  }, [selectedAirportCode]);
 
   return (
     <div className="leaflet-container-box">
       <MapContainer
-        key={selectedAirportCode}
+        key={airportCode}
         center={centerCoords}
         zoom={7}
         scrollWheelZoom={true}

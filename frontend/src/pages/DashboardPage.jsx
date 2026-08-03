@@ -41,7 +41,6 @@ import {
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
-import ThreeDAirfieldCanvas from '../components/ThreeDAirfieldCanvas';
 import GseTelemetryComponent from '../components/GseTelemetryComponent';
 import './DashboardPage.css';
 
@@ -75,7 +74,6 @@ export default function DashboardPage() {
 
   // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt'
   const [viewportTab, setViewportTab] = useState('radar');
-  const [viewMode3D, setViewMode3D] = useState(false);
   const [gateStandFilter, setGateStandFilter] = useState('ALL');
   const [selectedGateId, setSelectedGateId] = useState(null);
   const [aiDisruptionLoading, setAiDisruptionLoading] = useState(false);
@@ -826,34 +824,25 @@ export default function DashboardPage() {
           <div className="viewport-tab-bar">
             <div className="viewport-tabs">
               <button
-                className={`viewport-tab ${viewportTab === 'radar' && !viewMode3D ? 'active' : ''}`}
-                onClick={() => { setViewportTab('radar'); setViewMode3D(false); }}
+                className={`viewport-tab ${viewportTab === 'radar' ? 'active' : ''}`}
+                onClick={() => setViewportTab('radar')}
               >
                 <Plane size={14} />
                 <span>Live Radar</span>
               </button>
               <button
-                className={`viewport-tab ${viewportTab === 'gates' && !viewMode3D ? 'active' : ''}`}
-                onClick={() => { setViewportTab('gates'); setViewMode3D(false); }}
+                className={`viewport-tab ${viewportTab === 'gates' ? 'active' : ''}`}
+                onClick={() => setViewportTab('gates')}
               >
                 <LayoutGrid size={14} />
                 <span>Gate Status</span>
               </button>
               <button
-                className={`viewport-tab ${viewportTab === 'gantt' && !viewMode3D ? 'active' : ''}`}
-                onClick={() => { setViewportTab('gantt'); setViewMode3D(false); }}
+                className={`viewport-tab ${viewportTab === 'gantt' ? 'active' : ''}`}
+                onClick={() => setViewportTab('gantt')}
               >
                 <Calendar size={14} />
                 <span>Gantt Schedule</span>
-              </button>
-              <button
-                className={`viewport-tab ${viewMode3D ? 'active' : ''}`}
-                onClick={() => setViewMode3D(!viewMode3D)}
-                title="Toggle 3D WebGL Realtime Airfield Inspector"
-                style={viewMode3D ? { backgroundColor: 'rgba(14, 165, 233, 0.15)', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' } : {}}
-              >
-                <Sparkles size={14} />
-                <span>{viewMode3D ? '🏢 2D Gate View' : '🛩️ 3D WebGL Airfield'}</span>
               </button>
             </div>
 
@@ -877,15 +866,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="viewport-body">
-            {viewMode3D ? (
-              <ThreeDAirfieldCanvas selectedAirportCode={selectedAirport} flights={flights} />
-            ) : (
-              <>
-                {viewportTab === 'radar' && (
-                  <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
-                )}
+            {viewportTab === 'radar' && (
+              <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
+            )}
 
-                {viewportTab === 'gates' && (() => {
+            {viewportTab === 'gates' && (() => {
                   const activeInspectorGate =
                     gates.find((g) => g._id === selectedGateId) ||
                     gates.find((g) => g.status === 'occupied') ||
@@ -1172,8 +1157,6 @@ export default function DashboardPage() {
                 onSelectFlight={handleSelectFlightFromGantt}
                 onReassignGate={handleReassignGate}
               />
-            )}
-              </>
             )}
           </div>
         </section>
