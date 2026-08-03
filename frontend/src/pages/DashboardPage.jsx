@@ -777,7 +777,7 @@ function DashboardPageContent() {
               onClick={() => setShowNotifDropdown(!showNotifDropdown)}
             >
               <Bell size={16} />
-              {notifications.filter((n) => !n.is_read).length > 0 && (
+              {(Array.isArray(notifications) ? notifications.filter((n) => !n.is_read) : []).length > 0 && (
                 <span className="notif-badge-dot" />
               )}
             </button>
@@ -787,22 +787,22 @@ function DashboardPageContent() {
                 <div className="popover-header">
                   <h4>Alert Notifications</h4>
                   <span className="notif-unread-count">
-                    {notifications.filter((n) => !n.is_read).length} Unread
+                    {(Array.isArray(notifications) ? notifications.filter((n) => !n.is_read) : []).length} Unread
                   </span>
                 </div>
                 <div className="notif-list">
-                  {notifications.length === 0 ? (
+                  {(!Array.isArray(notifications) || notifications.length === 0) ? (
                     <div className="notif-empty">No unread alerts.</div>
                   ) : (
                     notifications.map((n) => (
                       <div
-                        key={n.id}
-                        className={`notif-item priority-${n.priority} ${n.is_read ? 'read' : 'unread'}`}
+                        key={n.id || Math.random()}
+                        className={`notif-item priority-${n.priority || 'medium'} ${n.is_read ? 'read' : 'unread'}`}
                         onClick={() => handleMarkAsRead(n.id)}
                       >
-                        <div className="notif-title font-mono">{n.title}</div>
-                        <div className="notif-msg">{n.message}</div>
-                        <span className="notif-time font-mono">{n.timestamp}</span>
+                        <div className="notif-title font-mono">{n.title || 'Notification'}</div>
+                        <div className="notif-msg">{n.message || ''}</div>
+                        <span className="notif-time font-mono">{n.timestamp || ''}</span>
                       </div>
                     ))
                   )}
@@ -819,7 +819,7 @@ function DashboardPageContent() {
               </button>
               <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/pending-approvals')}>
                 <UserCheck size={14} />
-                <span>Staff Approvals {pendingStaff.length > 0 && `(${pendingStaff.length})`}</span>
+                <span>Staff Approvals {Array.isArray(pendingStaff) && pendingStaff.length > 0 && `(${pendingStaff.length})`}</span>
               </button>
             </>
           )}
