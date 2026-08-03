@@ -222,8 +222,8 @@ class AircraftListCreateView(APIView):
             return Response({"error": str(err)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-from flights.opensky_service import fetch_live_opensky_flights
-from flights.flightradar_service import fetch_live_flightradar24_flights
+from flights.disruption_service import run_ai_disruption_recovery
+from flights.gse_service import get_gse_telemetry_for_airport
 
 
 class LiveOpenSkyRadarView(APIView):
@@ -248,6 +248,35 @@ class LiveOpenSkyRadarView(APIView):
             "total_count": len(all_live),
             "flights": all_live
         }, status=status.HTTP_200_OK)
+
+
+class AIDisruptionRecoveryView(APIView):
+    """
+    POST /api/flights/ai-disruption-recovery/
+    Runs the AI Automated Disruption Management algorithm to re-assign conflicting gate stands
+    and compress turnaround task slots for disrupted flights.
+    """
+
+    def post(self, request):
+        airport_code = request.data.get("airport", "AMD")
+        flights = request.data.get("flights", [])
+        gates = request.data.get("gates", [])
+
+        result = run_ai_disruption_recovery(airport_code, flights, gates)
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class GSETelemetryView(APIView):
+    """
+    GET /api/flights/gse-telemetry/?airport=DEL
+    Returns real-world Ground Support Equipment (GSE) vehicle telemetry and active gate dispatch telemetry.
+    """
+
+    def get(self, request):
+        airport_code = request.GET.get("airport", "AMD")
+        data = get_gse_telemetry_for_airport(airport_code)
+        return Response(data, status=status.HTTP_200_OK)
+
 
 
 

@@ -41,6 +41,8 @@ import {
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
+import ThreeDAirfieldCanvas from '../components/ThreeDAirfieldCanvas';
+import GseTelemetryComponent from '../components/GseTelemetryComponent';
 import './DashboardPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -73,8 +75,10 @@ export default function DashboardPage() {
 
   // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt'
   const [viewportTab, setViewportTab] = useState('radar');
+  const [viewMode3D, setViewMode3D] = useState(false);
   const [gateStandFilter, setGateStandFilter] = useState('ALL');
   const [selectedGateId, setSelectedGateId] = useState(null);
+  const [aiDisruptionLoading, setAiDisruptionLoading] = useState(false);
 
   // Toggle for Floating Voice Assistant Drawer
   const [showVoiceDrawer, setShowVoiceDrawer] = useState(false);
@@ -153,6 +157,46 @@ export default function DashboardPage() {
       loadAllData();
     } catch (err) {
       setActionError(err.response?.data?.error || 'Failed to update weather.');
+    }
+  };
+
+  const handleRunAiDisruptionRecovery = async () => {
+    try {
+      setAiDisruptionLoading(true);
+      setActionError('');
+      setActionSuccess('');
+      const res = await API.post('flights/ai-disruption-recovery/', {
+        airport: selectedAirport,
+        flights: flights,
+        gates: gates,
+      });
+
+      if (res.data.actions && res.data.actions.length > 0) {
+        const actionsMap = new Map(res.data.actions.map((a) => [a.flight_id, a]));
+        setFlights((prevFlights) =>
+          prevFlights.map((f) => {
+            const act = actionsMap.get(f._id);
+            if (act) {
+              const targetGate = gates.find((g) => g.label === act.new_gate_label);
+              return {
+                ...f,
+                status: act.new_status,
+                gate_id: targetGate ? targetGate._id : f.gate_id,
+              };
+            }
+            return f;
+          })
+        );
+        setActionSuccess(
+          `🤖 AI DISRUPTION RECOVERY: Resolved ${res.data.disruptions_resolved} flight conflict(s) for ${selectedAirport}! Gates reallocated & slots compressed.`
+        );
+      } else {
+        setActionSuccess(`🤖 AI DISRUPTION RECOVERY: All flight operations & gate stands for ${selectedAirport} are 100% optimal!`);
+      }
+    } catch (err) {
+      setActionError('Failed to execute AI Disruption Recovery.');
+    } finally {
+      setAiDisruptionLoading(false);
     }
   };
 
@@ -780,46 +824,72 @@ export default function DashboardPage() {
 
         <section className="shadcn-card viewport-card">
           <div className="viewport-tab-bar">
-            <div className="tab-group">
+            <div className="viewport-tabs">
               <button
-                className={`viewport-tab ${viewportTab === 'radar' ? 'active' : ''}`}
-                onClick={() => setViewportTab('radar')}
+                className={`viewport-tab ${viewportTab === 'radar' && !viewMode3D ? 'active' : ''}`}
+                onClick={() => { setViewportTab('radar'); setViewMode3D(false); }}
               >
                 <Plane size={14} />
                 <span>Live Radar</span>
               </button>
               <button
-                className={`viewport-tab ${viewportTab === 'gates' ? 'active' : ''}`}
-                onClick={() => setViewportTab('gates')}
+                className={`viewport-tab ${viewportTab === 'gates' && !viewMode3D ? 'active' : ''}`}
+                onClick={() => { setViewportTab('gates'); setViewMode3D(false); }}
               >
                 <LayoutGrid size={14} />
                 <span>Gate Status</span>
               </button>
               <button
-                className={`viewport-tab ${viewportTab === 'gantt' ? 'active' : ''}`}
-                onClick={() => setViewportTab('gantt')}
+                className={`viewport-tab ${viewportTab === 'gantt' && !viewMode3D ? 'active' : ''}`}
+                onClick={() => { setViewportTab('gantt'); setViewMode3D(false); }}
               >
                 <Calendar size={14} />
                 <span>Gantt Schedule</span>
               </button>
+              <button
+                className={`viewport-tab ${viewMode3D ? 'active' : ''}`}
+                onClick={() => setViewMode3D(!viewMode3D)}
+                title="Toggle 3D WebGL Realtime Airfield Inspector"
+                style={viewMode3D ? { backgroundColor: 'rgba(14, 165, 233, 0.15)', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' } : {}}
+              >
+                <Sparkles size={14} />
+                <span>{viewMode3D ? '🏢 2D Gate View' : '🛩️ 3D WebGL Airfield'}</span>
+              </button>
             </div>
 
-            <button className="shadcn-btn-secondary btn-compact" onClick={loadAllData}>
-              <RefreshCw size={13} />
-              <span>Refresh</span>
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <button
+                className="shadcn-btn-primary btn-compact"
+                style={{ backgroundColor: '#6366f1', borderColor: '#6366f1', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                onClick={handleRunAiDisruptionRecovery}
+                disabled={aiDisruptionLoading}
+                title="Run AI Automated Disruption Management algorithm to re-assign gate stands and compress slots"
+              >
+                <Zap size={13} className={aiDisruptionLoading ? 'spin' : ''} />
+                <span>{aiDisruptionLoading ? 'Running AI...' : '🤖 AI Disruption Recovery'}</span>
+              </button>
+
+              <button className="shadcn-btn-secondary btn-compact" onClick={loadAllData}>
+                <RefreshCw size={13} />
+                <span>Refresh</span>
+              </button>
+            </div>
           </div>
 
           <div className="viewport-body">
-            {viewportTab === 'radar' && (
-              <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
-            )}
+            {viewMode3D ? (
+              <ThreeDAirfieldCanvas selectedAirportCode={selectedAirport} flights={flights} />
+            ) : (
+              <>
+                {viewportTab === 'radar' && (
+                  <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
+                )}
 
-            {viewportTab === 'gates' && (() => {
-              const activeInspectorGate =
-                gates.find((g) => g._id === selectedGateId) ||
-                gates.find((g) => g.status === 'occupied') ||
-                gates[0];
+                {viewportTab === 'gates' && (() => {
+                  const activeInspectorGate =
+                    gates.find((g) => g._id === selectedGateId) ||
+                    gates.find((g) => g.status === 'occupied') ||
+                    gates[0];
 
               const inspectorFlight = activeInspectorGate
                 ? flights.find((f) => f.gate_id === activeInspectorGate._id && f.status !== 'departed')
@@ -1103,8 +1173,13 @@ export default function DashboardPage() {
                 onReassignGate={handleReassignGate}
               />
             )}
+              </>
+            )}
           </div>
         </section>
+
+        {/* Live Ground Support Equipment (GSE) Vehicle & Dispatch Telemetry */}
+        <GseTelemetryComponent selectedAirportCode={selectedAirport} />
 
         <section className="shadcn-card table-section">
           <div className="section-title-bar">
