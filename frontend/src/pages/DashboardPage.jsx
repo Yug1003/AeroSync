@@ -74,6 +74,7 @@ function DashboardPageContent() {
   const [gateMap, setGateMap] = useState({});
   const [tasksMap, setTasksMap] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [flightFilter, setFlightFilter] = useState('ALL');
 
   // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt'
   const [viewportTab, setViewportTab] = useState('radar');
