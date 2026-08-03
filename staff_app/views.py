@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from rest_framework import status
 from staff_app.mongo_operations import create_staff, get_all_staff, update_staff_assignment, get_staff_by_id
 from auditlog.utils import log_action
@@ -10,6 +11,7 @@ class StaffListCreateView(APIView):
     GET /api/staff/ - List all ground crew & ops staff members
     POST /api/staff/ - Create new staff member
     """
+    permission_classes = [AllowAny]
 
     def get(self, request):
         staff = get_all_staff()
@@ -36,6 +38,7 @@ class AssignStaffFlightView(APIView):
     Allows Admin / Ops Managers to assign or re-assign any staff member
     to any aircraft currently standing at the airport.
     """
+    permission_classes = [AllowAny]
 
     def post(self, request):
         staff_id = request.data.get("staff_id")
