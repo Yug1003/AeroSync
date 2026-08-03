@@ -1,13 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from staff_app.mongo_operations import create_staff, get_all_staff
+from staff_app.mongo_operations import create_staff, get_all_staff, update_staff_assignment, get_staff_by_id
 from auditlog.utils import log_action
 
 
 class StaffListCreateView(APIView):
     """
-    GET /api/staff/ - List all staff
+    GET /api/staff/ - List all ground crew & ops staff members
     POST /api/staff/ - Create new staff member
     """
 
@@ -28,3 +28,37 @@ class StaffListCreateView(APIView):
             return Response(staff_doc, status=status.HTTP_201_CREATED)
         except ValueError as err:
             return Response({"error": str(err)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AssignStaffFlightView(APIView):
+    """
+    POST /api/staff/assign-flight/
+    Allows Admin / Ops Managers to assign or re-assign any staff member
+    to any aircraft currently standing at the airport.
+    """
+
+    def post(self, request):
+        staff_id = request.data.get("staff_id")
+        flight_callsign = request.data.get("flight_callsign")
+        gate_label = request.data.get("gate_label")
+
+        if not staff_id:
+            return Response({"error": "staff_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        updated_staff = update_staff_assignment(staff_id, None, flight_callsign, gate_label)
+        
+        staff_name = updated_staff.get("name", "Staff Member") if updated_staff else "Staff Member"
+        assignment_msg = f"Assigned to Flight {flight_callsign} at Gate {gate_label}" if flight_callsign else "Set to Standby / Available"
+
+        log_action(
+            request.user,
+            "assign_staff_aircraft",
+            "Staff",
+            staff_id,
+            {"staff_name": staff_name, "flight_callsign": flight_callsign, "gate_label": gate_label},
+        )
+
+        return Response({
+            "message": f"✓ Staff member {staff_name} {assignment_msg} successfully.",
+            "staff": updated_staff
+        }, status=status.HTTP_200_OK)

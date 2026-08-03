@@ -780,10 +780,16 @@ export default function DashboardPage() {
           </div>
 
           {isAdmin && (
-            <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/pending-approvals')}>
-              <UserCheck size={14} />
-              <span>Staff Approvals {pendingStaff.length > 0 && `(${pendingStaff.length})`}</span>
-            </button>
+            <>
+              <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/staff-roster')}>
+                <User size={14} />
+                <span>Staff Roster</span>
+              </button>
+              <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/pending-approvals')}>
+                <UserCheck size={14} />
+                <span>Staff Approvals {pendingStaff.length > 0 && `(${pendingStaff.length})`}</span>
+              </button>
+            </>
           )}
 
           <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/incidents')}>

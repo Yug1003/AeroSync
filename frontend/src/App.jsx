@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import IncidentsPage from './pages/IncidentsPage';
 import ActivityLogPage from './pages/ActivityLogPage';
 import PendingApprovalsPage from './pages/PendingApprovalsPage';
+import StaffRosterPage from './pages/StaffRosterPage';
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/incidents" element={<IncidentsPage />} />
         <Route path="/activity-log" element={<ActivityLogPage />} />
         <Route path="/pending-approvals" element={<PendingApprovalsPage />} />
+        <Route path="/staff-roster" element={<StaffRosterPage />} />
       </Routes>
     </BrowserRouter>
   );
