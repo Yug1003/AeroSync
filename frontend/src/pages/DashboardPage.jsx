@@ -65,7 +65,7 @@ const INDIAN_AIRPORTS = [
   { code: 'VTZ', name: 'Visakhapatnam Intl', city: 'Visakhapatnam' },
 ];
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const [selectedAirport, setSelectedAirport] = useState('AMD');
   const [kpis, setKpis] = useState(null);
   const [gates, setGates] = useState([]);
@@ -425,7 +425,7 @@ export default function DashboardPage() {
     fetchPendingStaff();
   };
 
-  const handleMarkNotificationRead = async (notifId) => {
+  const handleMarkAsRead = async (notifId) => {
     try {
       await API.patch(`notifications/${notifId}/`, { is_read: true });
       fetchNotifications();
@@ -433,6 +433,7 @@ export default function DashboardPage() {
       console.error(err);
     }
   };
+  const handleMarkNotificationRead = handleMarkAsRead;
 
   useEffect(() => {
     loadAllData();
@@ -1390,3 +1391,39 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+class DashboardPageErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Dashboard Error Boundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: '3rem', textAlign: 'center', backgroundColor: '#0f172a', color: '#f8fafc', minHeight: '100vh', fontFamily: 'monospace' }}>
+          <h2 style={{ color: '#ef4444' }}>⚠️ AeroSync Operations Dashboard Error Recovered</h2>
+          <p style={{ marginTop: '1rem', color: '#94a3b8' }}>{this.state.error?.toString()}</p>
+          <button
+            style={{ marginTop: '1.5rem', padding: '0.6rem 1.2rem', backgroundColor: '#0ea5e9', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
+          >
+            🔄 Reload Operations Dashboard
+          </button>
+        </div>
+      );
+    }
+
+    return <DashboardPageContent {...this.props} />;
+  }
+}
+
+export default DashboardPageErrorBoundary;
