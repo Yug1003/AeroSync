@@ -34,6 +34,9 @@ import {
   Layers,
   BarChart2,
   SlidersHorizontal,
+  UserCheck,
+  UserX,
+  UserPlus,
 } from 'lucide-react';
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
@@ -85,6 +88,32 @@ export default function DashboardPage() {
   const [weather, setWeather] = useState(null);
   const [showWeatherModal, setShowWeatherModal] = useState(false);
 
+  const [pendingStaff, setPendingStaff] = useState([]);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+
+  const username = localStorage.getItem('username') || 'Operator';
+  const userRole = localStorage.getItem('user_role') || (username === 'admin' ? 'admin' : 'ground_crew');
+  const isAdmin = userRole === 'admin' || username === 'admin';
+
+  const fetchPendingStaff = async () => {
+    try {
+      const res = await API.get('auth/pending-staff/');
+      setPendingStaff(res.data);
+    } catch (err) {
+      // Non-admin accounts or network notes safely ignored
+    }
+  };
+
+  const handleApproveStaff = async (userId, action) => {
+    try {
+      const res = await API.post(`auth/approve-staff/${userId}/`, { action });
+      setActionSuccess(res.data.message);
+      fetchPendingStaff();
+    } catch (err) {
+      setActionError('Failed to update staff approval status.');
+    }
+  };
+
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [loadingGates, setLoadingGates] = useState(true);
   const [loadingFlights, setLoadingFlights] = useState(true);
@@ -93,8 +122,6 @@ export default function DashboardPage() {
   const [actionSuccess, setActionSuccess] = useState('');
   const [highlightedFlightId, setHighlightedFlightId] = useState(null);
   const navigate = useNavigate();
-
-  const username = localStorage.getItem('username') || 'Operator';
 
   const fetchWeather = async () => {
     try {
@@ -351,6 +378,7 @@ export default function DashboardPage() {
     fetchTasks();
     fetchNotifications();
     fetchWeather();
+    fetchPendingStaff();
   };
 
   const handleMarkNotificationRead = async (notifId) => {
@@ -709,6 +737,13 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {isAdmin && (
+            <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/pending-approvals')}>
+              <UserCheck size={14} />
+              <span>Staff Approvals {pendingStaff.length > 0 && `(${pendingStaff.length})`}</span>
+            </button>
+          )}
 
           <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/incidents')}>
             <AlertTriangle size={14} />
