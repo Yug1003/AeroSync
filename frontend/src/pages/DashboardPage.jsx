@@ -330,50 +330,46 @@ export default function DashboardPage() {
         }
       });
 
-      let operationalFlights = [];
+      // Generate clean, non-overlapping staggered gate schedules for the selected airport
+      const now = new Date();
+      const numGates = Math.max(1, gates.length);
 
-      if (dbFlights.length > 0 && selectedAirport === 'AMD') {
-        operationalFlights = dbFlights;
-      } else {
-        // Generate clean, non-overlapping staggered gate schedules for the selected airport
-        const now = new Date();
-        const numGates = Math.max(1, gates.length);
+      const sourceList = rawLive.length > 0 ? rawLive : dbFlights;
 
-        operationalFlights = rawLive.slice(0, numGates * 2).map((rf, idx) => {
-          const gateIdx = idx % numGates;
-          const slotInGate = Math.floor(idx / numGates);
+      let operationalFlights = sourceList.slice(0, Math.max(6, numGates * 2)).map((rf, idx) => {
+        const gateIdx = idx % numGates;
+        const slotInGate = Math.floor(idx / numGates);
 
-          // Stagger flight times cleanly by 2.5 hours so timelines never collide
-          const arrMinutesOffset = slotInGate * 150 - 60 + (idx % 2) * 15;
-          const arrTime = new Date(now.getTime() + arrMinutesOffset * 60000).toISOString();
-          const depTime = new Date(now.getTime() + (arrMinutesOffset + 90) * 60000).toISOString();
+        // Stagger flight times cleanly by 2.5 hours so timelines never collide
+        const arrMinutesOffset = slotInGate * 150 - 60 + (idx % 2) * 15;
+        const arrTime = new Date(now.getTime() + arrMinutesOffset * 60000).toISOString();
+        const depTime = new Date(now.getTime() + (arrMinutesOffset + 90) * 60000).toISOString();
 
-          const flightId = rf.id || `fl_${selectedAirport.toLowerCase()}_${idx}`;
-          newAcMap[flightId] = `${rf.tailNumber || 'VT-AIR'} — ${rf.callsign || 'FL-' + idx}`;
+        const flightId = rf.id || rf._id || `fl_${selectedAirport.toLowerCase()}_${idx}`;
+        newAcMap[flightId] = `${rf.tailNumber || 'VT-AIR'} — ${rf.callsign || 'FL-' + idx}`;
 
-          if (!newTasksMap[flightId]) {
-            newTasksMap[flightId] = [
-              { _id: `t_bg_${flightId}`, flight_id: flightId, task_type: 'baggage', status: idx % 2 === 0 ? 'completed' : 'pending' },
-              { _id: `t_cl_${flightId}`, flight_id: flightId, task_type: 'cleaning', status: idx % 3 === 0 ? 'completed' : 'pending' },
-              { _id: `t_rf_${flightId}`, flight_id: flightId, task_type: 'refuel', status: idx % 4 === 0 ? 'completed' : 'pending' },
-              { _id: `t_ct_${flightId}`, flight_id: flightId, task_type: 'catering', status: idx % 2 === 0 ? 'completed' : 'pending' },
-            ];
-          }
+        if (!newTasksMap[flightId]) {
+          newTasksMap[flightId] = [
+            { _id: `t_bg_${flightId}`, flight_id: flightId, task_type: 'baggage', status: idx % 2 === 0 ? 'completed' : 'pending' },
+            { _id: `t_cl_${flightId}`, flight_id: flightId, task_type: 'cleaning', status: idx % 3 === 0 ? 'completed' : 'pending' },
+            { _id: `t_rf_${flightId}`, flight_id: flightId, task_type: 'refuel', status: idx % 4 === 0 ? 'completed' : 'pending' },
+            { _id: `t_ct_${flightId}`, flight_id: flightId, task_type: 'catering', status: idx % 2 === 0 ? 'completed' : 'pending' },
+          ];
+        }
 
-          return {
-            _id: flightId,
-            aircraft_id: flightId,
-            gate_id: gates[gateIdx]?._id || null,
-            status: rf.is_on_ground ? 'in_progress' : 'scheduled',
-            arrival_time: arrTime,
-            departure_time: depTime,
-            callsign: rf.callsign,
-            tailNumber: rf.tailNumber,
-            aircraftType: rf.aircraft_type,
-            route: rf.route,
-          };
-        });
-      }
+        return {
+          _id: flightId,
+          aircraft_id: flightId,
+          gate_id: gates[gateIdx]?._id || null,
+          status: rf.is_on_ground ? 'in_progress' : 'scheduled',
+          arrival_time: arrTime,
+          departure_time: depTime,
+          callsign: rf.callsign || `6E-${idx + 101}`,
+          tailNumber: rf.tailNumber || `VT-AI${idx + 1}`,
+          aircraftType: rf.aircraft_type || 'A320neo',
+          route: rf.route || `${selectedAirport} ✈️ INTL`,
+        };
+      });
 
       setAircraftMap((prev) => {
         const merged = { ...newAcMap, ...prev };

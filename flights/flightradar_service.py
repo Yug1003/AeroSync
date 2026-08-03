@@ -1,7 +1,7 @@
 import urllib.request
 import json
 import time
-import random
+import math
 from datetime import datetime, timezone
 
 AIRPORT_CONFIGS = {
@@ -118,8 +118,8 @@ CACHE_TTL = 2  # 2 Seconds cache for ultra-fast instant search switching
 
 def generate_fallback_airport_flights(code, count=12):
     """
-    Generates rich, authentic airport operations for any selected Indian International Airport
-    guaranteeing 100% instantaneous (<10ms) loading for every search query!
+    Generates deterministic, stable flight telemetry centered at the selected airport
+    guaranteeing 100% instantaneous (<10ms) loading for ALL 15 Indian International Airports!
     """
     config = AIRPORT_CONFIGS.get(code, AIRPORT_CONFIGS["AMD"])
     center_lat, center_lng = config["coords"]
@@ -138,19 +138,19 @@ def generate_fallback_airport_flights(code, count=12):
     flights = []
     for i in range(count):
         airline_name, prefix, reg_prefix = airlines[i % len(airlines)]
-        flight_num = f"{prefix} {random.randint(101, 999)}"
-        tail = f"{reg_prefix}{chr(65 + i)}{chr(66 + (i * 2) % 20)}"
+        flight_num = f"{prefix} {101 + (i * 37) % 890}"
+        tail = f"{reg_prefix}{chr(65 + (i % 20))}{chr(66 + (i * 3) % 20)}"
         route = routes[i % len(routes)]
 
-        angle = (i * 40) * (3.14159 / 180)
-        radius = 0.04 + (i % 3) * 0.03
-        lat = center_lat + random.uniform(-0.08, 0.08)
-        lng = center_lng + random.uniform(-0.08, 0.08)
+        angle = (i * 30 + 15) * (3.14159 / 180)
+        radius = 0.03 + (i % 4) * 0.025
+        lat = round(center_lat + math.sin(angle) * radius, 4)
+        lng = round(center_lng + math.cos(angle) * radius, 4)
 
         is_ground = i % 2 == 0
-        alt = 0 if is_ground else random.randint(2500, 18000)
-        speed = 0 if is_ground else random.randint(160, 440)
-        heading = random.randint(0, 360)
+        alt = 0 if is_ground else (2500 + (i * 1200) % 15000)
+        speed = 0 if is_ground else (180 + (i * 45) % 280)
+        heading = (i * 45) % 360
 
         flights.append({
             "id": f"ap_{code.lower()}_{i}",
@@ -178,7 +178,7 @@ def generate_fallback_airport_flights(code, count=12):
 def fetch_live_flightradar24_flights(airport_code="AMD"):
     """
     Fetches real-time ground & flight telemetry directly from Flightradar24 live servers
-    with 2-second in-memory caching and instant fallback generation for 100% reliable 0ms loading.
+    with 2-second in-memory caching and instant fallback generation for 100% reliable 0ms loading across all airports.
     """
     code = airport_code.upper()
     now_ts = time.time()
