@@ -125,8 +125,11 @@ export default function DashboardPage() {
 
   const fetchWeather = async () => {
     try {
-      const res = await API.get('weather/');
-      setWeather(res.data);
+      const res = await API.get(`weather/?airport=${selectedAirport}`);
+      const weatherData = Array.isArray(res.data) ? res.data[0] : res.data;
+      if (weatherData) {
+        setWeather(weatherData);
+      }
     } catch (err) {
       console.error(err);
     }
