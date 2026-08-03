@@ -19,6 +19,7 @@ import {
 import './PendingApprovalsPage.css';
 
 export default function PendingApprovalsPage() {
+  const navigate = useNavigate();
   const [pendingStaff, setPendingStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

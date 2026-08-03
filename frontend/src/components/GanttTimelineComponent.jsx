@@ -37,20 +37,25 @@ export default function GanttTimelineComponent({
   };
 
   const calculateFlightStyle = (flight) => {
-    if (!flight.arrival_time || !flight.departure_time) return { left: '10%', width: '20%' };
+    if (!flight.arrival_time || !flight.departure_time) return { left: '2%', width: '12%' };
     const arr = new Date(flight.arrival_time);
     const dep = new Date(flight.departure_time);
 
-    const startMinutes = arr.getHours() * 60 + arr.getMinutes();
-    const endMinutes = dep.getHours() * 60 + dep.getMinutes();
-    const duration = Math.max(60, endMinutes - startMinutes);
+    let startMinutes = arr.getHours() * 60 + arr.getMinutes();
+    let endMinutes = dep.getHours() * 60 + dep.getMinutes();
 
-    const leftPercent = (startMinutes / 1440) * 100;
-    const widthPercent = (duration / 1440) * 100;
+    if (endMinutes <= startMinutes) {
+      endMinutes = startMinutes + 45;
+    }
+
+    const duration = Math.max(25, endMinutes - startMinutes);
+
+    const leftPercent = Math.max(0, Math.min(92, (startMinutes / 1440) * 100));
+    const widthPercent = Math.max(4, Math.min(98 - leftPercent, (duration / 1440) * 100));
 
     return {
-      left: `${Math.min(85, Math.max(2, leftPercent))}%`,
-      width: `${Math.min(35, Math.max(15, widthPercent))}%`,
+      left: `${leftPercent}%`,
+      width: `${widthPercent}%`,
     };
   };
 
