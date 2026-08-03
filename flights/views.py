@@ -278,5 +278,32 @@ class GSETelemetryView(APIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
+class AIDelayPredictorView(APIView):
+    """
+    GET /api/flights/predict-delays/?airport=AMD
+    AI Predictive Engine calculating turnaround delay risks (+X mins).
+    """
+
+    def get(self, request):
+        from flights.predictor_service import predict_flight_delays
+        airport_code = request.GET.get("airport", "AMD")
+        data = predict_flight_delays(airport_code)
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class PassengerBaggageCarouselView(APIView):
+    """
+    GET /api/flights/baggage-carousels/?airport=AMD
+    Real-time arrival baggage claim belts (Belts B1 to B8) & carousel status.
+    """
+
+    def get(self, request):
+        from flights.baggage_service import get_baggage_carousel_telemetry
+        airport_code = request.GET.get("airport", "AMD")
+        data = get_baggage_carousel_telemetry(airport_code)
+        return Response(data, status=status.HTTP_200_OK)
+
+
+
 
 

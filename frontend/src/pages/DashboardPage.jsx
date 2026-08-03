@@ -43,6 +43,8 @@ import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
 import GseTelemetryComponent from '../components/GseTelemetryComponent';
+import VoiceCommandCenter from '../components/VoiceCommandCenter';
+import BaggageCarouselComponent from '../components/BaggageCarouselComponent';
 import './DashboardPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -737,7 +739,6 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Notification Bell */}
           <div className="notif-dropdown-container">
             <button
               className="notif-btn"
@@ -764,14 +765,12 @@ export default function DashboardPage() {
                     notifications.map((n) => (
                       <div
                         key={n.id}
-                        className={`notif-row ${n.is_read ? 'read' : 'unread'}`}
-                        onClick={() => handleMarkNotificationRead(n.id)}
+                        className={`notif-item priority-${n.priority} ${n.is_read ? 'read' : 'unread'}`}
+                        onClick={() => handleMarkAsRead(n.id)}
                       >
-                        <AlertTriangle size={14} className="notif-row-icon" />
-                        <div className="notif-row-content">
-                          <span className="notif-tag">[{n.notification_type}]</span>
-                          <p>{n.message}</p>
-                        </div>
+                        <div className="notif-title font-mono">{n.title}</div>
+                        <div className="notif-msg">{n.message}</div>
+                        <span className="notif-time font-mono">{n.timestamp}</span>
                       </div>
                     ))
                   )}
@@ -793,6 +792,10 @@ export default function DashboardPage() {
             </>
           )}
 
+          <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/analytics')}>
+            <BarChart2 size={14} />
+            <span>Executive Analytics</span>
+          </button>
           <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/incidents')}>
             <AlertTriangle size={14} />
             <span>Incidents</span>
@@ -822,6 +825,8 @@ export default function DashboardPage() {
           </div>
         )}
 
+        {/* AI Voice Command Center */}
+        <VoiceCommandCenter onRunCommand={handleVoiceCommand} />
 
         <section className="shadcn-card viewport-card">
           <div className="viewport-tab-bar">
@@ -1166,6 +1171,9 @@ export default function DashboardPage() {
 
         {/* Live Ground Support Equipment (GSE) Vehicle & Dispatch Telemetry */}
         <GseTelemetryComponent selectedAirportCode={selectedAirport} />
+
+        {/* Passenger Baggage Carousel & Claim Belt Allocation Matrix */}
+        <BaggageCarouselComponent selectedAirportCode={selectedAirport} />
 
         <section className="shadcn-card table-section">
           <div className="section-title-bar">
