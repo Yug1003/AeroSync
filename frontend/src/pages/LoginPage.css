@@ -66,9 +66,9 @@
 }
 
 .login-error-alert {
-  background: rgba(244, 63, 94, 0.12);
-  border: 1px solid rgba(244, 63, 94, 0.3);
-  color: #fb7185;
+  background: var(--status-occupied-bg);
+  border: 1px solid rgba(225, 29, 72, 0.3);
+  color: var(--status-occupied);
   padding: 0.65rem 0.85rem;
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
@@ -82,7 +82,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: #f43f5e;
+  background-color: var(--status-occupied);
   display: inline-block;
   flex-shrink: 0;
 }

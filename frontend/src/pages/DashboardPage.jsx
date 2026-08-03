@@ -22,7 +22,6 @@ import {
   Clock,
   Shield,
   Activity,
-  CheckCircle2,
   ChevronDown,
   Sparkles,
   MapPin,
@@ -39,7 +38,6 @@ import {
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
 import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
-import AirportTerminalLayoutComponent from '../components/AirportTerminalLayoutComponent';
 import './DashboardPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -70,8 +68,10 @@ export default function DashboardPage() {
   const [tasksMap, setTasksMap] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt' | 'simulation' | 'layout'
+  // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt'
   const [viewportTab, setViewportTab] = useState('radar');
+  const [gateStandFilter, setGateStandFilter] = useState('ALL');
+  const [selectedGateId, setSelectedGateId] = useState(null);
 
   // Toggle for Floating Voice Assistant Drawer
   const [showVoiceDrawer, setShowVoiceDrawer] = useState(false);
@@ -194,7 +194,7 @@ export default function DashboardPage() {
       res.data.forEach((ac) => {
         aMap[ac._id] = `${ac.tail_number} (${ac.airline})`;
       });
-      setAircraftMap(aMap);
+      setAircraftMap((prev) => ({ ...prev, ...aMap }));
     } catch (err) {
       console.error(err);
     }
@@ -210,7 +210,15 @@ export default function DashboardPage() {
         }
         tMap[t.flight_id].push(t);
       });
-      setTasksMap(tMap);
+      setTasksMap((prev) => {
+        const merged = { ...prev };
+        Object.keys(tMap).forEach((fId) => {
+          if (tMap[fId] && tMap[fId].length > 0) {
+            merged[fId] = tMap[fId];
+          }
+        });
+        return merged;
+      });
     } catch (err) {
       console.error(err);
     }
@@ -231,14 +239,22 @@ export default function DashboardPage() {
         console.warn('Live radar fetch warning:', err);
       }
 
-      const newAcMap = { ...aircraftMap };
-      const newTasksMap = { ...tasksMap };
+      const newAcMap = {};
+      const newTasksMap = {};
 
-      dbFlights.forEach((f) => {
-        if (!newAcMap[f.aircraft_id]) {
-          newAcMap[f.aircraft_id] = f.callsign
-            ? `${f.tailNumber || 'VT-AIR'} — ${f.callsign}`
-            : `Aircraft ${f.aircraft_id.slice(-6)}`;
+      dbFlights.forEach((f, idx) => {
+        const flightId = f._id;
+        newAcMap[f.aircraft_id] = f.callsign
+          ? `${f.tailNumber || 'VT-AIR'} — ${f.callsign}`
+          : `Aircraft ${f.aircraft_id.slice(-6)}`;
+
+        if (!newTasksMap[flightId]) {
+          newTasksMap[flightId] = [
+            { _id: `t_bg_${flightId}`, flight_id: flightId, task_type: 'baggage', status: idx % 2 === 0 ? 'completed' : 'pending' },
+            { _id: `t_cl_${flightId}`, flight_id: flightId, task_type: 'cleaning', status: idx % 3 === 0 ? 'completed' : 'pending' },
+            { _id: `t_rf_${flightId}`, flight_id: flightId, task_type: 'refuel', status: idx % 4 === 0 ? 'completed' : 'pending' },
+            { _id: `t_ct_${flightId}`, flight_id: flightId, task_type: 'catering', status: idx % 2 === 0 ? 'completed' : 'pending' },
+          ];
         }
       });
 
@@ -287,8 +303,20 @@ export default function DashboardPage() {
         });
       }
 
-      setAircraftMap(newAcMap);
-      setTasksMap(newTasksMap);
+      setAircraftMap((prev) => {
+        const merged = { ...newAcMap, ...prev };
+        Object.keys(newAcMap).forEach((key) => {
+          if (prev[key] && !prev[key].startsWith('Aircraft ')) {
+            merged[key] = prev[key];
+          }
+        });
+        return merged;
+      });
+
+      setTasksMap((prev) => ({
+        ...newTasksMap,
+        ...prev,
+      }));
 
       // Preserve local state changes (e.g. user pushback departed status and gate re-assignments)
       setFlights((prevFlights) => {
@@ -710,12 +738,7 @@ export default function DashboardPage() {
             <span>{actionError}</span>
           </div>
         )}
-        {actionSuccess && (
-          <div className="alert-bar success">
-            <CheckCircle2 size={16} />
-            <span>{actionSuccess}</span>
-          </div>
-        )}
+
 
         <section className="shadcn-card viewport-card">
           <div className="viewport-tab-bar">
@@ -732,7 +755,7 @@ export default function DashboardPage() {
                 onClick={() => setViewportTab('gates')}
               >
                 <LayoutGrid size={14} />
-                <span>Gate Status Grid</span>
+                <span>Gate Status</span>
               </button>
               <button
                 className={`viewport-tab ${viewportTab === 'gantt' ? 'active' : ''}`}
@@ -740,13 +763,6 @@ export default function DashboardPage() {
               >
                 <Calendar size={14} />
                 <span>Gantt Schedule</span>
-              </button>
-              <button
-                className={`viewport-tab ${viewportTab === 'layout' ? 'active' : ''}`}
-                onClick={() => setViewportTab('layout')}
-              >
-                <SlidersHorizontal size={14} />
-                <span>2D Terminal Inspector</span>
               </button>
             </div>
 
@@ -761,41 +777,293 @@ export default function DashboardPage() {
               <RadarMapComponent flights={flights} selectedAirportCode={selectedAirport} />
             )}
 
-            {viewportTab === 'gates' && (
-              <div className="gate-boxes-grid">
-                {gates.map((gate) => {
-                  const gateStatus = gate.status || 'available';
-                  return (
-                    <div key={gate._id} className={`gate-item status-${gateStatus}`}>
-                      <div className="gate-item-header">
-                        <span className="gate-name font-mono">{gate.label}</span>
-                        <span className={`shadcn-badge badge-${gateStatus}`}>
-                          <span className="shadcn-badge-dot" />
-                          {gateStatus}
-                        </span>
+            {viewportTab === 'gates' && (() => {
+              const activeInspectorGate =
+                gates.find((g) => g._id === selectedGateId) ||
+                gates.find((g) => g.status === 'occupied') ||
+                gates[0];
+
+              const inspectorFlight = activeInspectorGate
+                ? flights.find((f) => f.gate_id === activeInspectorGate._id && f.status !== 'departed')
+                : null;
+
+              let inspectorCallsign = 'STAND CLEAR';
+              if (inspectorFlight) {
+                if (inspectorFlight.callsign && inspectorFlight.callsign !== 'UNK') {
+                  inspectorCallsign = inspectorFlight.callsign;
+                } else if (inspectorFlight.tailNumber) {
+                  inspectorCallsign = inspectorFlight.tailNumber;
+                } else if (aircraftMap && aircraftMap[inspectorFlight.aircraft_id]) {
+                  const info = aircraftMap[inspectorFlight.aircraft_id];
+                  const parts = info.split('—');
+                  inspectorCallsign = parts.length > 1 ? parts[1].split('(')[0].trim() : parts[0].trim();
+                } else {
+                  inspectorCallsign = `FL-${inspectorFlight._id.slice(-4).toUpperCase()}`;
+                }
+              }
+
+              const inspectorTasks = inspectorFlight ? tasksMap[inspectorFlight._id] || [] : [];
+              const inspectorCompletedCount = inspectorTasks.filter((t) => t.status === 'completed').length;
+              const inspectorProgress = inspectorTasks.length > 0 ? (inspectorCompletedCount / 4) * 100 : 0;
+              const inspectorAircraftInfo = inspectorFlight && aircraftMap[inspectorFlight.aircraft_id]
+                ? aircraftMap[inspectorFlight.aircraft_id]
+                : null;
+
+              return (
+                <div className="gate-viewport-split-container">
+                  <div className="gate-grid-column">
+                    <div className="gate-viewport-subbar font-mono">
+                      <div className="gate-subbar-left">
+                        <span>🚪 GATE STAND OCCUPANCY & FLIGHT ASSIGNMENTS</span>
                       </div>
-                      <div className="gate-item-footer">
-                        <span className="gate-id font-mono">ID: {gate._id.slice(-6)}</span>
+
+                      <div className="gate-subbar-right">
+                        <div className="gate-filter-pills">
+                          <button
+                            type="button"
+                            className={`gate-filter-pill ${gateStandFilter === 'ALL' ? 'active' : ''}`}
+                            onClick={() => setGateStandFilter('ALL')}
+                          >
+                            ALL STANDS ({gates.length})
+                          </button>
+                          <button
+                            type="button"
+                            className={`gate-filter-pill ${gateStandFilter === 'OCCUPIED' ? 'active' : ''}`}
+                            onClick={() => setGateStandFilter('OCCUPIED')}
+                          >
+                            OCCUPIED ({gates.filter((g) => g.status === 'occupied').length})
+                          </button>
+                          <button
+                            type="button"
+                            className={`gate-filter-pill ${gateStandFilter === 'CLEAR' ? 'active' : ''}`}
+                            onClick={() => setGateStandFilter('CLEAR')}
+                          >
+                            CLEAR ({gates.filter((g) => g.status === 'available' || g.status !== 'occupied').length})
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
+
+                    <div className="gate-boxes-grid">
+                      {gates
+                        .filter((g) => {
+                          if (gateStandFilter === 'OCCUPIED') return g.status === 'occupied';
+                          if (gateStandFilter === 'CLEAR') return g.status === 'available' || g.status !== 'occupied';
+                          return true;
+                        })
+                        .map((gate) => {
+                          const gateStatus = gate.status || 'available';
+                          const gateFlight = flights.find(
+                            (f) => f.gate_id === gate._id && f.status !== 'departed'
+                          );
+
+                          let flightLabel = null;
+                          if (gateFlight) {
+                            if (gateFlight.callsign && gateFlight.callsign !== 'UNK') {
+                              flightLabel = gateFlight.callsign;
+                            } else if (gateFlight.tailNumber) {
+                              flightLabel = gateFlight.tailNumber;
+                            } else if (aircraftMap && aircraftMap[gateFlight.aircraft_id]) {
+                              const info = aircraftMap[gateFlight.aircraft_id];
+                              const parts = info.split('—');
+                              flightLabel = parts.length > 1 ? parts[1].split('(')[0].trim() : parts[0].trim();
+                            } else {
+                              flightLabel = `FL-${gateFlight._id.slice(-4).toUpperCase()}`;
+                            }
+                          }
+
+                          const tasks = gateFlight ? tasksMap[gateFlight._id] || [] : [];
+                          const completedTasks = tasks.filter((t) => t.status === 'completed').length;
+                          const progressPercent = tasks.length > 0 ? (completedTasks / 4) * 100 : 0;
+                          const isSelectedStand = activeInspectorGate && activeInspectorGate._id === gate._id;
+
+                          return (
+                            <div
+                              key={gate._id}
+                              tabIndex={gateFlight ? 0 : -1}
+                              role={gateFlight ? 'button' : undefined}
+                              aria-label={
+                                gateFlight
+                                  ? `Gate ${gate.label}, Flight ${flightLabel}, ${completedTasks} of 4 turnaround milestones completed.`
+                                  : `Gate ${gate.label}, Stand Clear`
+                              }
+                              className={`gate-item status-${gateStatus} ${gateFlight ? 'has-flight' : 'empty-stand'} ${isSelectedStand ? 'selected-stand' : ''}`}
+                              onClick={() => {
+                                setSelectedGateId(gate._id);
+                                if (gateFlight) {
+                                  handleSelectFlightFromGantt(gateFlight._id);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if ((e.key === 'Enter' || e.key === ' ') && gateFlight) {
+                                  e.preventDefault();
+                                  setSelectedGateId(gate._id);
+                                  handleSelectFlightFromGantt(gateFlight._id);
+                                }
+                              }}
+                              title={`Gate ${gate.label} • Click to inspect live telemetry and turnaround milestones`}
+                            >
+                              <div className="gate-item-top font-mono">
+                                <div className="gate-title-col">
+                                  <span className="gate-name">Gate {gate.label}</span>
+                                  {gateFlight && (
+                                    <span className="gate-flight-callsign">{flightLabel}</span>
+                                  )}
+                                </div>
+                                {!gateFlight && (
+                                  <span className="shadcn-badge badge-available">CLEAR</span>
+                                )}
+                              </div>
+
+                              {gateFlight ? (
+                                <div className="gate-item-mid font-mono">
+                                  <div className="gate-mid-meta">
+                                    <span className="gate-flight-route">{gateFlight.route || 'Local Line'}</span>
+                                    <span className="gate-flight-status-tag">
+                                      {gateFlight.status.replace('_', ' ').toUpperCase()}
+                                    </span>
+                                  </div>
+
+                                  <div className="gate-progress-line-wrapper">
+                                    <div className="gate-progress-text font-mono">
+                                      <span>Turnaround</span>
+                                      <strong>{completedTasks}/4 Done</strong>
+                                    </div>
+                                    <div className="gate-mini-progress-track">
+                                      <div
+                                        className="gate-mini-progress-fill"
+                                        style={{ width: `${progressPercent}%` }}
+                                      ></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="gate-empty-hint font-mono">
+                                  <span>STAND CLEAR</span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Right Sticky Stand Inspector Panel */}
+                  <div className="gate-inspector-column">
+                    {activeInspectorGate ? (
+                      <div className="stand-inspector-panel">
+                        <div className="inspector-header">
+                          <div>
+                            <span className="inspector-gate-label font-mono">STAND INSPECTOR — GATE {activeInspectorGate.label}</span>
+                            <h4 className="inspector-callsign font-mono">{inspectorCallsign}</h4>
+                          </div>
+                          <span className={`inspector-status-badge status-${activeInspectorGate.status} font-mono`}>
+                            {activeInspectorGate.status.toUpperCase()}
+                          </span>
+                        </div>
+
+                        {inspectorFlight ? (
+                          <>
+                            <div className="inspector-route-bar font-mono">
+                              <span>Route: {inspectorFlight.route || 'Local Line'}</span>
+                            </div>
+
+                            <div className="inspector-progress-box">
+                              <div className="progress-label-row font-mono">
+                                <span>Turnaround Progress</span>
+                                <strong>{inspectorCompletedCount}/4 Completed ({inspectorProgress}%)</strong>
+                              </div>
+                              <div className="inspector-progress-track">
+                                <div
+                                  className="inspector-progress-fill"
+                                  style={{ width: `${inspectorProgress}%` }}
+                                ></div>
+                              </div>
+                            </div>
+
+                            <div className="inspector-grid font-mono">
+                              <div className="inspector-item">
+                                <span>Aircraft Reg</span>
+                                <strong>{inspectorFlight.tailNumber || (inspectorAircraftInfo ? inspectorAircraftInfo.split('—')[0].trim() : 'VT-IZB')}</strong>
+                              </div>
+
+                              <div className="inspector-item">
+                                <span>Airline Operator</span>
+                                <strong>{inspectorFlight.callsign ? inspectorFlight.callsign.split(' ')[0] : 'IndiGo'}</strong>
+                              </div>
+
+                              <div className="inspector-item">
+                                <span>Aircraft Model</span>
+                                <strong>{inspectorAircraftInfo ? inspectorAircraftInfo.split('—')[0].trim() : 'A320neo'}</strong>
+                              </div>
+
+                              <div className="inspector-item">
+                                <span>Stand Location</span>
+                                <strong>Gate {activeInspectorGate.label}</strong>
+                              </div>
+                            </div>
+
+                            <div className="inspector-checklist font-mono">
+                              <h6>Turnaround Operational Milestones</h6>
+                              <ul className="checklist-items">
+                                {['baggage', 'refuel', 'cleaning', 'catering'].map((taskType) => {
+                                  const taskObj = inspectorTasks.find((t) => t.task_type === taskType);
+                                  const isDone = taskObj?.status === 'completed';
+
+                                  return (
+                                    <li
+                                      key={taskType}
+                                      className={isDone ? 'done' : 'pending'}
+                                      onClick={() => taskObj && handleToggleTask(taskObj)}
+                                      title="Click to toggle milestone state"
+                                    >
+                                      <div className="checklist-left">
+                                        <span className="check-icon">{isDone ? '✓' : '○'}</span>
+                                        <span className="task-title">{taskType.replace('_', ' ')}</span>
+                                      </div>
+                                      <span className="task-state-tag">{isDone ? 'DONE' : 'PENDING'}</span>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
+
+                            <div className="inspector-actions">
+                              <button
+                                className="shadcn-btn-primary pushback-action-btn w-full"
+                                disabled={inspectorCompletedCount < 4}
+                                onClick={() => handlePushback(inspectorFlight._id)}
+                              >
+                                Push Back Aircraft
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="stand-inspector-empty font-mono">
+                            <span>STAND CLEAR — READY FOR ARRIVAL</span>
+                            <p className="empty-subtext">Select any occupied gate card to inspect live flight turnaround metrics.</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="stand-inspector-empty font-mono">
+                        <span>Select any gate stand card to inspect live telemetry</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {viewportTab === 'gantt' && (
               <GanttTimelineComponent
-                gates={gates}
                 flights={flights}
-                tasksMap={tasksMap}
+                gates={gates}
+                gateMap={gateMap}
                 aircraftMap={aircraftMap}
-                onReassignGate={handleReassignGate}
                 onSelectFlight={handleSelectFlightFromGantt}
+                onReassignGate={handleReassignGate}
               />
-            )}
-
-            {viewportTab === 'layout' && (
-              <AirportTerminalLayoutComponent selectedAirportCode={selectedAirport} />
             )}
           </div>
         </section>
@@ -861,7 +1129,7 @@ export default function DashboardPage() {
                       />
                       <Bar dataKey="flights_handled" name="Flights Handled" radius={[4, 4, 0, 0]}>
                         {kpis.gate_utilization.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.flights_handled > 2 ? '#fafafa' : '#71717a'} />
+                          <Cell key={`cell-${index}`} fill={entry.flights_handled > 2 ? '#86efac' : '#3f3f46'} />
                         ))}
                       </Bar>
                     </BarChart>

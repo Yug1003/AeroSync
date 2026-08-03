@@ -7,7 +7,7 @@ import './RadarMapComponent.css';
 
 // Custom Airplane Icon generator for Leaflet (Airborne vs Ground Parked)
 const createPlaneIcon = (heading = 45, isGround = false) => {
-  const color = isGround ? '#fbbf24' : '#00f2fe';
+  const color = isGround ? '#fbbf24' : '#0ea5e9';
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${isGround ? 26 : 32}" height="${isGround ? 26 : 32}" style="transform: rotate(${heading}deg);">
       <path fill="${color}" stroke="#ffffff" stroke-width="1.2" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
@@ -111,64 +111,55 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
   }, [flights, selectedAirportCode]);
 
   return (
-    <div className="radar-map-wrapper">
-      <div className="radar-map-header">
-        <div>
-          <h4>🗺️ Flightradar24 Real-Time Ground & Airspace Radar — {selectedAirportCode} Hub</h4>
-          <span className="radar-subtext">Unified live transponder feed (Planes at gates + Airborne in {selectedAirportCode} Corridor)</span>
-        </div>
-      </div>
+    <div className="leaflet-container-box">
+      <MapContainer
+        key={selectedAirportCode}
+        center={centerCoords}
+        zoom={7}
+        scrollWheelZoom={true}
+        className="radar-map"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.flightradar24.com">Flightradar24</a> & OpenSky'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        />
 
-      <div className="leaflet-container-box">
-        <MapContainer
-          key={selectedAirportCode}
+        {/* Airspace Boundary Circle */}
+        <Circle
           center={centerCoords}
-          zoom={7}
-          scrollWheelZoom={true}
-          className="radar-map"
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.flightradar24.com">Flightradar24</a> & OpenSky'
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          />
+          radius={150000}
+          pathOptions={{ color: '#4ade80', fillColor: '#4ade80', fillOpacity: 0.03, weight: 1.5, dashArray: '8, 8' }}
+        />
 
-          {/* Airspace Boundary Circle */}
-          <Circle
-            center={centerCoords}
-            radius={150000}
-            pathOptions={{ color: '#00f2fe', fillColor: '#00f2fe', fillOpacity: 0.03, weight: 1.5, dashArray: '8, 8' }}
-          />
+        {/* Airport Tarmac Hub Circle */}
+        <Circle
+          center={centerCoords}
+          radius={20000}
+          pathOptions={{ color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 0.15, weight: 2 }}
+        />
 
-          {/* Airport Tarmac Hub Circle */}
-          <Circle
-            center={centerCoords}
-            radius={20000}
-            pathOptions={{ color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 0.15, weight: 2 }}
-          />
-
-          {/* Render Aircraft Markers */}
-          {radarFlights.map((rf) => (
-            <Marker
-              key={rf.id}
-              position={[rf.lat, rf.lng]}
-              icon={createPlaneIcon(rf.heading, rf.isOnGround)}
-            >
-              <Popup className="radar-popup">
-                <div className="popup-content">
-                  <h5>✈️ Flight {rf.callsign}</h5>
-                  <p>Reg / Tail: <strong>{rf.tailNumber}</strong> ({rf.aircraftType})</p>
-                  <p>Route: <strong>{rf.route}</strong></p>
-                  <p>Status: {rf.isOnGround ? <span className="ground-tag">🟡 AT GATE / TARMAC</span> : <span className="airborne-tag">🟢 AIRBORNE</span>}</p>
-                  <p>Altitude: <strong>{rf.altitude ? rf.altitude.toLocaleString() : '0'} ft</strong></p>
-                  <p>Ground Speed: <strong>{rf.speed} kts</strong></p>
-                  <p>Heading: <strong>{rf.heading}°</strong></p>
-                  <p>Source: <span className="feed-tag">{rf.source}</span></p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
+        {/* Render Aircraft Markers */}
+        {radarFlights.map((rf) => (
+          <Marker
+            key={rf.id}
+            position={[rf.lat, rf.lng]}
+            icon={createPlaneIcon(rf.heading, rf.isOnGround)}
+          >
+            <Popup className="radar-popup">
+              <div className="popup-content">
+                <h5>✈️ Flight {rf.callsign}</h5>
+                <p>Reg / Tail: <strong>{rf.tailNumber}</strong> ({rf.aircraftType})</p>
+                <p>Route: <strong>{rf.route}</strong></p>
+                <p>Status: {rf.isOnGround ? <span className="ground-tag">🟡 AT GATE / TARMAC</span> : <span className="airborne-tag">🟢 AIRBORNE</span>}</p>
+                <p>Altitude: <strong>{rf.altitude ? rf.altitude.toLocaleString() : '0'} ft</strong></p>
+                <p>Ground Speed: <strong>{rf.speed} kts</strong></p>
+                <p>Heading: <strong>{rf.heading}°</strong></p>
+                <p>Source: <span className="feed-tag">{rf.source}</span></p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
     </div>
   );
 }

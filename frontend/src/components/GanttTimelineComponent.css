@@ -1,6 +1,7 @@
 .gantt-wrapper {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
+  border-top: 2px solid rgba(74, 222, 128, 0.3);
   border-radius: var(--radius-md);
   padding: 1.15rem 1.25rem;
   display: flex;
@@ -48,9 +49,9 @@
 }
 
 .gantt-toggle-btn.active {
-  background: rgba(244, 63, 94, 0.14);
-  border-color: rgba(244, 63, 94, 0.45);
-  color: #f43f5e;
+  background: var(--status-occupied-bg);
+  border-color: rgba(225, 29, 72, 0.45);
+  color: var(--status-occupied);
 }
 
 .toggle-indicator {
@@ -62,16 +63,15 @@
 }
 
 .gantt-toggle-btn.active .toggle-indicator {
-  background: #f43f5e;
-  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+  background: var(--status-occupied);
 }
 
 .gantt-badge {
   font-size: 0.72rem;
   font-weight: 500;
   color: var(--accent-amber);
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--status-reserved-bg);
+  border: 1px solid rgba(217, 119, 6, 0.3);
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius-pill);
 }
@@ -155,7 +155,7 @@
 }
 
 .status-dot.dot-available { background: var(--status-available); }
-.status-dot.dot-occupied { background: var(--accent-cyan); }
+.status-dot.dot-occupied { background: var(--accent-green-stroke); }
 .status-dot.dot-maintenance { background: var(--status-maintenance); }
 
 .timeline-track-cell {
@@ -184,9 +184,9 @@
 
 .gantt-block:hover {
   transform: translateY(-2px);
-  border-color: #00f2fe;
+  border-color: var(--accent-green-stroke);
   z-index: 10;
-  box-shadow: 0 4px 14px rgba(0, 242, 254, 0.15);
+  box-shadow: 0 4px 14px rgba(74, 222, 128, 0.15);
 }
 
 .gantt-block:active {
@@ -252,8 +252,14 @@
 }
 
 .gantt-block.status-delayed {
-  background: rgba(244, 63, 94, 0.12);
-  border-color: rgba(244, 63, 94, 0.4);
+  background: var(--status-occupied-bg);
+  border-color: rgba(225, 29, 72, 0.4);
+}
+
+.gantt-block.status-scheduled,
+.gantt-block.status-in_progress {
+  border-left: 3px solid rgba(74, 222, 128, 0.5);
+  background: rgba(134, 239, 172, 0.04);
 }
 
 .block-header-row {
@@ -279,8 +285,8 @@
 }
 
 .block-status-tag.tag-in_progress {
-  color: #00f2fe;
-  background: rgba(0, 242, 254, 0.15);
+  color: var(--accent-green);
+  background: var(--accent-green-bg);
 }
 
 .block-status-tag.tag-scheduled {
@@ -289,8 +295,8 @@
 }
 
 .block-status-tag.tag-delayed {
-  color: #f43f5e;
-  background: rgba(244, 63, 94, 0.2);
+  color: var(--status-occupied);
+  background: var(--status-occupied-bg);
 }
 
 .block-status-tag.tag-departed {

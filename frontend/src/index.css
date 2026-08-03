@@ -17,21 +17,24 @@
   --text-muted: #71717a;
   --text-inverse: #09090b;
   
-  /* Status & Operational Colors */
+  /* Status & Operational Colors (Balanced & Harmonious - Neither Loud nor Dull) */
   --status-available: #10b981;
   --status-available-bg: rgba(16, 185, 129, 0.12);
-  --status-occupied: #f43f5e;
-  --status-occupied-bg: rgba(244, 63, 94, 0.12);
+  --status-occupied: #e11d48;
+  --status-occupied-bg: rgba(225, 29, 72, 0.12);
   --status-maintenance: #71717a;
   --status-maintenance-bg: rgba(113, 113, 122, 0.15);
-  --status-reserved: #f59e0b;
-  --status-reserved-bg: rgba(245, 158, 11, 0.12);
+  --status-reserved: #d97706;
+  --status-reserved-bg: rgba(217, 119, 6, 0.12);
   
-  --accent-cyan: #06b6d4;
+  --accent-green: #86efac;
+  --accent-green-stroke: #4ade80;
+  --accent-green-bg: rgba(134, 239, 172, 0.08);
+  --accent-cyan: #0ea5e9;
   --accent-blue: #3b82f6;
   --accent-indigo: #6366f1;
   --accent-violet: #8b5cf6;
-  --accent-amber: #f59e0b;
+  --accent-amber: #d97706;
   
   /* Layout & Spacing Tokens */
   --radius-sm: 6px;
@@ -172,7 +175,8 @@ select option {
 }
 
 .shadcn-btn-primary:hover {
-  background: #e4e4e7;
+  background: #d1fae5;
+  color: #064e3b;
 }
 
 .shadcn-btn-primary:disabled {
@@ -228,8 +232,8 @@ select option {
 }
 
 .shadcn-input:focus {
-  border-color: #a1a1aa;
-  box-shadow: 0 0 0 1px #a1a1aa;
+  border-color: var(--accent-green-stroke);
+  box-shadow: 0 0 0 1px rgba(74, 222, 128, 0.35);
 }
 
 .shadcn-badge {

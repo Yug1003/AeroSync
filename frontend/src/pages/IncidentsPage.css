@@ -109,8 +109,8 @@
   gap: 0.5rem;
 }
 
-.priority-high { background: rgba(244, 63, 94, 0.15); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
-.priority-medium { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.priority-high { background: var(--status-occupied-bg); color: var(--status-occupied); border: 1px solid rgba(225, 29, 72, 0.3); }
+.priority-medium { background: var(--status-reserved-bg); color: var(--accent-amber); border: 1px solid rgba(217, 119, 6, 0.3); }
 .priority-low { background: rgba(113, 113, 122, 0.15); color: #a1a1aa; border: 1px solid rgba(113, 113, 122, 0.3); }
 
 .inc-timestamp {
