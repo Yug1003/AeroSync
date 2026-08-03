@@ -14,9 +14,9 @@ DEFAULT_STAFF_ROSTER = [
     {"_id": "st_05", "name": "Deepak Verma", "role": "Ramp Marshal", "department": "operations", "phone": "+91 98765 43214", "assigned_flight": "SG 531", "assigned_gate": "T1-G4", "status": "ON DUTY"},
     {"_id": "st_06", "name": "Sunil Mehta", "role": "Fuel Hydrant Operator", "department": "fuel", "phone": "+91 98765 43215", "assigned_flight": "AI 101", "assigned_gate": "T3-A12", "status": "ON DUTY"},
     {"_id": "st_07", "name": "Karan Malhotra", "role": "Baggage Handler", "department": "baggage", "phone": "+91 98765 43216", "assigned_flight": "EK 517", "assigned_gate": "T3-B22", "status": "ON DUTY"},
-    {"_id": "st_08", "name": "Pooja Joshi", "role": "Ops Dispatch Coordinator", "department": "operations", "phone": "+91 98765 43217", "assigned_flight": null, "assigned_gate": null, "status": "STANDBY / AVAILABLE"},
-    {"_id": "st_09", "name": "Nitin Desai", "role": "Aircraft Wash & Clean", "department": "cleaning", "phone": "+91 98765 43218", "assigned_flight": null, "assigned_gate": null, "status": "STANDBY / AVAILABLE"},
-    {"_id": "st_10", "name": "Anil Rao", "role": "Catering Uplift Agent", "department": "catering", "phone": "+91 98765 43219", "assigned_flight": null, "assigned_gate": null, "status": "STANDBY / AVAILABLE"},
+    {"_id": "st_08", "name": "Pooja Joshi", "role": "Ops Dispatch Coordinator", "department": "operations", "phone": "+91 98765 43217", "assigned_flight": None, "assigned_gate": None, "status": "STANDBY / AVAILABLE"},
+    {"_id": "st_09", "name": "Nitin Desai", "role": "Aircraft Wash & Clean", "department": "cleaning", "phone": "+91 98765 43218", "assigned_flight": None, "assigned_gate": None, "status": "STANDBY / AVAILABLE"},
+    {"_id": "st_10", "name": "Anil Rao", "role": "Catering Uplift Agent", "department": "catering", "phone": "+91 98765 43219", "assigned_flight": None, "assigned_gate": None, "status": "STANDBY / AVAILABLE"},
 ]
 
 
