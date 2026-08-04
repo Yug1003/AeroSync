@@ -38,6 +38,7 @@ import {
   UserCheck,
   UserX,
   UserPlus,
+  Lock,
 } from 'lucide-react';
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
