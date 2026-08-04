@@ -101,6 +101,22 @@ function DashboardPageContent() {
   const userRole = localStorage.getItem('user_role') || (username === 'admin' ? 'admin' : 'ground_crew');
   const isAdmin = userRole === 'admin' || username === 'admin';
 
+  const [myAssignedFlightId, setMyAssignedFlightId] = useState(() => {
+    return localStorage.getItem(`my_assigned_flight_${username}`) || null;
+  });
+
+  const handleSelfAssignFlight = (flight) => {
+    setMyAssignedFlightId(flight._id);
+    localStorage.setItem(`my_assigned_flight_${username}`, flight._id);
+    setActionSuccess(`✓ Assigned yourself to Flight ${flight.callsign || flight.tailNumber || flight._id.slice(-6)} at Gate ${gateMap[flight.gate_id] || 'Stand'}!`);
+  };
+
+  const handleUnassignSelf = () => {
+    setMyAssignedFlightId(null);
+    localStorage.removeItem(`my_assigned_flight_${username}`);
+    setActionSuccess(`✓ Duty released. You are now on Standby mode.`);
+  };
+
   const fetchPendingStaff = async () => {
     try {
       const res = await API.get('auth/pending-staff/');
@@ -822,13 +838,13 @@ function DashboardPageContent() {
                 <UserCheck size={14} />
                 <span>Staff Approvals {Array.isArray(pendingStaff) && pendingStaff.length > 0 && `(${pendingStaff.length})`}</span>
               </button>
+              <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/analytics')}>
+                <BarChart2 size={14} />
+                <span>Executive Analytics</span>
+              </button>
             </>
           )}
 
-          <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/analytics')}>
-            <BarChart2 size={14} />
-            <span>Executive Analytics</span>
-          </button>
           <button className="shadcn-btn-ghost nav-btn" onClick={() => navigate('/incidents')}>
             <AlertTriangle size={14} />
             <span>Incidents</span>
@@ -858,8 +874,182 @@ function DashboardPageContent() {
           </div>
         )}
 
-        {/* AI Voice Command Center */}
-        <VoiceCommandCenter onRunCommand={handleVoiceCommand} selectedAirport={selectedAirport} />
+        {!isAdmin ? (
+          /* DEDICATED STAFF GROUND OPERATIONS PORTAL */
+          <div className="staff-portal-wrapper font-mono">
+            {actionSuccess && (
+              <div className="alert-bar success font-mono" style={{ marginBottom: '1rem' }}>
+                <Check size={16} />
+                <span>{actionSuccess}</span>
+              </div>
+            )}
+
+            {/* Staff Duty Header Banner */}
+            <div className="staff-duty-banner shadcn-card font-mono">
+              <div className="banner-info">
+                <div className="badge-duty-status">
+                  <span className={`dot ${myAssignedFlightId ? 'dot-active' : 'dot-standby'}`}></span>
+                  <span>{myAssignedFlightId ? 'ON DUTY — AIRCRAFT ASSIGNED' : 'STANDBY MODE — NO AIRCRAFT ASSIGNED'}</span>
+                </div>
+                <h2>👷 Ground Operations Staff Duty Terminal</h2>
+                <p className="banner-sub font-sans">
+                  Logged in as <strong>@{username}</strong> ({userRole.replace('_', ' ')}). Managing ground turnaround services at <strong>{selectedAirport} Hub</strong>.
+                </p>
+              </div>
+
+              {myAssignedFlightId && (
+                <button className="shadcn-btn-secondary unassign-duty-btn" onClick={handleUnassignSelf}>
+                  <UserX size={14} />
+                  <span>Finish Duty / Release Aircraft</span>
+                </button>
+              )}
+            </div>
+
+            {/* Section 1: My Assigned Aircraft Duty Card */}
+            {myAssignedFlightId ? (() => {
+              const assignedFlight = flights.find((f) => f._id === myAssignedFlightId) || flights[0];
+              if (!assignedFlight) return null;
+              const flightTasks = tasksMap[assignedFlight._id] || [];
+              const completedTasksCount = flightTasks.filter((t) => t.status === 'completed').length;
+              const progressPct = (completedTasksCount / 4) * 100;
+
+              return (
+                <section className="shadcn-card assigned-aircraft-card font-mono">
+                  <div className="card-header-row">
+                    <div className="aircraft-title-box">
+                      <span className="badge-assigned-tag">✈️ MY ASSIGNED AIRCRAFT</span>
+                      <h3>{aircraftMap[assignedFlight.aircraft_id] || assignedFlight.callsign || 'Assigned Aircraft'}</h3>
+                      <span className="gate-tag">Stand: Gate {gateMap[assignedFlight.gate_id] || 'Stand'}</span>
+                    </div>
+                    <span className={`status-badge-flight badge-${assignedFlight.status}`}>
+                      {(assignedFlight.status || 'scheduled').toUpperCase()}
+                    </span>
+                  </div>
+
+                  <div className="assigned-aircraft-grid">
+                    <div className="meta-box">
+                      <span className="meta-label">Route & Schedule</span>
+                      <div className="meta-val">{assignedFlight.route || `${selectedAirport} ✈️ INTL`}</div>
+                      <div className="meta-time">
+                        <Clock size={13} style={{ display: 'inline', marginRight: '4px' }} />
+                        {formatDateTime(assignedFlight.arrival_time)} → {formatDateTime(assignedFlight.departure_time)}
+                      </div>
+                    </div>
+
+                    <div className="meta-box">
+                      <span className="meta-label">Aircraft Type & Tail</span>
+                      <div className="meta-val">{assignedFlight.aircraftType || 'A320neo'}</div>
+                      <div className="meta-tail">Tail Number: {assignedFlight.tailNumber || 'VT-AIR'}</div>
+                    </div>
+
+                    <div className="meta-box">
+                      <span className="meta-label">Turnaround Completion</span>
+                      <div className="meta-val">{completedTasksCount} / 4 Tasks Finished ({progressPct}%)</div>
+                      <div className="progress-track" style={{ marginTop: '0.4rem' }}>
+                        <div className="progress-fill" style={{ width: `${progressPct}%`, backgroundColor: progressPct === 100 ? '#86efac' : '#0ea5e9' }}></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="turnaround-tasks-section font-mono" style={{ marginTop: '1.25rem' }}>
+                    <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                      📋 Turnaround Checklist — Click task to toggle completed status:
+                    </h4>
+                    <div className="task-chip-list">
+                      {flightTasks.map((t) => (
+                        <button
+                          key={t._id}
+                          className={`task-chip ${t.status}`}
+                          onClick={() => handleToggleTask(t)}
+                          style={{ padding: '0.6rem 1rem', fontSize: '0.85rem' }}
+                        >
+                          {t.status === 'completed' ? <Check size={14} /> : <span className="chip-dot" />}
+                          <span>{t.task_type.replace('_', ' ')}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              );
+            })() : (
+              <section className="shadcn-card no-assignment-alert font-mono" style={{ padding: '1.5rem', textAlign: 'center' }}>
+                <AlertTriangle size={32} className="text-amber" style={{ margin: '0 auto 0.75rem auto' }} />
+                <h3>No Aircraft Currently Assigned to You</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '520px', margin: '0.5rem auto 1.25rem auto' }}>
+                  You are currently in Standby status at <strong>{selectedAirport}</strong>. Select any aircraft standing at the airport below to assign yourself and begin turnaround operations.
+                </p>
+              </section>
+            )}
+
+            {/* Section 2: Standing Aircraft Catalog for Self-Assignment */}
+            <section className="shadcn-card table-section font-mono" style={{ marginTop: '1.5rem' }}>
+              <div className="section-title-bar">
+                <div>
+                  <h3 className="section-title">✈️ Standing Aircraft Catalog at {selectedAirport}</h3>
+                  <p className="section-subtitle">Click "Claim & Assign to Me" on any aircraft standing at the airport to take responsibility for its turnaround.</p>
+                </div>
+              </div>
+
+              <div className="shadcn-table-wrapper">
+                <table className="shadcn-table">
+                  <thead>
+                    <tr>
+                      <th>Flight / Tail Number</th>
+                      <th>Gate / Stand</th>
+                      <th>Schedule</th>
+                      <th>Status</th>
+                      <th>Turnaround Progress</th>
+                      <th style={{ textAlign: 'right' }}>Self-Assignment Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {flights.map((flight) => {
+                      const isAssignedToMe = myAssignedFlightId === flight._id;
+                      const flightTasks = tasksMap[flight._id] || [];
+                      const completedTasks = flightTasks.filter((t) => t.status === 'completed').length;
+
+                      return (
+                        <tr key={flight._id} className={isAssignedToMe ? 'row-assigned-me' : ''}>
+                          <td>
+                            <strong>{aircraftMap[flight.aircraft_id] || flight.callsign}</strong>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{flight.route}</div>
+                          </td>
+                          <td>
+                            <span className="gate-pill">{gateMap[flight.gate_id] || 'Stand'}</span>
+                          </td>
+                          <td>{formatDateTime(flight.arrival_time)} → {formatDateTime(flight.departure_time)}</td>
+                          <td>
+                            <span className={`status-badge-flight badge-${flight.status}`}>
+                              {(flight.status || 'scheduled').toUpperCase()}
+                            </span>
+                          </td>
+                          <td>{completedTasks} / 4 Tasks</td>
+                          <td style={{ textAlign: 'right' }}>
+                            {isAssignedToMe ? (
+                              <span className="badge-assigned-label">✓ Assigned to You</span>
+                            ) : (
+                              <button
+                                className="shadcn-btn-primary btn-compact"
+                                onClick={() => handleSelfAssignFlight(flight)}
+                              >
+                                <UserPlus size={13} />
+                                <span>Claim & Assign to Me</span>
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        ) : (
+          /* FULL EXECUTIVE ADMIN CONTROL CENTER */
+          <>
+            {/* AI Voice Command Center */}
+            <VoiceCommandCenter onRunCommand={handleVoiceCommand} selectedAirport={selectedAirport} />
 
         <section className="shadcn-card viewport-card">
           <div className="viewport-tab-bar">
@@ -1366,6 +1556,8 @@ function DashboardPageContent() {
             </table>
           </div>
         </section>
+        </>
+        )}
       </main>
 
       {/* Floating AI Voice Assistant Drawer Toggle */}
