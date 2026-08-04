@@ -4,24 +4,6 @@ import API from '../api/api';
 import { Plane, Shield, User, Key, ArrowRight, CheckCircle2, Lock, UserPlus, Briefcase, Mail, MapPin } from 'lucide-react';
 import './LoginPage.css';
 
-const INDIAN_AIRPORTS = [
-  { code: 'AMD', name: 'Sardar Vallabhbhai Patel Intl', city: 'Ahmedabad' },
-  { code: 'DEL', name: 'Indira Gandhi Intl', city: 'New Delhi' },
-  { code: 'BOM', name: 'Chhatrapati Shivaji Maharaj Intl', city: 'Mumbai' },
-  { code: 'BLR', name: 'Kempegowda Intl', city: 'Bengaluru' },
-  { code: 'MAA', name: 'Chennai Intl', city: 'Chennai' },
-  { code: 'HYD', name: 'Rajiv Gandhi Intl', city: 'Hyderabad' },
-  { code: 'CCU', name: 'Netaji Subhash Chandra Bose Intl', city: 'Kolkata' },
-  { code: 'COK', name: 'Cochin Intl', city: 'Kochi' },
-  { code: 'GOI', name: 'Manohar Intl / Dabolim', city: 'Goa' },
-  { code: 'JAI', name: 'Jaipur Intl', city: 'Jaipur' },
-  { code: 'LKO', name: 'Chaudhary Charan Singh Intl', city: 'Lucknow' },
-  { code: 'ATQ', name: 'Sri Guru Ram Dass Jee Intl', city: 'Amritsar' },
-  { code: 'TRV', name: 'Thiruvananthapuram Intl', city: 'Trivandrum' },
-  { code: 'IXC', name: 'Chandigarh Intl', city: 'Chandigarh' },
-  { code: 'VTZ', name: 'Visakhapatnam Intl', city: 'Visakhapatnam' },
-];
-
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
 
@@ -37,7 +19,7 @@ export default function LoginPage() {
   const [regLastName, setRegLastName] = useState('');
   const [regRole, setRegRole] = useState('ground_crew');
   const [regDepartment, setRegDepartment] = useState('baggage');
-  const [regAirport, setRegAirport] = useState('AMD');
+  const regAirport = 'AMD'; // Compulsory Ahmedabad Airport station for all staff signups
 
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -86,11 +68,11 @@ export default function LoginPage() {
         department: regDepartment
       });
 
-      // Save home airport for registered staff member
-      localStorage.setItem(`staff_home_airport_${regUsername}`, regAirport);
+      // Save compulsory AMD airport station for registered staff member
+      localStorage.setItem(`staff_home_airport_${regUsername}`, 'AMD');
 
       setLoading(false);
-      setSuccessMsg(response.data.message || `Staff registration successful for ${regAirport} Airport Station! You can now log in.`);
+      setSuccessMsg(response.data.message || 'Staff registration successful for [AMD] Ahmedabad Airport Station! You can now log in.');
       
       // Auto-fill login form with newly registered credentials
       setUsername(regUsername);
@@ -138,7 +120,7 @@ export default function LoginPage() {
             <Plane className="brand-plane-icon" size={24} />
           </div>
           <h1 className="brand-title">AeroSync</h1>
-          <p className="brand-subtitle">Airport Ramp Operations & Gate Management Control</p>
+          <p className="brand-subtitle">Ahmedabad (AMD) Ramp Operations & Gate Control System</p>
         </div>
 
         {/* Tab Switcher for Sign In vs Staff Sign Up */}
@@ -299,21 +281,16 @@ export default function LoginPage() {
             </div>
 
             <div className="form-field">
-              <label htmlFor="regAirport">Primary Airport Station *</label>
-              <div className="input-with-icon">
-                <MapPin className="field-icon" size={16} />
-                <select
-                  id="regAirport"
-                  className="shadcn-input select-input"
-                  value={regAirport}
-                  onChange={(e) => setRegAirport(e.target.value)}
-                >
-                  {INDIAN_AIRPORTS.map((apt) => (
-                    <option key={apt.code} value={apt.code}>
-                      [{apt.code}] {apt.city} — {apt.name}
-                    </option>
-                  ))}
-                </select>
+              <label>Primary Airport Station (Compulsory Station)</label>
+              <div className="input-with-icon" style={{ backgroundColor: 'rgba(14, 165, 233, 0.1)', borderColor: 'rgba(14, 165, 233, 0.3)' }}>
+                <MapPin className="field-icon text-cyan" size={16} />
+                <input
+                  type="text"
+                  className="shadcn-input"
+                  value="[AMD] Ahmedabad — Sardar Vallabhbhai Patel Intl"
+                  disabled
+                  style={{ color: 'var(--accent-cyan)', fontWeight: '600', opacity: 1, cursor: 'not-allowed' }}
+                />
               </div>
             </div>
 
@@ -361,7 +338,7 @@ export default function LoginPage() {
                 <span>Registering Account...</span>
               ) : (
                 <>
-                  <span>Create Staff Account</span>
+                  <span>Create Staff Account (AMD Station)</span>
                   <UserPlus size={16} />
                 </>
               )}
