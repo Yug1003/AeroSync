@@ -10,7 +10,7 @@ export default function GseTelemetryComponent({ selectedAirportCode = 'AMD' }) {
   const fetchGseTelemetry = async () => {
     try {
       setLoading(true);
-      const res = await API.get(`flights/gse-telemetry/?airport=${selectedAirportCode}`);
+      const res = await API.get(`flights/gse-telemetry/?airport=${selectedAirportCode}&_t=${Date.now()}`);
       if (res && res.data && Array.isArray(res.data.fleet)) {
         setGseFleet(res.data.fleet);
       } else {
