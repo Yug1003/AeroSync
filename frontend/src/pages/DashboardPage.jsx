@@ -66,7 +66,14 @@ const INDIAN_AIRPORTS = [
 ];
 
 function DashboardPageContent() {
-  const [selectedAirport, setSelectedAirport] = useState('AMD');
+  const username = localStorage.getItem('username') || 'Operator';
+  const userRole = localStorage.getItem('user_role') || (username === 'admin' ? 'admin' : 'ground_crew');
+  const isAdmin = userRole === 'admin' || username === 'admin';
+  const staffHomeAirport = localStorage.getItem(`staff_home_airport_${username}`) || 'AMD';
+
+  const [selectedAirport, setSelectedAirport] = useState(() => {
+    return !isAdmin ? staffHomeAirport : 'AMD';
+  });
   const [kpis, setKpis] = useState(null);
   const [gates, setGates] = useState([]);
   const [flights, setFlights] = useState([]);
@@ -96,10 +103,6 @@ function DashboardPageContent() {
 
   const [pendingStaff, setPendingStaff] = useState([]);
   const [showPendingModal, setShowPendingModal] = useState(false);
-
-  const username = localStorage.getItem('username') || 'Operator';
-  const userRole = localStorage.getItem('user_role') || (username === 'admin' ? 'admin' : 'ground_crew');
-  const isAdmin = userRole === 'admin' || username === 'admin';
 
   const [myAssignedFlightId, setMyAssignedFlightId] = useState(() => {
     return localStorage.getItem(`my_assigned_flight_${username}`) || null;
@@ -698,24 +701,33 @@ function DashboardPageContent() {
             <span className="brand-name">AeroSync</span>
           </div>
 
-          <div className="airport-selector-box">
-            <MapPin size={14} className="selector-icon" />
-            <select
-              className="airport-select-native"
-              value={selectedAirport}
-              onChange={(e) => {
-                setSelectedAirport(e.target.value);
-                setActionSuccess(`Airport switched to ${e.target.value} — Telemetry updated.`);
-              }}
-            >
-              {INDIAN_AIRPORTS.map((apt) => (
-                <option key={apt.code} value={apt.code}>
-                  [{apt.code}] {apt.city} — {apt.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={14} className="selector-arrow" />
-          </div>
+          {isAdmin ? (
+            <div className="airport-selector-box">
+              <MapPin size={14} className="selector-icon" />
+              <select
+                className="airport-select-native"
+                value={selectedAirport}
+                onChange={(e) => {
+                  setSelectedAirport(e.target.value);
+                  setActionSuccess(`Airport switched to ${e.target.value} — Telemetry updated.`);
+                }}
+              >
+                {INDIAN_AIRPORTS.map((apt) => (
+                  <option key={apt.code} value={apt.code}>
+                    [{apt.code}] {apt.city} — {apt.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="selector-arrow" />
+            </div>
+          ) : (
+            <div className="airport-selector-box" style={{ borderColor: 'rgba(14, 165, 233, 0.4)' }}>
+              <MapPin size={14} className="selector-icon text-cyan" />
+              <span style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--accent-cyan)' }}>
+                Station: [{selectedAirport}] {selectedAirportObj.city} (Assigned Station)
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="header-right">
@@ -1027,6 +1039,17 @@ function DashboardPageContent() {
                           <td style={{ textAlign: 'right' }}>
                             {isAssignedToMe ? (
                               <span className="badge-assigned-label">✓ Assigned to You</span>
+                            ) : myAssignedFlightId ? (
+                              <button
+                                type="button"
+                                className="shadcn-btn-secondary btn-compact"
+                                disabled
+                                style={{ opacity: 0.5, cursor: 'not-allowed', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                                title="Complete your current assigned aircraft turnaround duty before claiming another aircraft."
+                              >
+                                <Lock size={12} />
+                                <span>Complete Current Duty First</span>
+                              </button>
                             ) : (
                               <button
                                 className="shadcn-btn-primary btn-compact"

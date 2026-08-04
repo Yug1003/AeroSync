@@ -1,8 +1,26 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api';
-import { Plane, Shield, User, Key, ArrowRight, CheckCircle2, Lock, UserPlus, Briefcase, Mail } from 'lucide-react';
+import { Plane, Shield, User, Key, ArrowRight, CheckCircle2, Lock, UserPlus, Briefcase, Mail, MapPin } from 'lucide-react';
 import './LoginPage.css';
+
+const INDIAN_AIRPORTS = [
+  { code: 'AMD', name: 'Sardar Vallabhbhai Patel Intl', city: 'Ahmedabad' },
+  { code: 'DEL', name: 'Indira Gandhi Intl', city: 'New Delhi' },
+  { code: 'BOM', name: 'Chhatrapati Shivaji Maharaj Intl', city: 'Mumbai' },
+  { code: 'BLR', name: 'Kempegowda Intl', city: 'Bengaluru' },
+  { code: 'MAA', name: 'Chennai Intl', city: 'Chennai' },
+  { code: 'HYD', name: 'Rajiv Gandhi Intl', city: 'Hyderabad' },
+  { code: 'CCU', name: 'Netaji Subhash Chandra Bose Intl', city: 'Kolkata' },
+  { code: 'COK', name: 'Cochin Intl', city: 'Kochi' },
+  { code: 'GOI', name: 'Manohar Intl / Dabolim', city: 'Goa' },
+  { code: 'JAI', name: 'Jaipur Intl', city: 'Jaipur' },
+  { code: 'LKO', name: 'Chaudhary Charan Singh Intl', city: 'Lucknow' },
+  { code: 'ATQ', name: 'Sri Guru Ram Dass Jee Intl', city: 'Amritsar' },
+  { code: 'TRV', name: 'Thiruvananthapuram Intl', city: 'Trivandrum' },
+  { code: 'IXC', name: 'Chandigarh Intl', city: 'Chandigarh' },
+  { code: 'VTZ', name: 'Visakhapatnam Intl', city: 'Visakhapatnam' },
+];
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -19,6 +37,7 @@ export default function LoginPage() {
   const [regLastName, setRegLastName] = useState('');
   const [regRole, setRegRole] = useState('ground_crew');
   const [regDepartment, setRegDepartment] = useState('baggage');
+  const [regAirport, setRegAirport] = useState('AMD');
 
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -67,8 +86,11 @@ export default function LoginPage() {
         department: regDepartment
       });
 
+      // Save home airport for registered staff member
+      localStorage.setItem(`staff_home_airport_${regUsername}`, regAirport);
+
       setLoading(false);
-      setSuccessMsg(response.data.message || 'Staff registration successful! You can now log in.');
+      setSuccessMsg(response.data.message || `Staff registration successful for ${regAirport} Airport Station! You can now log in.`);
       
       // Auto-fill login form with newly registered credentials
       setUsername(regUsername);
@@ -273,6 +295,25 @@ export default function LoginPage() {
                   onChange={(e) => setRegPassword(e.target.value)}
                   required
                 />
+              </div>
+            </div>
+
+            <div className="form-field">
+              <label htmlFor="regAirport">Primary Airport Station *</label>
+              <div className="input-with-icon">
+                <MapPin className="field-icon" size={16} />
+                <select
+                  id="regAirport"
+                  className="shadcn-input select-input"
+                  value={regAirport}
+                  onChange={(e) => setRegAirport(e.target.value)}
+                >
+                  {INDIAN_AIRPORTS.map((apt) => (
+                    <option key={apt.code} value={apt.code}>
+                      [{apt.code}] {apt.city} — {apt.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
