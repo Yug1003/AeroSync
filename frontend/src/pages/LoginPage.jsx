@@ -8,6 +8,7 @@ import {
   User,
   Key,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   Lock,
   UserPlus,
@@ -129,6 +130,34 @@ export default function LoginPage() {
 
   return (
     <div className="aero-login-wrapper">
+      <button
+        type="button"
+        onClick={() => navigate('/')}
+        className="aero-back-home-btn"
+        style={{
+          position: 'absolute',
+          top: '1.25rem',
+          left: '1.25rem',
+          zIndex: 10,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          padding: '0.45rem 0.75rem',
+          borderRadius: 'var(--radius-sm)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-color)',
+          color: 'var(--text-main)',
+          fontSize: '0.8125rem',
+          fontWeight: '500',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+        }}
+        title="Back to Home Page"
+      >
+        <ArrowLeft size={15} />
+        <span>Back to Home</span>
+      </button>
+
       <div style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10 }}>
         <ThemeToggle />
       </div>
