@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api';
-import { Plane, Shield, User, Key, ArrowRight, CheckCircle2, Lock, UserPlus, Briefcase, Mail, MapPin } from 'lucide-react';
+import {
+  Plane,
+  Shield,
+  User,
+  Key,
+  ArrowRight,
+  CheckCircle2,
+  Lock,
+  UserPlus,
+} from 'lucide-react';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -19,11 +28,11 @@ export default function LoginPage() {
   const [regLastName, setRegLastName] = useState('');
   const [regRole, setRegRole] = useState('ground_crew');
   const [regDepartment, setRegDepartment] = useState('baggage');
-  const regAirport = 'AMD'; // Compulsory Ahmedabad Airport station for all staff signups
 
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -38,7 +47,7 @@ export default function LoginPage() {
       localStorage.setItem('refresh_token', response.data.refresh);
       localStorage.setItem('username', username);
       localStorage.setItem('user_role', response.data.role || 'admin');
-      
+
       setLoading(false);
       navigate('/dashboard');
     } catch (err) {
@@ -65,21 +74,21 @@ export default function LoginPage() {
         first_name: regFirstName,
         last_name: regLastName,
         role: regRole,
-        department: regDepartment
+        department: regDepartment,
       });
 
-      // Save compulsory AMD airport station for registered staff member
       localStorage.setItem(`staff_home_airport_${regUsername}`, 'AMD');
 
       setLoading(false);
-      setSuccessMsg(response.data.message || 'Staff registration successful for [AMD] Ahmedabad Airport Station! You can now log in.');
-      
-      // Auto-fill login form with newly registered credentials
+      setSuccessMsg(
+        response.data.message ||
+          'Staff registration successful for [AMD] Ahmedabad Airport Station! You can now log in.'
+      );
+
       setUsername(regUsername);
       setPassword(regPassword);
       setIsSignUp(false);
 
-      // Reset sign up fields
       setRegUsername('');
       setRegPassword('');
       setRegEmail('');
@@ -91,7 +100,9 @@ export default function LoginPage() {
         const data = err.response.data;
         if (typeof data === 'object') {
           const firstKey = Object.keys(data)[0];
-          const firstErr = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
+          const firstErr = Array.isArray(data[firstKey])
+            ? data[firstKey][0]
+            : data[firstKey];
           setError(`${firstKey}: ${firstErr}`);
         } else {
           setError('Registration failed. Please check inputs.');
@@ -111,197 +122,176 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="shadcn-login-wrapper">
-      <div className="login-glow" />
-
-      <div className="shadcn-login-card">
-        <div className="brand-header">
-          <div className="brand-icon-box">
-            <Plane className="brand-plane-icon" size={24} />
-          </div>
-          <h1 className="brand-title">AeroSync</h1>
-          <p className="brand-subtitle">Ahmedabad (AMD) Ramp Operations & Gate Control System</p>
-        </div>
-
-        {/* Tab Switcher for Sign In vs Staff Sign Up */}
-        <div className="auth-tab-bar">
-          <button
-            type="button"
-            className={`auth-tab-btn ${!isSignUp ? 'active' : ''}`}
-            onClick={() => { setIsSignUp(false); setError(''); setSuccessMsg(''); }}
-          >
-            <Lock size={14} />
-            <span>Sign In</span>
-          </button>
-          <button
-            type="button"
-            className={`auth-tab-btn ${isSignUp ? 'active' : ''}`}
-            onClick={() => { setIsSignUp(true); setError(''); setSuccessMsg(''); }}
-          >
-            <UserPlus size={14} />
-            <span>Staff Sign Up</span>
-          </button>
-        </div>
-
-        {error && (
-          <div className="login-error-alert">
-            <span className="error-dot" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {successMsg && (
-          <div className="login-success-alert">
-            <CheckCircle2 size={16} className="text-emerald" />
-            <span>{successMsg}</span>
-          </div>
-        )}
-
-        {!isSignUp ? (
-          /* Sign In Form */
-          <form onSubmit={handleLogin} className="login-form">
-            <div className="form-field">
-              <label htmlFor="username">Username</label>
-              <div className="input-with-icon">
-                <User className="field-icon" size={16} />
-                <input
-                  id="username"
-                  type="text"
-                  className="shadcn-input"
-                  placeholder="e.g. admin, ops, crew"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
-                />
-              </div>
+    <div className="aero-login-wrapper">
+      <div className="aero-single-card-container">
+        <div className="aero-auth-card">
+          {/* Brand Mark Header */}
+          <div className="aero-brand-center">
+            <div className="aero-brand-icon-box">
+              <Plane className="w-5 h-5 -rotate-45" />
             </div>
+            <span className="aero-brand-title">AEROSYNC</span>
+          </div>
 
-            <div className="form-field">
-              <div className="field-header">
-                <label htmlFor="password">Password</label>
-              </div>
-              <div className="input-with-icon">
-                <Key className="field-icon" size={16} />
-                <input
-                  id="password"
-                  type="password"
-                  className="shadcn-input"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <button type="submit" className="shadcn-btn-primary login-submit-btn" disabled={loading}>
-              {loading ? (
-                <span>Authenticating...</span>
-              ) : (
-                <>
-                  <span>Sign In to Terminal</span>
-                  <ArrowRight size={16} />
-                </>
-              )}
+          {/* Header Switcher */}
+          <div className="aero-tab-switcher">
+            <button
+              type="button"
+              className={`aero-tab-btn ${!isSignUp ? 'active' : ''}`}
+              onClick={() => {
+                setIsSignUp(false);
+                setError('');
+                setSuccessMsg('');
+              }}
+            >
+              <Lock className="w-4 h-4" />
+              <span>SIGN IN</span>
             </button>
-          </form>
-        ) : (
-          /* Staff Sign Up Form */
-          <form onSubmit={handleRegister} className="login-form">
-            <div className="form-field-row">
-              <div className="form-field">
-                <label htmlFor="regFirstName">First Name</label>
-                <input
-                  id="regFirstName"
-                  type="text"
-                  className="shadcn-input"
-                  placeholder="e.g. Rajesh"
-                  value={regFirstName}
-                  onChange={(e) => setRegFirstName(e.target.value)}
-                />
-              </div>
-              <div className="form-field">
-                <label htmlFor="regLastName">Last Name</label>
-                <input
-                  id="regLastName"
-                  type="text"
-                  className="shadcn-input"
-                  placeholder="e.g. Patel"
-                  value={regLastName}
-                  onChange={(e) => setRegLastName(e.target.value)}
-                />
-              </div>
-            </div>
+            <button
+              type="button"
+              className={`aero-tab-btn ${isSignUp ? 'active' : ''}`}
+              onClick={() => {
+                setIsSignUp(true);
+                setError('');
+                setSuccessMsg('');
+              }}
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>STAFF SIGN UP</span>
+            </button>
+          </div>
 
-            <div className="form-field">
-              <label htmlFor="regUsername">Staff Username *</label>
-              <div className="input-with-icon">
-                <User className="field-icon" size={16} />
+          {/* Error Banner */}
+          {error && (
+            <div className="aero-alert-error">
+              <span className="aero-pulse-dot" style={{ backgroundColor: '#f87171' }} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Success Banner */}
+          {successMsg && (
+            <div className="aero-alert-success">
+              <CheckCircle2 className="w-4.5 h-4.5" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
+          {!isSignUp ? (
+            /* Sign In Form */
+            <form onSubmit={handleLogin} className="aero-form-stack">
+              <div className="aero-form-field">
+                <label className="aero-form-label">Staff Username</label>
+                <div className="aero-input-wrapper">
+                  <User className="aero-input-icon w-4 h-4" />
+                  <input
+                    type="text"
+                    className="aero-input-field"
+                    placeholder="e.g. admin, ops, crew"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="aero-form-field">
+                <label className="aero-form-label">Password</label>
+                <div className="aero-input-wrapper">
+                  <Key className="aero-input-icon w-4 h-4" />
+                  <input
+                    type="password"
+                    className="aero-input-field"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="aero-submit-btn">
+                {loading ? (
+                  <span>AUTHENTICATING...</span>
+                ) : (
+                  <>
+                    <span>SIGN IN TO TERMINAL</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            /* Staff Sign Up Form */
+            <form onSubmit={handleRegister} className="aero-form-stack">
+              <div className="aero-form-row">
+                <div className="aero-form-field">
+                  <label className="aero-form-label">First Name</label>
+                  <input
+                    type="text"
+                    className="aero-input-field"
+                    style={{ paddingLeft: '1rem' }}
+                    placeholder="Rajesh"
+                    value={regFirstName}
+                    onChange={(e) => setRegFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="aero-form-field">
+                  <label className="aero-form-label">Last Name</label>
+                  <input
+                    type="text"
+                    className="aero-input-field"
+                    style={{ paddingLeft: '1rem' }}
+                    placeholder="Patel"
+                    value={regLastName}
+                    onChange={(e) => setRegLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="aero-form-field">
+                <label className="aero-form-label">Staff Username *</label>
                 <input
-                  id="regUsername"
                   type="text"
-                  className="shadcn-input"
+                  className="aero-input-field"
+                  style={{ paddingLeft: '1rem' }}
                   placeholder="Choose username"
                   value={regUsername}
                   onChange={(e) => setRegUsername(e.target.value)}
                   required
                 />
               </div>
-            </div>
 
-            <div className="form-field">
-              <label htmlFor="regEmail">Work Email</label>
-              <div className="input-with-icon">
-                <Mail className="field-icon" size={16} />
+              <div className="aero-form-field">
+                <label className="aero-form-label">Work Email</label>
                 <input
-                  id="regEmail"
                   type="email"
-                  className="shadcn-input"
+                  className="aero-input-field"
+                  style={{ paddingLeft: '1rem' }}
                   placeholder="staff@aerosync.com"
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                 />
               </div>
-            </div>
 
-            <div className="form-field">
-              <label htmlFor="regPassword">Password *</label>
-              <div className="input-with-icon">
-                <Key className="field-icon" size={16} />
+              <div className="aero-form-field">
+                <label className="aero-form-label">Password *</label>
                 <input
-                  id="regPassword"
                   type="password"
-                  className="shadcn-input"
+                  className="aero-input-field"
+                  style={{ paddingLeft: '1rem' }}
                   placeholder="At least 4 characters"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
                   required
                 />
               </div>
-            </div>
 
-            <div className="form-field">
-              <label>Primary Airport Station (Compulsory Station)</label>
-              <div className="input-with-icon" style={{ backgroundColor: 'rgba(14, 165, 233, 0.1)', borderColor: 'rgba(14, 165, 233, 0.3)' }}>
-                <MapPin className="field-icon text-cyan" size={16} />
-                <input
-                  type="text"
-                  className="shadcn-input"
-                  value="[AMD] Ahmedabad — Sardar Vallabhbhai Patel Intl"
-                  disabled
-                  style={{ color: 'var(--accent-cyan)', fontWeight: '600', opacity: 1, cursor: 'not-allowed' }}
-                />
-              </div>
-            </div>
-
-            <div className="form-field-row">
-              <div className="form-field">
-                <label htmlFor="regRole">Airport Staff Role *</label>
-                <div className="input-with-icon">
-                  <Shield className="field-icon" size={16} />
+              <div className="aero-form-row">
+                <div className="aero-form-field">
+                  <label className="aero-form-label">Staff Role *</label>
                   <select
-                    id="regRole"
-                    className="shadcn-input select-input"
+                    className="aero-select-field"
                     value={regRole}
                     onChange={(e) => setRegRole(e.target.value)}
                   >
@@ -310,77 +300,67 @@ export default function LoginPage() {
                     <option value="admin">System Admin</option>
                   </select>
                 </div>
-              </div>
 
-              {regRole === 'ground_crew' && (
-                <div className="form-field">
-                  <label htmlFor="regDepartment">Department</label>
-                  <div className="input-with-icon">
-                    <Briefcase className="field-icon" size={16} />
+                {regRole === 'ground_crew' && (
+                  <div className="aero-form-field">
+                    <label className="aero-form-label">Department</label>
                     <select
-                      id="regDepartment"
-                      className="shadcn-input select-input"
+                      className="aero-select-field"
                       value={regDepartment}
                       onChange={(e) => setRegDepartment(e.target.value)}
                     >
-                      <option value="baggage">Baggage Handling</option>
-                      <option value="fuel">Fuel Operations</option>
-                      <option value="cleaning">Cabin Cleaning</option>
-                      <option value="catering">Catering Service</option>
+                      <option value="baggage">Baggage</option>
+                      <option value="fuel">Fueling</option>
+                      <option value="cleaning">Cleaning</option>
+                      <option value="catering">Catering</option>
                     </select>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+
+              <button type="submit" disabled={loading} className="aero-submit-btn">
+                {loading ? (
+                  <span>REGISTERING...</span>
+                ) : (
+                  <>
+                    <span>CREATE STAFF ACCOUNT</span>
+                    <UserPlus className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* Quick Demo Role Selector */}
+          <div className="aero-demo-section">
+            <span className="aero-demo-title">QUICK SELECT DEMO ROLE (PASS: admin123)</span>
+            <div className="aero-demo-grid">
+              <button
+                type="button"
+                onClick={() => fillDemoAccount('admin', 'admin123')}
+                className="aero-demo-btn"
+              >
+                <Shield className="w-3.5 h-3.5" style={{ color: '#a78bfa' }} />
+                <span>Admin</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount('ops', 'admin123')}
+                className="aero-demo-btn"
+              >
+                <Plane className="w-3.5 h-3.5" style={{ color: '#38bdf8' }} />
+                <span>Ops Mgr</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemoAccount('crew', 'admin123')}
+                className="aero-demo-btn"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: '#4ade80' }} />
+                <span>Crew</span>
+              </button>
             </div>
-
-            <button type="submit" className="shadcn-btn-primary login-submit-btn" disabled={loading}>
-              {loading ? (
-                <span>Registering Account...</span>
-              ) : (
-                <>
-                  <span>Create Staff Account (AMD Station)</span>
-                  <UserPlus size={16} />
-                </>
-              )}
-            </button>
-          </form>
-        )}
-
-        <div className="demo-accounts-section">
-          <div className="demo-header">
-            <Lock size={12} />
-            <span>Quick Select Demo Role (Pass: admin123)</span>
           </div>
-          <div className="demo-btn-group">
-            <button
-              type="button"
-              className="demo-chip"
-              onClick={() => fillDemoAccount('admin', 'admin123')}
-            >
-              <Shield size={12} className="text-violet" />
-              <span>Admin</span>
-            </button>
-            <button
-              type="button"
-              className="demo-chip"
-              onClick={() => fillDemoAccount('ops', 'admin123')}
-            >
-              <Plane size={12} className="text-cyan" />
-              <span>Ops Manager</span>
-            </button>
-            <button
-              type="button"
-              className="demo-chip"
-              onClick={() => fillDemoAccount('crew', 'admin123')}
-            >
-              <CheckCircle2 size={12} className="text-emerald" />
-              <span>Ground Crew</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="login-footer">
-          <span>AeroSync Operations v2.4 • Secured via SimpleJWT & PyMongo Engine</span>
         </div>
       </div>
     </div>

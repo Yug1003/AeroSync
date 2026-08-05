@@ -67,6 +67,15 @@ const INDIAN_AIRPORTS = [
 ];
 
 function DashboardPageContent() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      navigate('/login');
+    }
+  }, [navigate]);
+
   const username = localStorage.getItem('username') || 'Operator';
   const userRole = localStorage.getItem('user_role') || (username === 'admin' ? 'admin' : 'ground_crew');
   const isAdmin = userRole === 'admin' || username === 'admin';
@@ -100,7 +109,6 @@ function DashboardPageContent() {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
 
   const [weather, setWeather] = useState(null);
-  const [showWeatherModal, setShowWeatherModal] = useState(false);
 
   const [pendingStaff, setPendingStaff] = useState([]);
   const [showPendingModal, setShowPendingModal] = useState(false);
@@ -147,7 +155,6 @@ function DashboardPageContent() {
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
   const [highlightedFlightId, setHighlightedFlightId] = useState(null);
-  const navigate = useNavigate();
 
   const fetchWeather = async () => {
     try {
@@ -158,27 +165,6 @@ function DashboardPageContent() {
       }
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  const handleUpdateWeather = async (weatherPayload) => {
-    try {
-      setActionError('');
-      setActionSuccess('');
-      const res = await API.post('weather/', weatherPayload);
-      setWeather(res.data.weather);
-      setShowWeatherModal(false);
-
-      if (res.data.automated_delays_applied > 0) {
-        setActionSuccess(
-          `WEATHER ALERT: ${res.data.weather.condition}! ${res.data.automated_delays_applied} active flight(s) automatically marked DELAYED.`
-        );
-      } else {
-        setActionSuccess(`Airport Weather condition updated to '${res.data.weather.condition}'.`);
-      }
-      loadAllData();
-    } catch (err) {
-      setActionError(err.response?.data?.error || 'Failed to update weather.');
     }
   };
 
@@ -526,24 +512,6 @@ function DashboardPageContent() {
         setFlightFilter('ALL');
         setActionSuccess('Showing ALL flight operations.');
         break;
-      case 'SET_WEATHER_THUNDERSTORM':
-        handleUpdateWeather({
-          condition: 'Severe Thunderstorm ⛈️',
-          temp_c: 18,
-          wind_speed_kts: 45,
-          visibility_miles: 0.5,
-          severity: 'severe',
-        });
-        break;
-      case 'SET_WEATHER_CLEAR':
-        handleUpdateWeather({
-          condition: 'Clear / Fair ☀️',
-          temp_c: 24,
-          wind_speed_kts: 10,
-          visibility_miles: 10.0,
-          severity: 'clear',
-        });
-        break;
       default:
         if (payload) {
           setActionSuccess(`⚡ [VOICE DISPATCH EXECUTED]: "${payload}"`);
@@ -732,72 +700,19 @@ function DashboardPageContent() {
         </div>
 
         <div className="header-right">
-          {/* Weather Pill */}
+          {/* Weather Pill (Current Real Station Weather fetched from API) */}
           {weather && (
             <div className="weather-dropdown-container">
               <button
                 className={`weather-pill-btn severity-${weather.severity}`}
-                onClick={() => setShowWeatherModal(!showWeatherModal)}
+                onClick={fetchWeather}
+                title="Current Station Weather (Click to refresh)"
               >
                 <CloudSun size={14} />
                 <span>{weather.temp_c}°C</span>
                 <span className="weather-desc">{weather.condition}</span>
                 <span className={`wx-dot ${weather.severity}`} />
               </button>
-
-              {showWeatherModal && (
-                <div className="weather-popover shadcn-card">
-                  <div className="popover-header">
-                    <h4>Simulate METAR Weather</h4>
-                    <button className="icon-close" onClick={() => setShowWeatherModal(false)}>✕</button>
-                  </div>
-                  <p className="popover-sub">Triggering severe weather automatically updates flight delays and logs audit entries.</p>
-                  <div className="weather-presets">
-                    <button
-                      className="wx-preset-btn clear"
-                      onClick={() =>
-                        handleUpdateWeather({
-                          condition: 'Clear / Fair ☀️',
-                          temp_c: 24,
-                          wind_speed_kts: 10,
-                          visibility_miles: 10.0,
-                          severity: 'clear',
-                        })
-                      }
-                    >
-                      Clear / Fair ☀️ (10 kts)
-                    </button>
-                    <button
-                      className="wx-preset-btn severe"
-                      onClick={() =>
-                        handleUpdateWeather({
-                          condition: 'Severe Thunderstorm ⛈️',
-                          temp_c: 18,
-                          wind_speed_kts: 45,
-                          visibility_miles: 0.5,
-                          severity: 'severe',
-                        })
-                      }
-                    >
-                      Thunderstorm ⛈️ (45 kts)
-                    </button>
-                    <button
-                      className="wx-preset-btn severe"
-                      onClick={() =>
-                        handleUpdateWeather({
-                          condition: 'Dense Ground Fog 🌫️',
-                          temp_c: 12,
-                          wind_speed_kts: 5,
-                          visibility_miles: 0.2,
-                          severity: 'severe',
-                        })
-                      }
-                    >
-                      Dense Fog 🌫️ (0.2 mi)
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -805,10 +720,13 @@ function DashboardPageContent() {
             <button
               className="notif-btn"
               onClick={() => setShowNotifDropdown(!showNotifDropdown)}
+              title="Alert Notifications"
             >
               <Bell size={16} />
               {(Array.isArray(notifications) ? notifications.filter((n) => !n.is_read) : []).length > 0 && (
-                <span className="notif-badge-dot" />
+                <span className="notif-badge-count">
+                  {(Array.isArray(notifications) ? notifications.filter((n) => !n.is_read) : []).length}
+                </span>
               )}
             </button>
 
@@ -959,7 +877,7 @@ function DashboardPageContent() {
                       <span className="meta-label">Turnaround Completion</span>
                       <div className="meta-val">{completedTasksCount} / 4 Tasks Finished ({progressPct}%)</div>
                       <div className="progress-track" style={{ marginTop: '0.4rem' }}>
-                        <div className="progress-fill" style={{ width: `${progressPct}%`, backgroundColor: progressPct === 100 ? '#86efac' : '#0ea5e9' }}></div>
+                        <div className="progress-fill" style={{ width: `${progressPct}%`, backgroundColor: '#86efac' }}></div>
                       </div>
                     </div>
                   </div>
@@ -1104,7 +1022,7 @@ function DashboardPageContent() {
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <button
                 className="shadcn-btn-primary btn-compact"
-                style={{ backgroundColor: '#6366f1', borderColor: '#6366f1', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                style={{ backgroundColor: '#86efac', borderColor: '#86efac', color: '#09090b', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                 onClick={handleRunAiDisruptionRecovery}
                 disabled={aiDisruptionLoading}
                 title="Run AI Automated Disruption Management algorithm to re-assign gate stands and compress slots"
@@ -1630,7 +1548,7 @@ class DashboardPageErrorBoundary extends React.Component {
           <h2 style={{ color: '#ef4444' }}>⚠️ AeroSync Operations Dashboard Error Recovered</h2>
           <p style={{ marginTop: '1rem', color: '#94a3b8' }}>{this.state.error?.toString()}</p>
           <button
-            style={{ marginTop: '1.5rem', padding: '0.6rem 1.2rem', backgroundColor: '#0ea5e9', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+            style={{ marginTop: '1.5rem', padding: '0.6rem 1.2rem', backgroundColor: '#86efac', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
             onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
           >
             🔄 Reload Operations Dashboard

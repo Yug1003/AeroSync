@@ -12478,7 +12478,11 @@ void main() {
     document.addEventListener('mousemove', handleMouseMove, true);
     document.addEventListener('click', handleClick, true);
     document.addEventListener('keydown', handleKeyDown, true);
-    connectSSE();
+    if (document.readyState === 'complete') {
+      setTimeout(connectSSE, 100);
+    } else {
+      window.addEventListener('load', () => setTimeout(connectSSE, 100));
+    }
 
     // Check for an active session to resume (variant wrapper already in DOM after HMR)
     if (!resumeSession()) {

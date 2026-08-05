@@ -36,13 +36,13 @@
 .brand-logo-small {
   width: 28px;
   height: 28px;
-  background: rgba(0, 229, 255, 0.15);
-  border: 1px solid var(--border-cyan);
+  background: rgba(134, 239, 172, 0.12);
+  border: 1px solid rgba(134, 239, 172, 0.3);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--aero-cyan);
+  color: #86efac;
 }
 
 .brand-name {
@@ -82,9 +82,9 @@
 }
 
 .shadcn-btn-secondary.return-dashboard-btn {
-  background: rgba(0, 229, 255, 0.15);
-  border: 1px solid var(--border-cyan);
-  color: var(--aero-cyan);
+  background: rgba(134, 239, 172, 0.12);
+  border: 1px solid rgba(134, 239, 172, 0.3);
+  color: #86efac;
   padding: 0.55rem 1.1rem;
   border-radius: var(--radius-md);
   font-weight: 700;
@@ -97,9 +97,9 @@
 }
 
 .shadcn-btn-secondary.return-dashboard-btn:hover {
-  background: rgba(0, 229, 255, 0.3);
+  background: rgba(134, 239, 172, 0.25);
   color: #FFFFFF;
-  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);
+  box-shadow: none;
   transform: translateY(-1px);
 }
 
@@ -120,9 +120,9 @@
 }
 
 .refresh-btn:hover {
-  background: rgba(0, 229, 255, 0.15);
-  color: var(--aero-cyan);
-  border-color: var(--border-cyan);
+  background: rgba(134, 239, 172, 0.12);
+  color: #86efac;
+  border-color: rgba(134, 239, 172, 0.3);
 }
 
 .spin {
@@ -306,7 +306,7 @@
 
 .username-tag {
   font-size: 0.78rem;
-  color: var(--aero-cyan);
+  color: #86efac;
   font-family: monospace;
 }
 
@@ -322,9 +322,9 @@
 }
 
 .role-ops_manager {
-  background: rgba(0, 229, 255, 0.18);
-  color: var(--aero-cyan);
-  border: 1px solid var(--border-cyan);
+  background: rgba(134, 239, 172, 0.12);
+  color: #86efac;
+  border: 1px solid rgba(134, 239, 172, 0.3);
 }
 
 .role-ground_crew {
@@ -412,6 +412,6 @@
   justify-content: center;
 }
 
-.text-cyan { color: var(--aero-cyan); }
+.text-cyan { color: #86efac; }
 .text-amber { color: var(--aero-amber); }
 .text-emerald { color: #34D399; }

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
 
 :root {
   /* Shadcn Obsidian Dark Color System */
@@ -30,9 +31,9 @@
   --accent-green: #86efac;
   --accent-green-stroke: #4ade80;
   --accent-green-bg: rgba(134, 239, 172, 0.08);
-  --accent-cyan: #0ea5e9;
-  --accent-blue: #3b82f6;
-  --accent-indigo: #6366f1;
+  --accent-cyan: #86efac;
+  --accent-blue: #86efac;
+  --accent-indigo: #86efac;
   --accent-violet: #8b5cf6;
   --accent-amber: #d97706;
   
