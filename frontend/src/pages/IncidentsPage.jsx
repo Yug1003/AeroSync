@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api';
+import ThemeToggle from '../components/ThemeToggle';
 import {
   Plane,
   ArrowLeft,
@@ -126,10 +127,13 @@ export default function IncidentsPage() {
           <span className="header-title">Incidents Management</span>
         </div>
 
-        <button className="shadcn-btn-secondary" onClick={() => navigate('/dashboard')}>
-          <ArrowLeft size={14} />
-          <span>Return to Dashboard</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <ThemeToggle />
+          <button className="shadcn-btn-secondary" onClick={() => navigate('/dashboard')}>
+            <ArrowLeft size={14} />
+            <span>Return to Dashboard</span>
+          </button>
+        </div>
       </header>
 
       <main className="incidents-content">

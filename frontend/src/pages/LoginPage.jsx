@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api';
+import ThemeToggle from '../components/ThemeToggle';
 import {
   Plane,
   Shield,
@@ -53,7 +54,18 @@ export default function LoginPage() {
     } catch (err) {
       setLoading(false);
       if (err.response && err.response.data) {
-        setError(err.response.data.detail || 'Invalid username or password');
+        const data = err.response.data;
+        if (data.detail) {
+          setError(data.detail);
+        } else if (data.non_field_errors) {
+          setError(Array.isArray(data.non_field_errors) ? data.non_field_errors[0] : data.non_field_errors);
+        } else if (typeof data === 'object') {
+          const firstKey = Object.keys(data)[0];
+          const firstErr = Array.isArray(data[firstKey]) ? data[firstKey][0] : data[firstKey];
+          setError(`${firstKey}: ${firstErr}`);
+        } else {
+          setError('Invalid username or password');
+        }
       } else {
         setError('Network error. Unable to connect to server.');
       }
@@ -113,16 +125,13 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemoAccount = (u, p) => {
-    setIsSignUp(false);
-    setUsername(u);
-    setPassword(p);
-    setError('');
-    setSuccessMsg('');
-  };
+
 
   return (
     <div className="aero-login-wrapper">
+      <div style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', zIndex: 10 }}>
+        <ThemeToggle />
+      </div>
       <div className="aero-single-card-container">
         <div className="aero-auth-card">
           {/* Brand Mark Header */}
@@ -331,36 +340,7 @@ export default function LoginPage() {
             </form>
           )}
 
-          {/* Quick Demo Role Selector */}
-          <div className="aero-demo-section">
-            <span className="aero-demo-title">QUICK SELECT DEMO ROLE (PASS: admin123)</span>
-            <div className="aero-demo-grid">
-              <button
-                type="button"
-                onClick={() => fillDemoAccount('admin', 'admin123')}
-                className="aero-demo-btn"
-              >
-                <Shield className="w-3.5 h-3.5" style={{ color: '#a78bfa' }} />
-                <span>Admin</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount('ops', 'admin123')}
-                className="aero-demo-btn"
-              >
-                <Plane className="w-3.5 h-3.5" style={{ color: '#38bdf8' }} />
-                <span>Ops Mgr</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemoAccount('crew', 'admin123')}
-                className="aero-demo-btn"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" style={{ color: '#4ade80' }} />
-                <span>Crew</span>
-              </button>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>

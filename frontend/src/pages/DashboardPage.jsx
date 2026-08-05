@@ -46,6 +46,7 @@ import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
 import GseTelemetryComponent from '../components/GseTelemetryComponent';
 import VoiceCommandCenter from '../components/VoiceCommandCenter';
 import BaggageCarouselComponent from '../components/BaggageCarouselComponent';
+import ThemeToggle from '../components/ThemeToggle';
 import './DashboardPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -789,6 +790,8 @@ function DashboardPageContent() {
             <Shield size={14} className="user-icon" />
             <span>{username}</span>
           </div>
+
+          <ThemeToggle />
 
           <button className="shadcn-btn-ghost icon-btn" onClick={handleLogout} title="Sign Out">
             <LogOut size={16} />

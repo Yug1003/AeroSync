@@ -18,6 +18,7 @@ import {
   SlidersHorizontal,
   ChevronDown
 } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 import './StaffRosterPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -216,6 +217,8 @@ export default function StaffRosterPage() {
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
             <span>Refresh Roster</span>
           </button>
+
+          <ThemeToggle />
 
           <button
             type="button"

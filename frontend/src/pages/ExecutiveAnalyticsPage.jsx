@@ -27,6 +27,7 @@ import {
   RefreshCw,
   Shield
 } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 import './ExecutiveAnalyticsPage.css';
 
 const INDIAN_AIRPORTS = [
@@ -134,6 +135,8 @@ export default function ExecutiveAnalyticsPage() {
             <Download size={14} />
             <span>Export CSV Report</span>
           </button>
+
+          <ThemeToggle />
 
           <button
             type="button"

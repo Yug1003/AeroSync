@@ -16,6 +16,7 @@ import {
   Check,
   X
 } from 'lucide-react';
+import ThemeToggle from '../components/ThemeToggle';
 import './PendingApprovalsPage.css';
 
 export default function PendingApprovalsPage() {
@@ -89,6 +90,7 @@ export default function PendingApprovalsPage() {
             <RefreshCw size={14} className={loading ? 'spin' : ''} />
             <span>Refresh</span>
           </button>
+          <ThemeToggle />
           <button
             type="button"
             className="shadcn-btn-secondary return-dashboard-btn"
