@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 
-export const generateSequenceUrls = (folder, count = 120) => {
+export const generateSequenceUrls = (folder, count = 120, step = 2) => {
   const urls = [];
-  for (let i = 1; i <= count; i++) {
+  for (let i = step; i <= count; i += step) {
     const frameNum = String(i).padStart(3, '0');
     urls.push(`/${folder}/ezgif-frame-${frameNum}.jpg`);
   }
