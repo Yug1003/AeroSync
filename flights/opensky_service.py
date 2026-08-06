@@ -1,29 +1,34 @@
 import urllib.request
 import json
+import time
 from datetime import datetime, timezone
 
-# OpenSky Network 2000km Radius Airspace Bounding Box around Ahmedabad (AMD)
-# Lat: 5.0° N to 41.0° N | Lng: 54.0° E to 91.0° E
 OPENSKY_URL = "https://opensky-network.org/api/states/all?lamin=5.0&lamax=41.0&lomin=54.0&lomax=91.0"
+
+_OPENSKY_CACHE = {"timestamp": 0, "data": []}
+CACHE_TTL_SECONDS = 15.0
 
 
 def fetch_live_opensky_flights():
     """
-    Fetches real-time ADS-B satellite telemetry for aircraft currently flying in
-    Ahmedabad airspace directly from OpenSky Network satellite receivers.
+    Fetches real-time ADS-B satellite telemetry with a 15-second TTL cache to prevent server blocking.
     """
+    now = time.time()
+    if now - _OPENSKY_CACHE["timestamp"] < CACHE_TTL_SECONDS and _OPENSKY_CACHE["data"]:
+        return _OPENSKY_CACHE["data"]
+
     try:
         req = urllib.request.Request(
             OPENSKY_URL,
             headers={"User-Agent": "AeroSync-Aviation-Command/1.0"},
         )
-        with urllib.request.urlopen(req, timeout=5) as response:
+        with urllib.request.urlopen(req, timeout=2.0) as response:
             data = json.loads(response.read().decode("utf-8"))
             states = data.get("states", [])
 
             live_flights = []
             if states:
-                for s in states:
+                for s in states[:30]:  # Cap at 30 items for maximum performance
                     icao24 = s[0]
                     callsign = (s[1] or "UNK").strip()
                     origin_country = s[2] or "Unknown"
@@ -50,7 +55,10 @@ def fetch_live_opensky_flights():
                             }
                         )
 
+            _OPENSKY_CACHE["timestamp"] = now
+            _OPENSKY_CACHE["data"] = live_flights
             return live_flights
     except Exception as err:
         print(f"[OpenSky API Warning] {err}")
-        return []
+        return _OPENSKY_CACHE["data"]
+

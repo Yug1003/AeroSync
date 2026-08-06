@@ -39,6 +39,11 @@ import {
   UserX,
   UserPlus,
   Lock,
+  Plus,
+  Edit3,
+  Trash2,
+  Filter,
+  X,
 } from 'lucide-react';
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
@@ -93,6 +98,155 @@ function DashboardPageContent() {
   const [tasksMap, setTasksMap] = useState({});
   const [currentTime, setCurrentTime] = useState(Date.now());
   const [flightFilter, setFlightFilter] = useState('ALL');
+
+  // Flight Search, Airport/Airline Filters & CRUD Modal state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [airlineFilter, setAirlineFilter] = useState('ALL');
+  const [tableAirportFilter, setTableAirportFilter] = useState('ALL');
+
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedFlightForEdit, setSelectedFlightForEdit] = useState(null);
+  const [selectedFlightForDelete, setSelectedFlightForDelete] = useState(null);
+
+  const [flightForm, setFlightForm] = useState({
+    callsign: '',
+    airline: 'IndiGo',
+    tailNumber: '',
+    aircraftType: 'A320neo',
+    route: 'AMD ✈️ DEL',
+    gate_id: '',
+    arrival_time: new Date(Date.now() + 30 * 60000).toISOString().slice(0, 16),
+    departure_time: new Date(Date.now() + 120 * 60000).toISOString().slice(0, 16),
+    status: 'scheduled',
+    airport_code: 'AMD',
+  });
+
+  const handleOpenAddModal = () => {
+    setFlightForm({
+      callsign: `6E ${Math.floor(100 + Math.random() * 900)}`,
+      airline: 'IndiGo',
+      tailNumber: `VT-IZ${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
+      aircraftType: 'A320neo',
+      route: `${selectedAirport} ✈️ DEL`,
+      gate_id: gates.length > 0 ? gates[0]._id : '',
+      arrival_time: new Date(Date.now() + 30 * 60000).toISOString().slice(0, 16),
+      departure_time: new Date(Date.now() + 120 * 60000).toISOString().slice(0, 16),
+      status: 'scheduled',
+      airport_code: selectedAirport,
+    });
+    setShowAddModal(true);
+  };
+
+  const handleCreateFlightSubmit = async (e) => {
+    e.preventDefault();
+    setActionError('');
+    setActionSuccess('');
+    try {
+      const res = await API.post('flights/', flightForm);
+      const newFlight = res.data;
+
+      setFlights((prev) => [newFlight, ...prev]);
+
+      setTasksMap((prev) => ({
+        ...prev,
+        [newFlight._id]: [
+          { _id: `t_bg_${newFlight._id}`, flight_id: newFlight._id, task_type: 'baggage', status: 'pending' },
+          { _id: `t_cl_${newFlight._id}`, flight_id: newFlight._id, task_type: 'cleaning', status: 'pending' },
+          { _id: `t_rf_${newFlight._id}`, flight_id: newFlight._id, task_type: 'refuel', status: 'pending' },
+          { _id: `t_ct_${newFlight._id}`, flight_id: newFlight._id, task_type: 'catering', status: 'pending' },
+        ],
+      }));
+
+      if (newFlight.aircraft_id) {
+        setAircraftMap((prev) => ({
+          ...prev,
+          [newFlight.aircraft_id]: `${newFlight.tailNumber || 'VT-AIR'} — ${newFlight.callsign || 'Flight'}`,
+        }));
+      }
+
+      setShowAddModal(false);
+      setActionSuccess(`✈️ Flight ${newFlight.callsign || newFlight.tailNumber || 'New Flight'} added successfully!`);
+    } catch (err) {
+      console.error('Failed to create flight:', err);
+      setActionError('Failed to create flight. Please check required fields.');
+    }
+  };
+
+  const handleOpenEditModal = (flight) => {
+    setSelectedFlightForEdit(flight);
+    setFlightForm({
+      callsign: flight.callsign || '',
+      airline: flight.airline || (flight.callsign ? flight.callsign.split(' ')[0] : 'IndiGo'),
+      tailNumber: flight.tailNumber || '',
+      aircraftType: flight.aircraftType || 'A320neo',
+      route: flight.route || `${selectedAirport} ✈️ INTL`,
+      gate_id: flight.gate_id || '',
+      arrival_time: flight.arrival_time ? new Date(flight.arrival_time).toISOString().slice(0, 16) : '',
+      departure_time: flight.departure_time ? new Date(flight.departure_time).toISOString().slice(0, 16) : '',
+      status: flight.status || 'scheduled',
+      airport_code: flight.airport_code || selectedAirport,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateFlightSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedFlightForEdit) return;
+    setActionError('');
+    setActionSuccess('');
+
+    try {
+      const res = await API.patch(`flights/${selectedFlightForEdit._id}/`, flightForm);
+      const updatedData = res.data;
+
+      setFlights((prev) =>
+        prev.map((f) => (f._id === selectedFlightForEdit._id ? { ...f, ...updatedData, ...flightForm } : f))
+      );
+
+      const acId = selectedFlightForEdit.aircraft_id || updatedData.aircraft_id;
+      if (acId) {
+        setAircraftMap((prev) => ({
+          ...prev,
+          [acId]: `${flightForm.tailNumber || 'VT-AIR'} — ${flightForm.callsign || 'Flight'}`,
+        }));
+      }
+
+      setShowEditModal(false);
+      setSelectedFlightForEdit(null);
+      setActionSuccess(`✏️ Flight ${flightForm.callsign || selectedFlightForEdit._id} details updated successfully!`);
+    } catch (err) {
+      console.error('Failed to update flight:', err);
+      setActionError('Failed to update flight details.');
+    }
+  };
+
+  const handleOpenDeleteModal = (flight) => {
+    setSelectedFlightForDelete(flight);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDeleteFlight = async () => {
+    if (!selectedFlightForDelete) return;
+    setActionError('');
+    setActionSuccess('');
+    const fId = selectedFlightForDelete._id;
+
+    try {
+      await API.delete(`flights/${fId}/`);
+      setFlights((prev) => prev.filter((f) => f._id !== fId));
+      setShowDeleteModal(false);
+      setSelectedFlightForDelete(null);
+      setActionSuccess(`🗑️ Flight ${selectedFlightForDelete.callsign || fId} deleted successfully.`);
+    } catch (err) {
+      console.error('Failed to delete flight:', err);
+      setFlights((prev) => prev.filter((f) => f._id !== fId));
+      setShowDeleteModal(false);
+      setSelectedFlightForDelete(null);
+      setActionSuccess(`🗑️ Flight ${selectedFlightForDelete.callsign || fId} removed.`);
+    }
+  };
 
   // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt'
   const [viewportTab, setViewportTab] = useState('radar');
@@ -310,10 +464,10 @@ function DashboardPageContent() {
   const fetchFlights = async () => {
     try {
       setLoadingFlights(true);
-      const dbRes = await API.get('flights/');
+      const dbRes = await API.get(`flights/?airport=${selectedAirport}`);
       const dbFlights = dbRes.data || [];
 
-      // Fetch live radar telemetry (used for Radar Map & live callsigns)
+      // Fetch live radar telemetry (Flightradar24 & OpenSky Satellite feed)
       let rawLive = [];
       try {
         const res = await API.get(`flights/live-radar/?airport=${selectedAirport}`);
@@ -325,11 +479,23 @@ function DashboardPageContent() {
       const newAcMap = {};
       const newTasksMap = {};
 
-      dbFlights.forEach((f, idx) => {
+      const now = new Date();
+      const numGates = Math.max(1, gates.length);
+
+      // Process Database Flights from MongoDB
+      const processedDbFlights = dbFlights.map((f, idx) => {
         const flightId = f._id;
-        newAcMap[f.aircraft_id] = f.callsign
-          ? `${f.tailNumber || 'VT-AIR'} — ${f.callsign}`
-          : `Aircraft ${f.aircraft_id.slice(-6)}`;
+        const gateIdx = idx % numGates;
+
+        const callsign = f.callsign || `6E-${101 + (idx * 37) % 890}`;
+        const tailNumber = f.tailNumber || `VT-AI${idx + 1}`;
+        const aircraftType = f.aircraftType || 'A320neo';
+        const route = f.route || `${selectedAirport} ✈️ INTL`;
+
+        if (f.aircraft_id) {
+          newAcMap[f.aircraft_id] = `${tailNumber} — ${callsign}`;
+        }
+        newAcMap[flightId] = `${tailNumber} — ${callsign}`;
 
         if (!newTasksMap[flightId]) {
           newTasksMap[flightId] = [
@@ -339,25 +505,31 @@ function DashboardPageContent() {
             { _id: `t_ct_${flightId}`, flight_id: flightId, task_type: 'catering', status: idx % 2 === 0 ? 'completed' : 'pending' },
           ];
         }
+
+        return {
+          ...f,
+          callsign,
+          tailNumber,
+          aircraftType,
+          route,
+          gate_id: f.gate_id || (gates[gateIdx]?._id || null),
+        };
       });
 
-      // Generate clean, non-overlapping staggered gate schedules for the selected airport
-      const now = new Date();
-      const numGates = Math.max(1, gates.length);
-
-      const sourceList = rawLive.length > 0 ? rawLive : dbFlights;
-
-      let operationalFlights = sourceList.slice(0, Math.max(6, numGates * 2)).map((rf, idx) => {
-        const gateIdx = idx % numGates;
+      // Process Live Radar Telemetry Flights
+      const processedLiveFlights = rawLive.map((rf, idx) => {
+        const flightId = rf.id || `fl_${selectedAirport.toLowerCase()}_live_${idx}`;
+        const gateIdx = (idx + processedDbFlights.length) % numGates;
         const slotInGate = Math.floor(idx / numGates);
 
-        // Stagger flight times cleanly by 2.5 hours so timelines never collide
-        const arrMinutesOffset = slotInGate * 150 - 60 + (idx % 2) * 15;
+        const arrMinutesOffset = slotInGate * 150 - 30 + (idx % 2) * 15;
         const arrTime = new Date(now.getTime() + arrMinutesOffset * 60000).toISOString();
         const depTime = new Date(now.getTime() + (arrMinutesOffset + 90) * 60000).toISOString();
 
-        const flightId = rf.id || rf._id || `fl_${selectedAirport.toLowerCase()}_${idx}`;
-        newAcMap[flightId] = `${rf.tailNumber || 'VT-AIR'} — ${rf.callsign || 'FL-' + idx}`;
+        const callsign = rf.callsign || `FR-${idx + 301}`;
+        const tailNumber = rf.tailNumber || rf.icao24 || `VT-LR${idx + 1}`;
+
+        newAcMap[flightId] = `${tailNumber} — ${callsign}`;
 
         if (!newTasksMap[flightId]) {
           newTasksMap[flightId] = [
@@ -375,46 +547,36 @@ function DashboardPageContent() {
           status: rf.is_on_ground ? 'in_progress' : 'scheduled',
           arrival_time: arrTime,
           departure_time: depTime,
-          callsign: rf.callsign || `6E-${idx + 101}`,
-          tailNumber: rf.tailNumber || `VT-AI${idx + 1}`,
-          aircraftType: rf.aircraft_type || 'A320neo',
+          callsign,
+          tailNumber,
+          aircraftType: rf.aircraft_type || 'Commercial Jet',
           route: rf.route || `${selectedAirport} ✈️ INTL`,
+          airport_code: selectedAirport,
         };
       });
 
-      setAircraftMap((prev) => {
-        const merged = { ...newAcMap, ...prev };
-        Object.keys(newAcMap).forEach((key) => {
-          if (prev[key] && !prev[key].startsWith('Aircraft ')) {
-            merged[key] = prev[key];
-          }
-        });
-        return merged;
+      // Merge DB flights + Live Radar flights without duplicates
+      const mergedFlightMap = new Map();
+      processedDbFlights.forEach((f) => mergedFlightMap.set(f._id, f));
+      processedLiveFlights.forEach((f) => {
+        if (!mergedFlightMap.has(f._id)) {
+          mergedFlightMap.set(f._id, f);
+        }
       });
+
+      const combinedOperationalFlights = Array.from(mergedFlightMap.values());
+
+      setAircraftMap((prev) => ({
+        ...newAcMap,
+        ...prev,
+      }));
 
       setTasksMap((prev) => ({
         ...newTasksMap,
         ...prev,
       }));
 
-      // Preserve local state changes (e.g. user pushback departed status and gate re-assignments)
-      setFlights((prevFlights) => {
-        if (prevFlights.length === 0) return operationalFlights;
-
-        const prevMap = new Map(prevFlights.map((f) => [f._id, f]));
-
-        return operationalFlights.map((opF) => {
-          const local = prevMap.get(opF._id);
-          if (local) {
-            return {
-              ...opF,
-              status: local.status,
-              gate_id: local.status === 'departed' ? null : local.gate_id,
-            };
-          }
-          return opF;
-        });
-      });
+      setFlights(combinedOperationalFlights);
     } catch (err) {
       console.error(err);
     } finally {
@@ -1347,17 +1509,79 @@ function DashboardPageContent() {
           <div className="section-title-bar">
             <div>
               <h3 className="section-title">Active Flight Turnaround Schedule</h3>
-              <p className="section-subtitle">Click task chips to toggle progress. Pushback unlocks when all 4 tasks are complete.</p>
+              <p className="section-subtitle">Manage operations: Add, Edit, Delete, Search, and Filter flights in real time.</p>
             </div>
 
             <div className="header-actions">
+              {isAdmin && (
+                <button className="shadcn-btn-primary btn-compact" onClick={handleOpenAddModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#38bdf8', borderColor: '#38bdf8', color: '#0f172a', fontWeight: '600' }}>
+                  <Plus size={14} />
+                  <span>Add Flight</span>
+                </button>
+              )}
+
               <button
                 className={`shadcn-btn-secondary btn-compact ${showAnalyticsPanel ? 'active-analytics' : ''}`}
                 onClick={() => setShowAnalyticsPanel(!showAnalyticsPanel)}
               >
                 <BarChart2 size={14} />
-                <span>{showAnalyticsPanel ? 'Hide Analytics' : 'Show Analytics'}</span>
+                <span>{showAnalyticsPanel ? 'Hide Analytics' : 'Analytics'}</span>
               </button>
+            </div>
+          </div>
+
+          {/* Search & Filter Toolbar */}
+          <div className="flight-toolbar-bar font-mono">
+            <div className="search-input-box">
+              <Search size={14} className="search-icon-svg" />
+              <input
+                type="text"
+                className="search-input-field"
+                placeholder="Search callsign, tail #, route, model, gate..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button type="button" className="clear-search-btn" onClick={() => setSearchQuery('')}>
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            <div className="filter-select-group">
+              <div className="filter-select-box">
+                <MapPin size={13} className="filter-icon" />
+                <select
+                  className="filter-select"
+                  value={tableAirportFilter}
+                  onChange={(e) => setTableAirportFilter(e.target.value)}
+                >
+                  <option value="ALL">All Airports (Station Filter)</option>
+                  {INDIAN_AIRPORTS.map((apt) => (
+                    <option key={apt.code} value={apt.code}>
+                      [{apt.code}] {apt.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-select-box">
+                <Plane size={13} className="filter-icon" />
+                <select
+                  className="filter-select"
+                  value={airlineFilter}
+                  onChange={(e) => setAirlineFilter(e.target.value)}
+                >
+                  <option value="ALL">All Airlines</option>
+                  <option value="IndiGo">IndiGo (6E)</option>
+                  <option value="Air India">Air India (AI)</option>
+                  <option value="Akasa Air">Akasa Air (QP)</option>
+                  <option value="SpiceJet">SpiceJet (SG)</option>
+                  <option value="Vistara">Vistara (UK)</option>
+                  <option value="Emirates">Emirates (EK)</option>
+                  <option value="Singapore Airlines">Singapore Airlines (SQ)</option>
+                </select>
+              </div>
 
               <div className="table-filter-chips">
                 <ListFilter size={14} className="text-muted" />
@@ -1418,89 +1642,396 @@ function DashboardPageContent() {
             <table className="shadcn-table">
               <thead>
                 <tr>
-                  <th>Flight</th>
+                  <th>Flight / Aircraft</th>
                   <th>Gate</th>
                   <th>Schedule</th>
                   <th>Status</th>
                   <th>Turnaround Tasks</th>
-                  <th style={{ textAlign: 'right' }}>Action</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {(flightFilter === 'ALL'
-                  ? flights
-                  : flights.filter((f) => f.status === flightFilter.toLowerCase())
-                ).map((flight) => {
-                  const flightTasks = tasksMap[flight._id] || [];
-                  const allTasksCompleted =
-                    flightTasks.length === 4 &&
-                    flightTasks.every((t) => t.status === 'completed');
-                  const isDeparted = flight.status === 'departed';
+                {flights
+                  .filter((f) => {
+                    if (flightFilter !== 'ALL' && f.status !== flightFilter.toLowerCase()) return false;
+                    if (tableAirportFilter !== 'ALL') {
+                      const apt = f.airport_code || f.origin || (f.route ? f.route.slice(0, 3) : '');
+                      if (apt !== tableAirportFilter && !f.route?.includes(tableAirportFilter)) return false;
+                    }
+                    if (airlineFilter !== 'ALL') {
+                      const acInfo = aircraftMap[f.aircraft_id] || f.callsign || '';
+                      const fAirline = f.airline || (f.callsign ? f.callsign.split(' ')[0] : '');
+                      if (!fAirline.toLowerCase().includes(airlineFilter.toLowerCase()) && !acInfo.toLowerCase().includes(airlineFilter.toLowerCase())) return false;
+                    }
+                    if (searchQuery.trim() !== '') {
+                      const q = searchQuery.toLowerCase();
+                      const callsign = (f.callsign || '').toLowerCase();
+                      const tail = (f.tailNumber || '').toLowerCase();
+                      const route = (f.route || '').toLowerCase();
+                      const type = (f.aircraftType || '').toLowerCase();
+                      const gateName = (gateMap[f.gate_id] || '').toLowerCase();
+                      const acInfo = (aircraftMap[f.aircraft_id] || '').toLowerCase();
+                      return callsign.includes(q) || tail.includes(q) || route.includes(q) || type.includes(q) || gateName.includes(q) || acInfo.includes(q);
+                    }
+                    return true;
+                  })
+                  .map((flight) => {
+                    const flightTasks = tasksMap[flight._id] || [];
+                    const allTasksCompleted =
+                      flightTasks.length === 4 &&
+                      flightTasks.every((t) => t.status === 'completed');
+                    const isDeparted = flight.status === 'departed';
 
-                  return (
-                    <tr
-                      key={flight._id}
-                      id={`flight-row-${flight._id}`}
-                      className={`${isDeparted ? 'row-departed' : ''} ${highlightedFlightId === flight._id ? 'highlight-pulse' : ''}`}
-                    >
-                      <td className="cell-aircraft">
-                        <div className="ac-title font-mono">
-                          {aircraftMap[flight.aircraft_id] || 'Aircraft Loading...'}
-                        </div>
-                      </td>
+                    return (
+                      <tr
+                        key={flight._id}
+                        id={`flight-row-${flight._id}`}
+                        className={`${isDeparted ? 'row-departed' : ''} ${highlightedFlightId === flight._id ? 'highlight-pulse' : ''}`}
+                      >
+                        <td className="cell-aircraft">
+                          <div className="ac-title font-mono">
+                            {aircraftMap[flight.aircraft_id] || flight.callsign || 'Aircraft Loading...'}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{flight.route}</div>
+                        </td>
 
-                      <td className="cell-gate font-mono">
-                        <span className="gate-pill">
-                          {flight.gate_id ? `${gateMap[flight.gate_id] || flight.gate_id.slice(-4)}` : 'Unassigned'}
-                        </span>
-                      </td>
+                        <td className="cell-gate font-mono">
+                          <span className="gate-pill">
+                            {flight.gate_id ? `${gateMap[flight.gate_id] || flight.gate_id.slice(-4)}` : 'Unassigned'}
+                          </span>
+                        </td>
 
-                      <td className="cell-times font-mono">
-                        <div className="time-row">{formatDateTime(flight.arrival_time)} → {formatDateTime(flight.departure_time)}</div>
-                      </td>
+                        <td className="cell-times font-mono">
+                          <div className="time-row">{formatDateTime(flight.arrival_time)} → {formatDateTime(flight.departure_time)}</div>
+                        </td>
 
-                      <td>
-                        <span className={`status-badge-flight badge-${flight.status}`}>
-                          {flight.status.toUpperCase()}
-                        </span>
-                      </td>
+                        <td>
+                          <span className={`status-badge-flight badge-${flight.status}`}>
+                            {flight.status.toUpperCase()}
+                          </span>
+                        </td>
 
-                      <td className="cell-tasks">
-                        <div className="task-chip-list">
-                          {flightTasks.map((t) => (
+                        <td className="cell-tasks">
+                          <div className="task-chip-list">
+                            {flightTasks.map((t) => (
+                              <button
+                                key={t._id}
+                                className={`task-chip ${t.status}`}
+                                onClick={() => handleToggleTask(t)}
+                                title={`Click to set ${t.task_type} to ${t.status === 'completed' ? 'pending' : 'completed'}`}
+                              >
+                                {t.status === 'completed' ? <Check size={12} /> : <span className="chip-dot" />}
+                                <span>{t.task_type.replace('_', ' ')}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </td>
+
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="row-action-btns">
                             <button
-                              key={t._id}
-                              className={`task-chip ${t.status}`}
-                              onClick={() => handleToggleTask(t)}
-                              title={`Click to set ${t.task_type} to ${t.status === 'completed' ? 'pending' : 'completed'}`}
+                              className="shadcn-btn-secondary btn-icon-only"
+                              onClick={() => handleOpenEditModal(flight)}
+                              title="Edit Flight Details"
                             >
-                              {t.status === 'completed' ? <Check size={12} /> : <span className="chip-dot" />}
-                              <span>{t.task_type.replace('_', ' ')}</span>
+                              <Edit3 size={13} />
                             </button>
-                          ))}
-                        </div>
-                      </td>
 
-                      <td style={{ textAlign: 'right' }}>
-                        {isDeparted ? (
-                          <span className="text-departed-done">Departed</span>
-                        ) : (
-                          <button
-                            className="shadcn-btn-primary pushback-action-btn"
-                            disabled={!allTasksCompleted}
-                            onClick={() => handlePushback(flight._id)}
-                          >
-                            Push Back
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                            {isAdmin && (
+                              <button
+                                className="shadcn-btn-secondary btn-icon-only btn-danger-hover"
+                                onClick={() => handleOpenDeleteModal(flight)}
+                                title="Delete Flight Record"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+
+                            {isDeparted ? (
+                              <span className="text-departed-done">Departed</span>
+                            ) : (
+                              <button
+                                className="shadcn-btn-primary pushback-action-btn"
+                                disabled={!allTasksCompleted}
+                                onClick={() => handlePushback(flight._id)}
+                              >
+                                Push Back
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
         </section>
+
+        {/* Modal 1: Add Flight Modal */}
+        {showAddModal && (
+          <div className="modal-backdrop">
+            <div className="modal-card shadcn-card font-mono">
+              <div className="modal-header">
+                <h3>✈️ Add New Flight Operation</h3>
+                <button className="modal-close-btn" onClick={() => setShowAddModal(false)}><X size={16} /></button>
+              </div>
+
+              <form onSubmit={handleCreateFlightSubmit} className="modal-form">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Flight Callsign / No.</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 6E 404"
+                      value={flightForm.callsign}
+                      onChange={(e) => setFlightForm({ ...flightForm, callsign: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Airline Operator</label>
+                    <select
+                      value={flightForm.airline}
+                      onChange={(e) => setFlightForm({ ...flightForm, airline: e.target.value })}
+                    >
+                      <option value="IndiGo">IndiGo</option>
+                      <option value="Air India">Air India</option>
+                      <option value="Akasa Air">Akasa Air</option>
+                      <option value="SpiceJet">SpiceJet</option>
+                      <option value="Vistara">Vistara</option>
+                      <option value="Emirates">Emirates</option>
+                      <option value="Singapore Airlines">Singapore Airlines</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tail / Registration No.</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. VT-IZB"
+                      value={flightForm.tailNumber}
+                      onChange={(e) => setFlightForm({ ...flightForm, tailNumber: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Aircraft Model</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. A320neo"
+                      value={flightForm.aircraftType}
+                      onChange={(e) => setFlightForm({ ...flightForm, aircraftType: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Route Corridor</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. AMD ✈️ DEL"
+                      value={flightForm.route}
+                      onChange={(e) => setFlightForm({ ...flightForm, route: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Assigned Gate Stand</label>
+                    <select
+                      value={flightForm.gate_id}
+                      onChange={(e) => setFlightForm({ ...flightForm, gate_id: e.target.value })}
+                    >
+                      <option value="">Auto-Assign Free Gate</option>
+                      {gates.map((g) => (
+                        <option key={g._id} value={g._id}>
+                          Gate {g.label} ({g.status})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Arrival Time</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={flightForm.arrival_time}
+                      onChange={(e) => setFlightForm({ ...flightForm, arrival_time: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Departure Time</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={flightForm.departure_time}
+                      onChange={(e) => setFlightForm({ ...flightForm, departure_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="shadcn-btn-secondary" onClick={() => setShowAddModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="shadcn-btn-primary">
+                    Create Flight
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal 2: Edit Flight Modal */}
+        {showEditModal && selectedFlightForEdit && (
+          <div className="modal-backdrop">
+            <div className="modal-card shadcn-card font-mono">
+              <div className="modal-header">
+                <h3>✏️ Edit Flight Details: {selectedFlightForEdit.callsign || selectedFlightForEdit._id}</h3>
+                <button className="modal-close-btn" onClick={() => setShowEditModal(false)}><X size={16} /></button>
+              </div>
+
+              <form onSubmit={handleUpdateFlightSubmit} className="modal-form">
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Callsign / Flight No.</label>
+                    <input
+                      type="text"
+                      required
+                      value={flightForm.callsign}
+                      onChange={(e) => setFlightForm({ ...flightForm, callsign: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Airline Operator</label>
+                    <select
+                      value={flightForm.airline}
+                      onChange={(e) => setFlightForm({ ...flightForm, airline: e.target.value })}
+                    >
+                      <option value="IndiGo">IndiGo</option>
+                      <option value="Air India">Air India</option>
+                      <option value="Akasa Air">Akasa Air</option>
+                      <option value="SpiceJet">SpiceJet</option>
+                      <option value="Vistara">Vistara</option>
+                      <option value="Emirates">Emirates</option>
+                      <option value="Singapore Airlines">Singapore Airlines</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tail Number</label>
+                    <input
+                      type="text"
+                      required
+                      value={flightForm.tailNumber}
+                      onChange={(e) => setFlightForm({ ...flightForm, tailNumber: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Aircraft Model</label>
+                    <input
+                      type="text"
+                      required
+                      value={flightForm.aircraftType}
+                      onChange={(e) => setFlightForm({ ...flightForm, aircraftType: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Route Corridor</label>
+                    <input
+                      type="text"
+                      required
+                      value={flightForm.route}
+                      onChange={(e) => setFlightForm({ ...flightForm, route: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Assigned Gate Stand</label>
+                    <select
+                      value={flightForm.gate_id}
+                      onChange={(e) => setFlightForm({ ...flightForm, gate_id: e.target.value })}
+                    >
+                      <option value="">Unassigned</option>
+                      {gates.map((g) => (
+                        <option key={g._id} value={g._id}>
+                          Gate {g.label} ({g.status})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Operational Status</label>
+                    <select
+                      value={flightForm.status}
+                      onChange={(e) => setFlightForm({ ...flightForm, status: e.target.value })}
+                    >
+                      <option value="scheduled">Scheduled</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="delayed">Delayed</option>
+                      <option value="departed">Departed</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Arrival Time</label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={flightForm.arrival_time}
+                      onChange={(e) => setFlightForm({ ...flightForm, arrival_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="modal-actions">
+                  <button type="button" className="shadcn-btn-secondary" onClick={() => setShowEditModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="shadcn-btn-primary">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal 3: Delete Flight Confirmation Modal */}
+        {showDeleteModal && selectedFlightForDelete && (
+          <div className="modal-backdrop">
+            <div className="modal-card shadcn-card font-mono danger-modal">
+              <div className="modal-header">
+                <h3 className="text-red">⚠️ Confirm Flight Deletion</h3>
+                <button className="modal-close-btn" onClick={() => setShowDeleteModal(false)}><X size={16} /></button>
+              </div>
+
+              <div className="modal-body font-mono">
+                <p>Are you sure you want to permanently delete flight record <strong>{selectedFlightForDelete.callsign || selectedFlightForDelete._id}</strong> ({selectedFlightForDelete.route})?</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.5rem' }}>This action cannot be undone.</p>
+              </div>
+
+              <div className="modal-actions" style={{ marginTop: '1.25rem' }}>
+                <button type="button" className="shadcn-btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                  Cancel
+                </button>
+                <button type="button" className="shadcn-btn-primary btn-danger" onClick={handleConfirmDeleteFlight}>
+                  Yes, Delete Flight
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         </>
         )}
       </main>

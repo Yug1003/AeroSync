@@ -56,6 +56,7 @@
 .leaflet-plane-icon {
   background: transparent;
   border: none;
+  transition: transform 1.2s linear, top 1.2s linear, left 1.2s linear;
 }
 
 .radar-popup .leaflet-popup-content-wrapper {

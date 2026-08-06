@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import API from '../api/api';
 import 'leaflet/dist/leaflet.css';
@@ -39,10 +39,30 @@ const AIRPORT_COORDS = {
   VTZ: [17.7211, 83.2245],
 };
 
+function MapRecenter({ center }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center && Array.isArray(center) && center.length === 2) {
+      map.setView(center, 7, { animate: true });
+    }
+  }, [center, map]);
+  return null;
+}
+
 export default function RadarMapComponent({ flights = [], selectedAirportCode = 'AMD' }) {
   const [radarFlights, setRadarFlights] = useState([]);
+  const [tick, setTick] = useState(0);
+
   const airportCode = selectedAirportCode.toUpperCase();
   const centerCoords = AIRPORT_COORDS[airportCode] || AIRPORT_COORDS['AMD'];
+
+  // Dynamic movement tick counter for flight vector animation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick((prev) => (prev + 1) % 500);
+    }, 1500);
+    return () => clearInterval(timer);
+  }, []);
 
   const fetchLiveRadarData = async () => {
     try {
@@ -63,9 +83,9 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
             country: rf.origin_country || 'Commercial',
             lat: Number(rf.lat),
             lng: Number(rf.lng),
-            heading: rf.heading || 0,
-            altitude: rf.altitude_ft ?? 0,
-            speed: rf.speed_kts ?? 0,
+            heading: rf.heading || 45,
+            altitude: rf.altitude_ft ?? 12000,
+            speed: rf.speed_kts ?? 350,
             isOnGround: rf.is_on_ground || (rf.altitude_ft ?? 0) <= 100,
             source: rf.source || `Flightradar24 Live (${airportCode}) 📡`,
           }));
@@ -76,25 +96,28 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
       // Generate airport active flight vectors around selected airport center
       const dbMapped = (flights || []).map((f, idx) => {
         const angle = (idx * 55) * (Math.PI / 180);
-        const radius = 0.05 + (idx % 3) * 0.035;
-        const lat = centerCoords[0] + Math.sin(angle) * radius;
-        const lng = centerCoords[1] + Math.cos(angle) * radius;
-        const heading = Math.round((Math.atan2(centerCoords[1] - lng, centerCoords[0] - lat) * 180) / Math.PI);
+        const radius = 0.04 + (idx % 3) * 0.035;
+        const initialLat = centerCoords[0] + Math.sin(angle) * radius;
+        const initialLng = centerCoords[1] + Math.cos(angle) * radius;
+        const heading = Math.round((Math.atan2(centerCoords[1] - initialLng, centerCoords[0] - initialLat) * 180) / Math.PI);
+        const isOnGround = f.status === 'in_progress' || f.status === 'scheduled';
 
         return {
-          id: `db_${f._id}`,
-          callsign: f.callsign ? f.callsign : `6E-${String(f._id).slice(-4)}`,
-          icao24: String(f._id).slice(-6).toUpperCase(),
+          id: `db_${f._id || idx}`,
+          callsign: f.callsign ? f.callsign : `6E-${String(f._id || idx).slice(-4)}`,
+          icao24: String(f._id || idx).slice(-6).toUpperCase(),
           tailNumber: f.tailNumber || 'VT-AIR',
           aircraftType: f.aircraftType || 'A320neo',
           route: f.route || `${airportCode} ✈️ INTL`,
           country: 'India',
-          lat: lat,
-          lng: lng,
+          baseLat: initialLat,
+          baseLng: initialLng,
+          lat: initialLat,
+          lng: initialLng,
           heading: heading,
-          altitude: f.status === 'departed' ? 14000 : f.status === 'in_progress' ? 0 : 3500,
-          speed: f.status === 'departed' ? 420 : f.status === 'in_progress' ? 0 : 180,
-          isOnGround: f.status === 'in_progress',
+          altitude: f.status === 'departed' ? 18000 : isOnGround ? 0 : 4500,
+          speed: f.status === 'departed' ? 440 : isOnGround ? 0 : 210,
+          isOnGround: isOnGround,
           source: `AeroSync ${airportCode} Hub 🏢`,
         };
       });
@@ -114,7 +137,7 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
 
   useEffect(() => {
     fetchLiveRadarData();
-    const pollInterval = setInterval(fetchLiveRadarData, 2000);
+    const pollInterval = setInterval(fetchLiveRadarData, 10000);
     return () => clearInterval(pollInterval);
   }, [selectedAirportCode, flights.length]);
 
@@ -127,6 +150,8 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
         scrollWheelZoom={true}
         className="radar-map"
       >
+        <MapRecenter center={centerCoords} />
+
         <TileLayer
           attribution='&copy; <a href="https://www.flightradar24.com">Flightradar24</a> & OpenSky'
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
@@ -146,28 +171,45 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
           pathOptions={{ color: '#fbbf24', fillColor: '#fbbf24', fillOpacity: 0.15, weight: 2 }}
         />
 
-        {/* Render Aircraft Markers */}
-        {radarFlights.map((rf) => (
-          <Marker
-            key={rf.id}
-            position={[rf.lat, rf.lng]}
-            icon={createPlaneIcon(rf.heading, rf.isOnGround)}
-          >
-            <Popup className="radar-popup">
-              <div className="popup-content">
-                <h5>✈️ Flight {rf.callsign}</h5>
-                <p>Reg / Tail: <strong>{rf.tailNumber}</strong> ({rf.aircraftType})</p>
-                <p>Route: <strong>{rf.route}</strong></p>
-                <p>Status: {rf.isOnGround ? <span className="ground-tag">🟡 AT GATE / TARMAC</span> : <span className="airborne-tag">🟢 AIRBORNE</span>}</p>
-                <p>Altitude: <strong>{rf.altitude ? rf.altitude.toLocaleString() : '0'} ft</strong></p>
-                <p>Ground Speed: <strong>{rf.speed} kts</strong></p>
-                <p>Heading: <strong>{rf.heading}°</strong></p>
-                <p>Source: <span className="feed-tag">{rf.source}</span></p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {/* Render Aircraft Markers with Live Animated Motion Vectors */}
+        {radarFlights.map((rf, idx) => {
+          let currentLat = rf.lat;
+          let currentLng = rf.lng;
+
+          // If airborne, calculate dynamic motion offset along plane heading vector
+          if (!rf.isOnGround) {
+            const rad = ((rf.heading || 45) * Math.PI) / 180;
+            const step = (tick + idx * 10) % 80;
+            const deltaLat = Math.cos(rad) * 0.0004 * step;
+            const deltaLng = Math.sin(rad) * 0.0004 * step;
+
+            currentLat = (rf.baseLat || rf.lat) + deltaLat;
+            currentLng = (rf.baseLng || rf.lng) + deltaLng;
+          }
+
+          return (
+            <Marker
+              key={rf.id}
+              position={[currentLat, currentLng]}
+              icon={createPlaneIcon(rf.heading, rf.isOnGround)}
+            >
+              <Popup className="radar-popup">
+                <div className="popup-content">
+                  <h5>✈️ Flight {rf.callsign}</h5>
+                  <p>Reg / Tail: <strong>{rf.tailNumber}</strong> ({rf.aircraftType})</p>
+                  <p>Route: <strong>{rf.route}</strong></p>
+                  <p>Status: {rf.isOnGround ? <span className="ground-tag">🟡 AT GATE / TARMAC</span> : <span className="airborne-tag">🟢 AIRBORNE</span>}</p>
+                  <p>Altitude: <strong>{rf.altitude ? rf.altitude.toLocaleString() : '0'} ft</strong></p>
+                  <p>Ground Speed: <strong>{rf.speed} kts</strong></p>
+                  <p>Heading: <strong>{rf.heading}°</strong></p>
+                  <p>Source: <span className="feed-tag">{rf.source}</span></p>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );
 }
+

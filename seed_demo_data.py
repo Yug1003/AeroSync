@@ -120,6 +120,11 @@ def seed_ahmedabad():
             "departure_time": dep_time,
             "gate_id": gate["_id"],
             "status": status,
+            "callsign": route_code,
+            "route": route_name,
+            "airline": ac["airline"],
+            "tailNumber": ac["tail_number"],
+            "airport_code": "AMD",
         })
         created_flights.append(flight)
 
