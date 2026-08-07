@@ -73,7 +73,6 @@ export default function ActivityLogPage() {
           <div className="card-title-bar">
             <div>
               <h3 className="card-heading">Relational Audit Log Records</h3>
-              <p className="card-subheading">System state mutations and user action events recorded via Django ORM</p>
             </div>
 
             <button className="shadcn-btn-secondary" onClick={fetchAuditLogs}>

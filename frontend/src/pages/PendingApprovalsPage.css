@@ -62,9 +62,9 @@
 
 .badge-page {
   font-size: 0.72rem;
-  background: rgba(255, 107, 0, 0.2);
-  color: #FF7B1A;
-  border: 1px solid var(--border-amber);
+  background: var(--accent-green-bg);
+  color: var(--accent-green);
+  border: 1px solid var(--accent-green-stroke);
   padding: 0.25rem 0.65rem;
   border-radius: 20px;
   text-transform: uppercase;

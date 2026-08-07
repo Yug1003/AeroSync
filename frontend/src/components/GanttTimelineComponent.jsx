@@ -103,7 +103,6 @@ export default function GanttTimelineComponent({
       <div className="gantt-header">
         <div>
           <h4>📅 Interactive Gate Occupancy Timeline & Gantt Schedule</h4>
-          <p className="gantt-subtitle">Click block to jump to schedule row. Drag & drop to reassign gate stands in real time.</p>
         </div>
 
         <div className="gantt-header-actions">

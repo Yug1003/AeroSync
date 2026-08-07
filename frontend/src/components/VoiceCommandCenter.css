@@ -226,7 +226,7 @@
 }
 
 .log-query {
-  color: #f8fafc;
+  color: var(--text-main);
   font-weight: 600;
 }
 

@@ -114,6 +114,17 @@ a {
   transition: color 0.15s ease;
 }
 
+.badge-page {
+  background-color: var(--accent-green-bg) !important;
+  color: var(--accent-green) !important;
+  border: 1px solid var(--accent-green-stroke) !important;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
 button {
   font-family: var(--font-sans);
   cursor: pointer;

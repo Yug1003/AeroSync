@@ -1017,9 +1017,6 @@ function DashboardPageContent() {
                   <span>{myAssignedFlightId ? 'ON DUTY — AIRCRAFT ASSIGNED' : 'STANDBY MODE — NO AIRCRAFT ASSIGNED'}</span>
                 </div>
                 <h2>👷 Ground Operations Staff Duty Terminal</h2>
-                <p className="banner-sub font-sans">
-                  Logged in as <strong>@{username}</strong> ({userRole.replace('_', ' ')}). Managing ground turnaround services at <strong>{selectedAirport} Hub</strong>.
-                </p>
               </div>
 
               {myAssignedFlightId && (
@@ -1100,9 +1097,6 @@ function DashboardPageContent() {
               <section className="shadcn-card no-assignment-alert font-mono" style={{ padding: '1.5rem', textAlign: 'center' }}>
                 <AlertTriangle size={32} className="text-amber" style={{ margin: '0 auto 0.75rem auto' }} />
                 <h3>No Aircraft Currently Assigned to You</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '520px', margin: '0.5rem auto 1.25rem auto' }}>
-                  You are currently in Standby status at <strong>{selectedAirport}</strong>. Select any aircraft standing at the airport below to assign yourself and begin turnaround operations.
-                </p>
               </section>
             )}
 
@@ -1111,7 +1105,6 @@ function DashboardPageContent() {
               <div className="section-title-bar">
                 <div>
                   <h3 className="section-title">✈️ Standing Aircraft Catalog at {selectedAirport}</h3>
-                  <p className="section-subtitle">Click "Claim & Assign to Me" on any aircraft standing at the airport to take responsibility for its turnaround.</p>
                 </div>
               </div>
 
@@ -1543,7 +1536,6 @@ function DashboardPageContent() {
           <div className="section-title-bar">
             <div>
               <h3 className="section-title">Active Flight Turnaround Schedule</h3>
-              <p className="section-subtitle">Manage operations: Add, Edit, Delete, Search, and Filter flights in real time.</p>
             </div>
 
             <div className="header-actions">

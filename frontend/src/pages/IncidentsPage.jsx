@@ -157,7 +157,6 @@ export default function IncidentsPage() {
               <AlertTriangle size={18} className="title-icon text-rose" />
               <div>
                 <h3 className="card-heading">Report Operational Incident</h3>
-                <p className="card-subheading">Log ground safety occurrences, equipment faults, or ramp hazards</p>
               </div>
             </div>
           </div>
@@ -223,7 +222,6 @@ export default function IncidentsPage() {
           <div className="card-title-bar">
             <div>
               <h3 className="card-heading">Reported Ground Incidents Feed</h3>
-              <p className="card-subheading">Real-time status updates from ramp safety log</p>
             </div>
           </div>
 
