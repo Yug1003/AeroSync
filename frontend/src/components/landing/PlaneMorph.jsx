@@ -117,18 +117,7 @@ export default function PlaneMorph({ images = [] }) {
           </h2>
         </motion.div>
 
-        {/* Phase 3 Text (Shifted to Bottom Right) */}
-        <motion.div
-          style={{ opacity: text3Opacity, y: text3Y }}
-          className="absolute bottom-20 right-6 sm:right-16 max-w-2xl flex flex-col items-end text-right px-6 pointer-events-none z-10"
-        >
-          <span className="text-xs font-mono tracking-[0.4em] uppercase text-[#86efac] mb-3 block text-right">
-            COMMAND CENTER ACCESS
-          </span>
-          <h2 className="text-2xl sm:text-5xl font-bold tracking-[0.25em] text-white font-mono uppercase leading-snug text-right">
-            THE FUTURE OF SMART AIRPORT DISPATCH
-          </h2>
-        </motion.div>
+
 
         {/* Transition gradient fade to next section */}
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#09090b] via-[#09090b]/80 to-transparent pointer-events-none z-10" />

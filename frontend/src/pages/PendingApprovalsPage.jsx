@@ -71,7 +71,7 @@ export default function PendingApprovalsPage() {
       {/* Top Bar Header */}
       <header className="pending-approvals-header">
         <div className="header-left">
-          <div className="brand-badge">
+          <div className="brand-badge" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }} title="Go to Dashboard">
             <div className="brand-logo-small">
               <Plane size={16} />
             </div>

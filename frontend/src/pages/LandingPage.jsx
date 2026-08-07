@@ -4,8 +4,7 @@ import useImagePreloader, { generateSequenceUrls } from '../hooks/useImagePreloa
 import LandingHeader from '../components/landing/LandingHeader';
 import HeroScroll from '../components/landing/HeroScroll';
 import PlaneMorph from '../components/landing/PlaneMorph';
-import LuxuryFeatures from '../components/landing/LuxuryFeatures';
-import LuxuryFooter from '../components/landing/LuxuryFooter';
+import EnterpriseCapabilities from '../components/landing/EnterpriseCapabilities';
 import { Plane } from 'lucide-react';
 
 const sequence1Urls = generateSequenceUrls('sequence1', 120);
@@ -85,9 +84,8 @@ export default function LandingPage() {
       <main>
         <HeroScroll images={sequence1Images} />
         <PlaneMorph images={sequence2Images} />
-        <LuxuryFeatures />
+        <EnterpriseCapabilities />
       </main>
-      <LuxuryFooter />
     </div>
   );
 }

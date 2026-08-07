@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BarChart,
@@ -73,6 +73,7 @@ const INDIAN_AIRPORTS = [
 
 function DashboardPageContent() {
   const navigate = useNavigate();
+  const airportSelectRef = useRef(null);
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -852,7 +853,7 @@ function DashboardPageContent() {
       {/* Top Navigation Bar */}
       <header className="shadcn-header">
         <div className="header-left">
-          <div className="brand-badge">
+          <div className="brand-badge" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }} title="Go to Dashboard">
             <div className="brand-logo-small">
               <Plane size={16} />
             </div>
@@ -860,9 +861,25 @@ function DashboardPageContent() {
           </div>
 
           {isAdmin ? (
-            <div className="airport-selector-box">
+            <div
+              className="airport-selector-box"
+              onClick={(e) => {
+                if (e.target.tagName !== 'SELECT' && airportSelectRef.current) {
+                  try {
+                    if (airportSelectRef.current.showPicker) {
+                      airportSelectRef.current.showPicker();
+                    } else {
+                      airportSelectRef.current.focus();
+                    }
+                  } catch (err) {
+                    airportSelectRef.current.focus();
+                  }
+                }
+              }}
+            >
               <MapPin size={14} className="selector-icon" />
               <select
+                ref={airportSelectRef}
                 className="airport-select-native"
                 value={selectedAirport}
                 onChange={(e) => {
@@ -876,7 +893,7 @@ function DashboardPageContent() {
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} className="selector-arrow" />
+              <ChevronDown size={14} className="selector-arrow" style={{ cursor: 'pointer' }} />
             </div>
           ) : (
             <div className="airport-selector-box" style={{ borderColor: 'rgba(14, 165, 233, 0.4)' }}>

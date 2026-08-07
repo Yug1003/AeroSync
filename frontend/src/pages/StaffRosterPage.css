@@ -374,6 +374,10 @@
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-pill);
   font-weight: 600;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .duty-on { background-color: rgba(16, 185, 129, 0.15); color: var(--status-available); }

@@ -104,7 +104,7 @@ export default function ExecutiveAnalyticsPage() {
       {/* Header */}
       <header className="analytics-header">
         <div className="header-left">
-          <div className="brand-badge">
+          <div className="brand-badge" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }} title="Go to Dashboard">
             <div className="brand-logo-small">
               <Plane size={16} />
             </div>

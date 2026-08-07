@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/api';
 import {
@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   Search,
   Filter,
-  Phone,
+  Mail,
   MapPin,
   SlidersHorizontal,
   ChevronDown
@@ -35,6 +35,7 @@ const INDIAN_AIRPORTS = [
 
 export default function StaffRosterPage() {
   const navigate = useNavigate();
+  const airportSelectRef = useRef(null);
   const [selectedAirport, setSelectedAirport] = useState('AMD');
   const [staffList, setStaffList] = useState([]);
   const [standingFlights, setStandingFlights] = useState([]);
@@ -91,16 +92,16 @@ export default function StaffRosterPage() {
 
     // Auto-associate staff with standing flights at the current airport if missing
     const enrichedStaff = (fetchedStaff.length > 0 ? fetchedStaff : [
-      { _id: "st_01", name: "Rajesh Kumar", role: "Refueling Captain", department: "fuel", phone: "+91 98765 43210" },
-      { _id: "st_02", name: "Vikram Singh", role: "Baggage Crew Lead", department: "baggage", phone: "+91 98765 43211" },
-      { _id: "st_03", name: "Sanjay Patel", role: "Catering Specialist", department: "catering", phone: "+91 98765 43212" },
-      { _id: "st_04", name: "Amit Sharma", role: "Cabin Sanitation Ops", department: "cleaning", phone: "+91 98765 43213" },
-      { _id: "st_05", name: "Deepak Verma", role: "Ramp Marshal", department: "operations", phone: "+91 98765 43214" },
-      { _id: "st_06", name: "Sunil Mehta", role: "Fuel Hydrant Operator", department: "fuel", phone: "+91 98765 43215" },
-      { _id: "st_07", name: "Karan Malhotra", role: "Baggage Handler", department: "baggage", phone: "+91 98765 43216" },
-      { _id: "st_08", name: "Pooja Joshi", role: "Ops Dispatch Coordinator", department: "operations", phone: "+91 98765 43217" },
-      { _id: "st_09", name: "Nitin Desai", role: "Aircraft Wash & Clean", department: "cleaning", phone: "+91 98765 43218" },
-      { _id: "st_10", name: "Anil Rao", role: "Catering Uplift Agent", department: "catering", phone: "+91 98765 43219" },
+      { _id: "st_01", name: "Rajesh Kumar", role: "Refueling Captain", department: "fuel", email: "rajesh.kumar@aerosync.com" },
+      { _id: "st_02", name: "Vikram Singh", role: "Baggage Crew Lead", department: "baggage", email: "vikram.singh@aerosync.com" },
+      { _id: "st_03", name: "Sanjay Patel", role: "Catering Specialist", department: "catering", email: "sanjay.patel@aerosync.com" },
+      { _id: "st_04", name: "Amit Sharma", role: "Cabin Sanitation Ops", department: "cleaning", email: "amit.sharma@aerosync.com" },
+      { _id: "st_05", name: "Deepak Verma", role: "Ramp Marshal", department: "operations", email: "deepak.verma@aerosync.com" },
+      { _id: "st_06", name: "Sunil Mehta", role: "Fuel Hydrant Operator", department: "fuel", email: "sunil.mehta@aerosync.com" },
+      { _id: "st_07", name: "Karan Malhotra", role: "Baggage Handler", department: "baggage", email: "karan.malhotra@aerosync.com" },
+      { _id: "st_08", name: "Pooja Joshi", role: "Ops Dispatch Coordinator", department: "operations", email: "pooja.joshi@aerosync.com" },
+      { _id: "st_09", name: "Nitin Desai", role: "Aircraft Wash & Clean", department: "cleaning", email: "nitin.desai@aerosync.com" },
+      { _id: "st_10", name: "Anil Rao", role: "Catering Uplift Agent", department: "catering", email: "anil.rao@aerosync.com" },
     ]).map((staff, idx) => {
       const assignedPlane = fetchedStanding[idx % fetchedStanding.length];
       const gateLabel = assignedPlane ? `Gate Stand ${selectedAirport}-G${(idx % 4) + 1}` : 'Tarmac Stand';
@@ -164,16 +165,21 @@ export default function StaffRosterPage() {
     }
   };
 
-  // Filtering
+  // Null-Safe Filtering
   const filteredStaff = staffList.filter((staff) => {
-    const matchesSearch =
-      staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (staff.assigned_flight && staff.assigned_flight.toLowerCase().includes(searchTerm.toLowerCase()));
+    if (!staff) return false;
+    const sName = staff.name ? String(staff.name).toLowerCase() : '';
+    const sRole = staff.role ? String(staff.role).toLowerCase() : '';
+    const sEmail = staff.email ? String(staff.email).toLowerCase() : '';
+    const sFlight = staff.assigned_flight ? String(staff.assigned_flight).toLowerCase() : '';
+    const sTerm = (searchTerm || '').toLowerCase();
 
+    const matchesSearch = sName.includes(sTerm) || sRole.includes(sTerm) || sFlight.includes(sTerm) || sEmail.includes(sTerm);
+
+    const sDept = staff.department ? String(staff.department).toLowerCase() : '';
     const matchesDept =
       selectedDepartment === 'ALL' ||
-      staff.department.toLowerCase() === selectedDepartment.toLowerCase();
+      sDept === selectedDepartment.toLowerCase();
 
     return matchesSearch && matchesDept;
   });
@@ -186,7 +192,7 @@ export default function StaffRosterPage() {
       {/* Top Header */}
       <header className="staff-roster-header">
         <div className="header-left">
-          <div className="brand-badge">
+          <div className="brand-badge" onClick={() => navigate('/dashboard')} style={{ cursor: 'pointer' }} title="Go to Dashboard">
             <div className="brand-logo-small">
               <Plane size={16} />
             </div>
@@ -198,9 +204,25 @@ export default function StaffRosterPage() {
         </div>
 
         <div className="header-right-tools">
-          <div className="airport-selector-box">
+          <div
+            className="airport-selector-box"
+            onClick={(e) => {
+              if (e.target.tagName !== 'SELECT' && airportSelectRef.current) {
+                try {
+                  if (airportSelectRef.current.showPicker) {
+                    airportSelectRef.current.showPicker();
+                  } else {
+                    airportSelectRef.current.focus();
+                  }
+                } catch (err) {
+                  airportSelectRef.current.focus();
+                }
+              }
+            }}
+          >
             <MapPin size={14} className="selector-icon" />
             <select
+              ref={airportSelectRef}
               className="airport-select-native"
               value={selectedAirport}
               onChange={(e) => setSelectedAirport(e.target.value)}
@@ -211,6 +233,7 @@ export default function StaffRosterPage() {
                 </option>
               ))}
             </select>
+            <ChevronDown size={14} className="selector-arrow" style={{ cursor: 'pointer' }} />
           </div>
 
           <button type="button" className="refresh-btn" onClick={loadData} disabled={loading}>
@@ -298,7 +321,7 @@ export default function StaffRosterPage() {
                   <tr>
                     <th>Staff Member</th>
                     <th>Role & Department</th>
-                    <th>Contact Phone</th>
+                    <th>Email Address</th>
                     <th>Duty Status</th>
                     <th>Current Aircraft Assignment</th>
                     <th style={{ textAlign: 'right' }}>Reassign Aircraft Action</th>
@@ -330,8 +353,8 @@ export default function StaffRosterPage() {
 
                       <td>
                         <span className="phone-text font-mono">
-                          <Phone size={12} style={{ display: 'inline', marginRight: '4px' }} />
-                          {staff.phone || '+91 98765 00000'}
+                          <Mail size={12} style={{ display: 'inline', marginRight: '4px' }} />
+                          {staff.email || `${staff.name ? staff.name.toLowerCase().replace(/\s+/g, '.') : 'staff'}@aerosync.com`}
                         </span>
                       </td>
 

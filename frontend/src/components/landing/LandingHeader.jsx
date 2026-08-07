@@ -10,11 +10,11 @@ export default function LandingHeader() {
       <div className="pointer-events-auto">
         <button
           onClick={() => navigate('/dashboard')}
-          className="group relative inline-flex items-center justify-center px-6 py-3 text-xs sm:text-sm font-bold tracking-widest font-mono uppercase text-black bg-white rounded-md overflow-hidden transition-all duration-300 hover:bg-[#86efac]"
+          className="inline-flex items-center justify-center px-8 py-4 text-sm sm:text-base font-bold tracking-widest font-mono uppercase text-black bg-white rounded-md"
         >
-          <span className="flex items-center gap-2.5">
+          <span className="flex items-center gap-3">
             <span>ENTER DASHBOARD</span>
-            <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+            <ArrowRight className="w-5 h-5" />
           </span>
         </button>
       </div>
