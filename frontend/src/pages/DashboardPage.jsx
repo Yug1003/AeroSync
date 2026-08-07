@@ -167,6 +167,9 @@ function DashboardPageContent() {
 
       setShowAddModal(false);
       setActionSuccess(`✈️ Flight ${newFlight.callsign || newFlight.tailNumber || 'New Flight'} added successfully!`);
+
+      // Notify all ground staff about the newly scheduled turnaround flight
+      notifyStaff('NEW FLIGHT SCHEDULED', `Turnaround flight ${newFlight.callsign || 'FLIGHT'} (${newFlight.tailNumber || 'VT-AIR'}) scheduled at ${selectedAirport}.`, 'new_flight');
     } catch (err) {
       console.error('Failed to create flight:', err);
       setActionError('Failed to create flight. Please check required fields.');
@@ -601,6 +604,25 @@ function DashboardPageContent() {
   };
   const handleMarkNotificationRead = handleMarkAsRead;
 
+  // Helper to dispatch staff alert notifications
+  const notifyStaff = async (title, message, notifType = 'gate_change') => {
+    try {
+      const res = await API.post('notifications/', {
+        message: `${title}: ${message}`,
+        notification_type: notifType,
+      });
+      if (res.data) {
+        setNotifications((prev) => [res.data, ...(Array.isArray(prev) ? prev : [])]);
+      }
+    } catch (e) {
+      console.warn('Notify staff error:', e);
+      setNotifications((prev) => [
+        { id: `notif_${Date.now()}`, title, message, is_read: false, timestamp: new Date().toLocaleTimeString() },
+        ...(Array.isArray(prev) ? prev : []),
+      ]);
+    }
+  };
+
   useEffect(() => {
     loadAllData();
     const interval = setInterval(() => {
@@ -779,6 +801,9 @@ function DashboardPageContent() {
       );
       setActionSuccess(`⚡ Reassigned Flight ${flightId.slice(-6)} to Gate ${newGateLabel || newGateId.slice(-4)}.`);
 
+      // Notify staff about gate change
+      notifyStaff('GATE REASSIGNMENT', `Flight ${targetFlight.callsign || flightId.slice(-6)} reassigned to Stand Gate ${newGateLabel || newGateId.slice(-4)}.`, 'gate_change');
+
       try {
         await API.patch(`flights/${flightId}/`, { gate_id: newGateId });
       } catch (err) {
@@ -905,17 +930,21 @@ function DashboardPageContent() {
                   {(!Array.isArray(notifications) || notifications.length === 0) ? (
                     <div className="notif-empty">No unread alerts.</div>
                   ) : (
-                    notifications.map((n) => (
-                      <div
-                        key={n.id || Math.random()}
-                        className={`notif-item priority-${n.priority || 'medium'} ${n.is_read ? 'read' : 'unread'}`}
-                        onClick={() => handleMarkAsRead(n.id)}
-                      >
-                        <div className="notif-title font-mono">{n.title || 'Notification'}</div>
-                        <div className="notif-msg">{n.message || ''}</div>
-                        <span className="notif-time font-mono">{n.timestamp || ''}</span>
-                      </div>
-                    ))
+                    notifications.map((n) => {
+                      const cleanTitle = (n.title || n.notification_type || 'ALERT UPDATE').replace(/^(notification|notif|alert)[\s:-]*/gi, '').trim().toUpperCase();
+                      const cleanMsg = (n.message || '').replace(/^(notification|notif|alert)[\s:-]*/gi, '').trim();
+                      return (
+                        <div
+                          key={n.id || Math.random()}
+                          className={`notif-item priority-${n.priority || 'medium'} ${n.is_read ? 'read' : 'unread'}`}
+                          onClick={() => handleMarkAsRead(n.id)}
+                        >
+                          <div className="notif-title font-mono">{cleanTitle || 'DISPATCH ALERT'}</div>
+                          <div className="notif-msg">{cleanMsg}</div>
+                          <span className="notif-time font-mono">{n.created_at ? new Date(n.created_at).toLocaleTimeString() : (n.timestamp || '')}</span>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>

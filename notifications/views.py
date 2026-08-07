@@ -7,13 +7,28 @@ from notifications.serializers import NotificationSerializer
 
 class NotificationListView(APIView):
     """
-    GET /api/notifications/ - List all unread notifications
+    GET /api/notifications/ - List notifications
+    POST /api/notifications/ - Create a notification alert
     """
 
     def get(self, request):
         notifications = Notification.objects.all().order_by("-created_at")[:50]
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        message = request.data.get("message", "System Alert Update")
+        task_id = request.data.get("task_id", "DISPATCH_ALERT")
+        notification_type = request.data.get("notification_type", "gate_change")
+        
+        notif = Notification.objects.create(
+            message=message,
+            task_id=task_id,
+            notification_type=notification_type,
+            is_read=False
+        )
+        serializer = NotificationSerializer(notif)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class NotificationUpdateView(APIView):

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import API from '../api/api';
+import { useTheme } from '../context/ThemeContext';
 import 'leaflet/dist/leaflet.css';
 import './RadarMapComponent.css';
 
@@ -50,6 +51,12 @@ function MapRecenter({ center }) {
 }
 
 export default function RadarMapComponent({ flights = [], selectedAirportCode = 'AMD' }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+  const tileUrl = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
   const [radarFlights, setRadarFlights] = useState([]);
   const [tick, setTick] = useState(0);
 
@@ -153,8 +160,9 @@ export default function RadarMapComponent({ flights = [], selectedAirportCode = 
         <MapRecenter center={centerCoords} />
 
         <TileLayer
+          key={theme}
           attribution='&copy; <a href="https://www.flightradar24.com">Flightradar24</a> & OpenSky'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url={tileUrl}
         />
 
         {/* Airspace Boundary Circle */}

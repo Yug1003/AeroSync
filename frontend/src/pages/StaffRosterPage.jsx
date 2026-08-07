@@ -263,7 +263,7 @@ export default function StaffRosterPage() {
 
           <div className="dept-filter-chips">
             <Filter size={14} className="text-muted" />
-            {['ALL', 'fuel', 'baggage', 'catering', 'cleaning', 'operations'].map((dept) => (
+            {['ALL', 'fuel', 'cleaning', 'catering'].map((dept) => (
               <button
                 key={dept}
                 className={`filter-tab ${selectedDepartment === dept ? 'active' : ''}`}
