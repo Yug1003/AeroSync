@@ -83,8 +83,8 @@
 }
 
 .airport-select-native option {
-  background-color: #18181b;
-  color: #fafafa;
+  background-color: var(--bg-card);
+  color: var(--text-main);
   padding: 0.5rem;
 }
 
@@ -551,7 +551,7 @@
 
 .inspector-item strong {
   font-size: 0.75rem;
-  color: #ffffff;
+  color: var(--text-main);
 }
 
 .inspector-checklist {
@@ -766,13 +766,13 @@
 .gate-name {
   font-weight: 700;
   font-size: 0.875rem;
-  color: #ffffff;
+  color: var(--text-main);
 }
 
 .gate-flight-callsign {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-main);
   letter-spacing: 0.02em;
 }
 
@@ -1264,7 +1264,7 @@
   display: inline-block;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: var(--accent-green);
   letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
 }
@@ -1320,11 +1320,11 @@
 }
 
 .row-assigned-me {
-  background-color: rgba(14, 165, 233, 0.12) !important;
+  background-color: rgba(134, 239, 172, 0.12) !important;
 }
 
 .badge-assigned-label {
-  color: #38bdf8;
+  color: var(--accent-green);
   font-weight: 700;
   font-size: 0.8rem;
 }
@@ -1416,8 +1416,8 @@
 }
 
 .filter-select option {
-  background-color: #18181b;
-  color: #fafafa;
+  background-color: var(--bg-card);
+  color: var(--text-main);
 }
 
 .row-action-btns {
@@ -1530,8 +1530,8 @@
 }
 
 .form-group select option {
-  background-color: #18181b;
-  color: #fafafa;
+  background-color: var(--bg-card);
+  color: var(--text-main);
 }
 
 .modal-actions {

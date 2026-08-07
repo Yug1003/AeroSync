@@ -208,9 +208,9 @@ export default function ExecutiveAnalyticsPage() {
                   <XAxis dataKey="airport" stroke="#94a3b8" />
                   <YAxis domain={[70, 100]} stroke="#94a3b8" />
                   <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc' }} />
-                  <Bar dataKey="otp" fill="#0ea5e9" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="otp" fill="#16a34a" radius={[4, 4, 0, 0]}>
                     {otpData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.airport === selectedAirport ? '#38bdf8' : '#0284c7'} />
+                      <Cell key={`cell-${index}`} fill={entry.airport === selectedAirport ? '#86efac' : '#16a34a'} />
                     ))}
                   </Bar>
                 </BarChart>

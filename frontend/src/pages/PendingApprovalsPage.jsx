@@ -66,9 +66,6 @@ export default function PendingApprovalsPage() {
     }
   };
 
-  const opsCount = pendingStaff.filter((s) => s.role === 'ops_manager').length;
-  const crewCount = pendingStaff.filter((s) => s.role === 'ground_crew').length;
-
   return (
     <div className="pending-approvals-container">
       {/* Top Bar Header */}

@@ -5,7 +5,6 @@ from django.db import models
 class User(AbstractUser):
     ROLE_CHOICES = (
         ("admin", "Admin"),
-        ("ops_manager", "Ops Manager"),
         ("ground_crew", "Ground Crew"),
     )
     role = models.CharField(

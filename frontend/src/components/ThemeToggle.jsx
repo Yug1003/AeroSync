@@ -36,7 +36,7 @@ export default function ThemeToggle({ className = '' }) {
         </>
       ) : (
         <>
-          <Moon size={15} style={{ color: '#6366f1' }} />
+          <Moon size={15} style={{ color: '#16a34a' }} />
           <span>Dark</span>
         </>
       )}

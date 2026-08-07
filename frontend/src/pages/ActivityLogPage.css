@@ -37,9 +37,9 @@
 
 .action-pill {
   display: inline-block;
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--accent-green-bg);
+  color: var(--accent-green);
+  border: 1px solid var(--accent-green-stroke);
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-sm);
   font-size: 0.72rem;

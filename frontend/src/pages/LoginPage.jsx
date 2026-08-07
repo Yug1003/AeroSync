@@ -327,33 +327,17 @@ export default function LoginPage() {
 
               <div className="aero-form-row">
                 <div className="aero-form-field">
-                  <label className="aero-form-label">Staff Role *</label>
+                  <label className="aero-form-label">Staff Department *</label>
                   <select
                     className="aero-select-field"
-                    value={regRole}
-                    onChange={(e) => setRegRole(e.target.value)}
+                    value={regDepartment}
+                    onChange={(e) => setRegDepartment(e.target.value)}
                   >
-                    <option value="ground_crew">Ground Crew</option>
-                    <option value="ops_manager">Ops Manager</option>
-                    <option value="admin">System Admin</option>
+                    <option value="fuel">Fueling Ramp Operations</option>
+                    <option value="cleaning">Aircraft Cleaning & Cabin Service</option>
+                    <option value="catering">Galley & Catering Service</option>
                   </select>
                 </div>
-
-                {regRole === 'ground_crew' && (
-                  <div className="aero-form-field">
-                    <label className="aero-form-label">Department</label>
-                    <select
-                      className="aero-select-field"
-                      value={regDepartment}
-                      onChange={(e) => setRegDepartment(e.target.value)}
-                    >
-                      <option value="baggage">Baggage</option>
-                      <option value="fuel">Fueling</option>
-                      <option value="cleaning">Cleaning</option>
-                      <option value="catering">Catering</option>
-                    </select>
-                  </div>
-                )}
               </div>
 
               <button type="submit" disabled={loading} className="aero-submit-btn">

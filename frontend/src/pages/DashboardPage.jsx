@@ -1519,7 +1519,7 @@ function DashboardPageContent() {
 
             <div className="header-actions">
               {isAdmin && (
-                <button className="shadcn-btn-primary btn-compact" onClick={handleOpenAddModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#38bdf8', borderColor: '#38bdf8', color: '#0f172a', fontWeight: '600' }}>
+                <button className="shadcn-btn-primary btn-compact" onClick={handleOpenAddModal} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#86efac', borderColor: '#86efac', color: '#09090b', fontWeight: '600' }}>
                   <Plus size={14} />
                   <span>Add Flight</span>
                 </button>
