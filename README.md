@@ -63,3 +63,21 @@ npm install
 npm run dev
 ```
 *Frontend application runs at `http://localhost:5173/`*
+
+---
+
+## 🐳 Running with Docker
+
+Run the entire pre-built AeroSync stack (React Frontend + Django Backend) directly from Docker Hub in a single command:
+
+```bash
+# Pull and run AeroSync container
+docker run -d -p 80:80 --name aerosync-app satyampatelmh/aerosync:latest
+```
+
+Open your browser at **[http://localhost](http://localhost)** *(or your server's IP address)*.
+
+To stop and remove the container:
+```bash
+docker stop aerosync-app && docker rm aerosync-app
+```

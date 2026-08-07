@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  aerosync:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: satyampatelmh/aerosync:latest
+    container_name: aerosync-app
+    ports:
+      - "80:80"
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
