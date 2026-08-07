@@ -117,24 +117,17 @@ export default function PlaneMorph({ images = [] }) {
           </h2>
         </motion.div>
 
-        {/* Phase 3 Final CTA */}
+        {/* Phase 3 Text (Shifted to Bottom Right) */}
         <motion.div
           style={{ opacity: text3Opacity, y: text3Y }}
-          className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pointer-events-auto z-10"
+          className="absolute bottom-20 right-6 sm:right-16 max-w-2xl flex flex-col items-end text-right px-6 pointer-events-none z-10"
         >
-          <span className="text-xs font-mono tracking-[0.4em] uppercase text-[#86efac] mb-3">
+          <span className="text-xs font-mono tracking-[0.4em] uppercase text-[#86efac] mb-3 block text-right">
             COMMAND CENTER ACCESS
           </span>
-          <h2 className="text-3xl sm:text-6xl font-bold tracking-[0.25em] text-white font-mono uppercase mb-6 max-w-3xl leading-snug">
+          <h2 className="text-2xl sm:text-5xl font-bold tracking-[0.25em] text-white font-mono uppercase leading-snug text-right">
             THE FUTURE OF SMART AIRPORT DISPATCH
           </h2>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="group relative inline-flex items-center gap-3 px-8 py-4 text-xs sm:text-sm font-bold tracking-[0.2em] font-mono uppercase text-black bg-[#86efac] rounded-md transition-all duration-300 hover:bg-white"
-          >
-            <span>ENTER AEROSYNC DASHBOARD</span>
-            <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </button>
         </motion.div>
 
         {/* Transition gradient fade to next section */}

@@ -865,7 +865,7 @@ function DashboardPageContent() {
         </div>
 
         <div className="header-right">
-          {/* Weather Pill (Current Real Station Weather fetched from API) */}
+          {/* Weather Pill (Icon & Temperature Only) */}
           {weather && (
             <div className="weather-dropdown-container">
               <button
@@ -875,9 +875,6 @@ function DashboardPageContent() {
               >
                 <CloudSun size={14} />
                 <span>{weather.temp_c}°C</span>
-                <span className="weather-desc">
-                  {weather.condition ? weather.condition.replace(/([A-Z]{3}|Ahmedabad|Mumbai|Delhi|Bengaluru|Chennai|Kolkata|Hyderabad|Jaipur|Goa|Cochin|Pune|Lucknow|Varanasi|Guwahati|Bhubaneswar|Indore|Surat|Thiruvananthapuram|Bagdogra|Amritsar|Calicut|Bhopal|Coimbatore|Visakhapatnam|Patna|Chandigarh|Raipur|Ranchi|Mangalore|Trichy|Agartala|Udaipur|Dehradun|Vadodara|Imphal|Hubli|Silchar|Dimapur|Jammu|Srinagar|Leh|Port Blair|Madurai|Jodhpur|Rajkot|Belgaum|Vijayawada|Tirupati|Aurangabad|Dibrugarh|Tuticorin|Jabalpur|Gwalior|Gaya|Rajahmundry|Khajuraho|Agra|Kullu|Shimla|Kandla|Porbandar|Bhuj|Jamnagar|Keshod|Bhavnagar|Diu|Jaisalmer|Bikaner|Kota|Pantnagar|Pithoragarh|Bareilly|Kanpur|Gorakhpur|Prayagraj|Jhansi|Kushinagar|Aligarh|Chitrakoot|Azamgarh|Shravasti|Muirpur|Faizabad|Hindan|Moradabad|Saharanpur|Jewar)/gi, '').trim() : ''}
-                </span>
                 <span className={`wx-dot ${weather.severity}`} />
               </button>
             </div>

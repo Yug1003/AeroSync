@@ -244,3 +244,17 @@
   background: var(--text-main);
   color: var(--text-inverse);
 }
+
+/* Prevent Chrome / Safari / Edge autofill white background override */
+.aero-input-field:-webkit-autofill,
+.aero-input-field:-webkit-autofill:hover,
+.aero-input-field:-webkit-autofill:focus,
+.aero-input-field:-webkit-autofill:active,
+.aero-select-field:-webkit-autofill,
+.aero-select-field:-webkit-autofill:hover,
+.aero-select-field:-webkit-autofill:focus,
+.aero-select-field:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--text-main) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-surface) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}

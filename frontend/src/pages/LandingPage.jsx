@@ -41,29 +41,38 @@ export default function LandingPage() {
 
   if (!isReady) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#09090b] flex flex-col items-center justify-center font-mono text-white px-6">
-        <div className="relative z-10 flex flex-col items-center max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#86efac] mb-8 animate-pulse">
-            <Plane className="w-8 h-8 -rotate-45" />
+      <div className="min-h-screen bg-[#09090b] text-white overflow-hidden relative">
+        {/* Skeleton Header */}
+        <header className="fixed top-0 left-0 right-0 z-50 px-10 py-8 flex items-center justify-between pointer-events-none">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white/10 animate-pulse" />
+            <div className="w-24 h-4 rounded bg-white/10 animate-pulse" />
+          </div>
+          <div className="w-36 h-10 rounded-md bg-white/10 animate-pulse" />
+        </header>
+
+        {/* Skeleton Hero Frame */}
+        <div className="h-screen w-full flex flex-col items-center justify-center px-6 relative">
+          <div className="w-48 h-6 rounded-full bg-white/10 animate-pulse mb-6" />
+          <div className="w-3/4 max-w-2xl h-12 rounded-lg bg-white/10 animate-pulse mb-4" />
+          <div className="w-1/2 max-w-md h-5 rounded-md bg-white/10 animate-pulse mb-12" />
+
+          {/* Skeleton Shimmer Canvas Frame */}
+          <div className="w-full max-w-4xl h-64 rounded-2xl bg-white/[0.03] border border-white/10 flex items-center justify-center animate-pulse relative overflow-hidden">
+            <Plane className="w-12 h-12 text-white/20 -rotate-45 animate-pulse" />
           </div>
 
-          <span className="text-xs tracking-[0.35em] text-[#86efac] uppercase mb-2">
-            AEROSYNC JETS
-          </span>
-          <h1 className="text-2xl font-bold tracking-[0.2em] uppercase mb-8">
-            INITIALIZING ENGINE TELEMETRY
-          </h1>
-
-          <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden mb-4 relative">
-            <div
-              className="h-full bg-gradient-to-r from-emerald-400 to-[#86efac] transition-all duration-300 rounded-full"
-              style={{ width: `${totalProgress}%` }}
-            />
-          </div>
-
-          <div className="w-full flex items-center justify-between text-xs text-zinc-400">
-            <span>PRECACHING SEQUENCES (240 FRAMES)</span>
-            <span className="font-bold text-[#86efac]">{totalProgress}%</span>
+          {/* Bottom Loading Progress Bar */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64 flex flex-col items-center">
+            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#86efac] transition-all duration-300 rounded-full"
+                style={{ width: `${totalProgress}%` }}
+              />
+            </div>
+            <span className="text-[10px] font-mono tracking-widest text-zinc-500 uppercase mt-2">
+              PRELOADING TELEMETRY · {totalProgress}%
+            </span>
           </div>
         </div>
       </div>

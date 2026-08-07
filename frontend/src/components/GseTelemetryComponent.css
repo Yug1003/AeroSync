@@ -148,9 +148,9 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  background-color: #38bdf8;
-  border: 1px solid #38bdf8;
-  color: #0f172a;
+  background-color: var(--accent-green);
+  border: 1px solid var(--accent-green);
+  color: #09090b;
   padding: 0.35rem 0.75rem;
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
@@ -160,8 +160,8 @@
 }
 
 .gse-add-btn:hover {
-  background-color: #0284c7;
-  border-color: #0284c7;
+  background-color: var(--accent-green-stroke);
+  border-color: var(--accent-green-stroke);
   color: #ffffff;
 }
 
