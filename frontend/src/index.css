@@ -52,43 +52,43 @@
 }
 
 [data-theme='light'] {
-  /* High-Contrast Light Theme Color System */
-  --bg-app: #f4f4f5;
-  --bg-surface: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f4f4f5;
-  --bg-muted: #e4e4e7;
+  /* Soft Low-Glare Eye-Friendly Light Theme */
+  --bg-app: #e2e8f0;
+  --bg-surface: #edf1f5;
+  --bg-card: #f8fafc;
+  --bg-card-hover: #e2e8f0;
+  --bg-muted: #cbd5e1;
   
-  --border-color: rgba(0, 0, 0, 0.16);
-  --border-subtle: rgba(0, 0, 0, 0.08);
-  --border-hover: rgba(0, 0, 0, 0.3);
+  --border-color: rgba(0, 0, 0, 0.12);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.25);
   
-  --text-main: #09090b;
-  --text-secondary: #27272a;
-  --text-muted: #52525b;
+  --text-main: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
   --text-inverse: #ffffff;
   
   --status-available: #16a34a;
   --status-available-bg: rgba(22, 163, 74, 0.12);
   --status-occupied: #dc2626;
   --status-occupied-bg: rgba(220, 38, 38, 0.12);
-  --status-maintenance: #52525b;
-  --status-maintenance-bg: rgba(82, 82, 91, 0.15);
+  --status-maintenance: #64748b;
+  --status-maintenance-bg: rgba(100, 116, 139, 0.15);
   --status-reserved: #d97706;
   --status-reserved-bg: rgba(217, 119, 6, 0.12);
   
-  --accent-green: #16a34a;
-  --accent-green-stroke: #15803d;
+  --accent-green: #15803d;
+  --accent-green-stroke: #16a34a;
   --accent-green-bg: rgba(22, 163, 74, 0.12);
-  --accent-cyan: #16a34a;
-  --accent-blue: #16a34a;
-  --accent-indigo: #16a34a;
+  --accent-cyan: #15803d;
+  --accent-blue: #15803d;
+  --accent-indigo: #15803d;
   --accent-violet: #7c3aed;
   --accent-amber: #d97706;
   
-  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.1);
-  --shadow-dropdown: 0 10px 30px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(0, 0, 0, 0.12);
+  --shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 * {

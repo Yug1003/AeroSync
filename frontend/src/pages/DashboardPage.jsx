@@ -45,14 +45,11 @@ import {
   Filter,
   X,
   Truck,
-  Package,
 } from 'lucide-react';
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
-import VoiceAssistantComponent from '../components/VoiceAssistantComponent';
 import GseTelemetryComponent from '../components/GseTelemetryComponent';
 import VoiceCommandCenter from '../components/VoiceCommandCenter';
-import BaggageCarouselComponent from '../components/BaggageCarouselComponent';
 import ThemeToggle from '../components/ThemeToggle';
 import './DashboardPage.css';
 
@@ -250,14 +247,11 @@ function DashboardPageContent() {
     }
   };
 
-  // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt'
+  // Active tab in consolidated Operations Viewport: 'radar' | 'gates' | 'gantt' | 'gse'
   const [viewportTab, setViewportTab] = useState('radar');
   const [gateStandFilter, setGateStandFilter] = useState('ALL');
   const [selectedGateId, setSelectedGateId] = useState(null);
   const [aiDisruptionLoading, setAiDisruptionLoading] = useState(false);
-
-  // Toggle for Floating Voice Assistant Drawer
-  const [showVoiceDrawer, setShowVoiceDrawer] = useState(false);
 
   // Analytics Collapsible Toggle
   const [showAnalyticsPanel, setShowAnalyticsPanel] = useState(false);
@@ -614,6 +608,11 @@ function DashboardPageContent() {
     }, 1000);
     return () => clearInterval(interval);
   }, [selectedAirport]);
+
+  // Auto-refresh operations viewport data once whenever tab changes
+  useEffect(() => {
+    loadAllData();
+  }, [viewportTab]);
 
   const handleVoiceCommand = (commandType, payload) => {
     switch (commandType) {
@@ -1190,13 +1189,6 @@ function DashboardPageContent() {
                 <Truck size={14} />
                 <span>GSE Telemetry</span>
               </button>
-              <button
-                className={`viewport-tab ${viewportTab === 'baggage' ? 'active' : ''}`}
-                onClick={() => setViewportTab('baggage')}
-              >
-                <Package size={14} />
-                <span>Baggage Belts</span>
-              </button>
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -1514,10 +1506,6 @@ function DashboardPageContent() {
 
             {viewportTab === 'gse' && (
               <GseTelemetryComponent selectedAirportCode={selectedAirport} />
-            )}
-
-            {viewportTab === 'baggage' && (
-              <BaggageCarouselComponent selectedAirportCode={selectedAirport} />
             )}
           </div>
         </section>
@@ -2052,28 +2040,6 @@ function DashboardPageContent() {
         </>
         )}
       </main>
-
-      {/* Floating AI Voice Assistant Drawer Toggle */}
-      <div className="floating-voice-widget">
-        {showVoiceDrawer ? (
-          <div className="voice-drawer-panel shadcn-card">
-            <div className="drawer-header">
-              <span className="drawer-title">🎙️ AI Voice Command Assistant</span>
-              <button className="drawer-close-btn" onClick={() => setShowVoiceDrawer(false)}>✕</button>
-            </div>
-            <VoiceAssistantComponent onVoiceCommand={handleVoiceCommand} />
-          </div>
-        ) : (
-          <button
-            className="floating-voice-btn"
-            onClick={() => setShowVoiceDrawer(true)}
-            title="Open AI Voice Assistant"
-          >
-            <Mic size={16} />
-            <span>AI Voice Command</span>
-          </button>
-        )}
-      </div>
     </div>
   );
 }
