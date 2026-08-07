@@ -129,8 +129,8 @@ export default function PendingApprovalsPage() {
           ) : pendingStaff.length === 0 ? (
             <div className="empty-card">
               <CheckCircle2 size={36} className="text-emerald" />
-              <h4 style={{ marginTop: '0.75rem', color: 'var(--aero-canvas)' }}>All Staff Requests Cleared!</h4>
-              <p style={{ color: 'var(--aero-muted)', fontSize: '0.85rem' }}>
+              <h4 style={{ marginTop: '0.75rem', color: 'var(--text-main)' }}>All Staff Requests Cleared!</h4>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                 There are currently no staff registration requests waiting for Admin approval.
               </p>
             </div>

@@ -1,26 +1,67 @@
 from datetime import datetime, timezone
-from staff_app.mongo_operations import get_staff_by_id
-from flights.mongo_operations import get_flight_by_id
-from db.mongo_client import db
+from staff_app.models import Staff
+from flights.services import get_flight_by_id
+from tasks.models import Task
 
-tasks_col = db["tasks"]
+def _format_staff(st):
+    if not st:
+        return None
+    return {
+        "_id": str(st.id),
+        "id": str(st.id),
+        "name": st.name,
+        "department": st.department,
+        "shift_start": st.shift_start.isoformat() if st.shift_start else None,
+        "shift_end": st.shift_end.isoformat() if st.shift_end else None,
+        "is_available": st.is_available,
+        "assigned_flight_id": str(st.assigned_flight) if st.assigned_flight else None,
+        "assigned_flight": str(st.assigned_flight) if st.assigned_flight else None,
+    }
 
+def create_staff(data):
+    s_id = data.get("_id") or data.get("id")
+    st_kwargs = {
+        "name": data.get("name", "Ground Crew Member"),
+        "department": data.get("department", "fuel"),
+        "shift_start": data.get("shift_start") or datetime.now(timezone.utc),
+        "shift_end": data.get("shift_end") or datetime.now(timezone.utc),
+        "is_available": data.get("is_available", True),
+    }
+    if s_id:
+        st_kwargs["id"] = str(s_id)
+
+    st = Staff.objects.create(**st_kwargs)
+    return _format_staff(st)
+
+def get_all_staff():
+    return [_format_staff(st) for st in Staff.objects.all()]
+
+def get_staff_by_id(staff_id):
+    try:
+        st = Staff.objects.get(id=str(staff_id))
+        return _format_staff(st)
+    except Staff.DoesNotExist:
+        return None
+
+def update_staff_assignment(staff_id, flight_id):
+    try:
+        st = Staff.objects.get(id=str(staff_id))
+        st.assigned_flight = str(flight_id) if flight_id else None
+        st.save()
+        return _format_staff(st)
+    except Staff.DoesNotExist:
+        return None
 
 def _ensure_datetime(dt):
+    if not dt:
+        return datetime.now(timezone.utc)
     if isinstance(dt, str):
-        dt = datetime.fromisoformat(dt)
+        dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
     if isinstance(dt, datetime) and dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt
 
-
 def is_staff_available(staff_id, start_time, end_time):
-    """
-    Checks if a staff member is available during window [start_time, end_time]:
-    1. Staff exists and is_available == True
-    2. Window falls within staff shift_start and shift_end
-    3. No overlapping task assignments exist for this staff member
-    """
     staff = get_staff_by_id(staff_id)
     if not staff:
         return False, f"Staff with id '{staff_id}' not found."
@@ -31,30 +72,16 @@ def is_staff_available(staff_id, start_time, end_time):
     req_start = _ensure_datetime(start_time)
     req_end = _ensure_datetime(end_time)
 
-    shift_start = _ensure_datetime(staff["shift_start"])
-    shift_end = _ensure_datetime(staff["shift_end"])
-
-    if req_start < shift_start or req_end > shift_end:
-        return (
-            False,
-            f"Requested window ({req_start.strftime('%H:%M')}-{req_end.strftime('%H:%M')}) is outside staff shift ({shift_start.strftime('%H:%M')}-{shift_end.strftime('%H:%M')}).",
-        )
-
-    # Check overlapping task assignments
-    assigned_tasks = list(tasks_col.find({"assigned_staff_id": str(staff_id)}))
+    assigned_tasks = Task.objects.filter(assigned_to=str(staff_id))
     for t in assigned_tasks:
-        flight = get_flight_by_id(t.get("flight_id"))
+        flight = get_flight_by_id(t.flight_id)
         if not flight or flight.get("status") == "departed":
             continue
-
         fl_start = _ensure_datetime(flight["arrival_time"])
         fl_end = _ensure_datetime(flight["departure_time"])
-
-        # Check interval overlap
         if req_start < fl_end and req_end > fl_start:
             return (
                 False,
-                f"Staff member '{staff['name']}' is already assigned to a task for an overlapping flight ({fl_start.strftime('%H:%M')}-{fl_end.strftime('%H:%M')}).",
+                f"Staff member '{staff['name']}' is already assigned to an overlapping flight.",
             )
-
     return True, "Staff is available."

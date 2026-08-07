@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from gates.mongo_operations import get_all_gates
+from gates.services import get_all_gates
 
 
 class GateListView(APIView):

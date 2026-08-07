@@ -3,14 +3,14 @@ import pandas as pd
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from flights.mongo_operations import get_all_flights
-from gates.mongo_operations import get_all_gates
+from flights.services import get_all_flights
+from gates.services import get_all_gates
 
 
 class KPIAnalyticsView(APIView):
     """
     GET /api/analytics/kpis/ - Advanced operational analytics powered by Pandas
-    Reads flight & gate data from MongoDB, converts into DataFrames, and performs
+    Reads flight & gate data from database models, converts into DataFrames, and performs
     in-memory data wrangling, grouping, and statistical metrics calculation.
     """
 

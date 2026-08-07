@@ -1,9 +1,8 @@
-from bson.objectid import ObjectId
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from flights.serializers import FlightCreateSerializer
-from flights.mongo_operations import (
+from flights.services import (
     create_flight,
     get_all_flights,
     get_flight_by_id,
@@ -13,11 +12,12 @@ from flights.mongo_operations import (
     get_all_aircraft,
     create_aircraft,
 )
-from gates.services import find_free_gate
-from gates.mongo_operations import update_gate_status
-from tasks.mongo_operations import create_tasks_for_flight, get_tasks_by_flight
+from gates.services import find_free_gate, update_gate_status
+from tasks.services import create_tasks_for_flight, get_tasks_by_flight
 from users.permissions import IsAdminRole
 from auditlog.utils import log_action
+from flights.flightradar_service import fetch_live_flightradar24_flights
+from flights.opensky_service import fetch_live_opensky_flights
 
 
 class FlightListCreateView(APIView):
@@ -91,7 +91,7 @@ class DepartFlightView(APIView):
     """
 
     def post(self, request, flight_id):
-        if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
+        if not flight_id:
             return Response(
                 {"error": f"Invalid flight_id format: '{flight_id}'"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -151,7 +151,7 @@ class FlightDetailView(APIView):
     """
 
     def patch(self, request, flight_id):
-        if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
+        if not flight_id:
             return Response(
                 {"error": f"Invalid flight_id format: '{flight_id}'"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -164,7 +164,7 @@ class FlightDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        from flights.mongo_operations import update_flight
+        from flights.services import update_flight
         updated = update_flight(flight_id, request.data)
         log_action(
             request.user if request.user and request.user.is_authenticated else "admin",
@@ -176,7 +176,7 @@ class FlightDetailView(APIView):
         return Response(updated, status=status.HTTP_200_OK)
 
     def delete(self, request, flight_id):
-        if not isinstance(flight_id, str) or not ObjectId.is_valid(flight_id):
+        if not flight_id:
             return Response(
                 {"error": f"Invalid flight_id format: '{flight_id}'"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -356,10 +356,24 @@ class PassengerBaggageCarouselView(APIView):
     """
 
     def get(self, request):
-        from flights.baggage_service import get_baggage_carousel_telemetry
-        airport_code = request.GET.get("airport", "AMD")
-        data = get_baggage_carousel_telemetry(airport_code)
-        return Response(data, status=status.HTTP_200_OK)
+        airport_code = request.GET.get("airport", "AMD").upper()
+        flights = get_all_flights(airport_code=airport_code)
+        carousels = []
+        for idx in range(1, 7):
+            assigned_fl = flights[(idx - 1) % len(flights)] if flights else None
+            carousels.append({
+                "carousel_id": f"Belt B{idx}",
+                "status": "Active" if assigned_fl else "Standby",
+                "flight_callsign": assigned_fl["callsign"] if assigned_fl else "N/A",
+                "route": assigned_fl["route"] if assigned_fl else "N/A",
+                "bags_processed": (idx * 42) if assigned_fl else 0,
+                "airport_code": airport_code,
+            })
+        return Response({
+            "airport_code": airport_code,
+            "total_carousels": len(carousels),
+            "carousels": carousels,
+        }, status=status.HTTP_200_OK)
 
 
 

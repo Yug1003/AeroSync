@@ -1,8 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from weather.mongo_operations import get_current_weather, update_weather
-from weather.services import evaluate_weather_delays
+from weather.services import get_current_weather, update_weather, evaluate_weather_delays
 
 # Distinct Real-World METAR Weather Telemetry per Indian International Airport
 AIRPORT_WEATHER_PRESETS = {

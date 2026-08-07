@@ -1,15 +1,14 @@
-from bson.objectid import ObjectId
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from tasks.mongo_operations import (
+from tasks.services import (
     get_all_tasks,
     get_tasks_by_flight,
     get_task_by_id,
     update_task_status,
     update_task_assignment,
 )
-from flights.mongo_operations import get_flight_by_id
+from flights.services import get_flight_by_id
 from staff_app.services import is_staff_available
 from auditlog.utils import log_action
 
@@ -35,7 +34,7 @@ class TaskUpdateView(APIView):
     """
 
     def get(self, request, task_id):
-        if not ObjectId.is_valid(task_id):
+        if not task_id:
             return Response({"_id": task_id, "status": "pending"}, status=status.HTTP_200_OK)
 
         task = get_task_by_id(task_id)
@@ -50,7 +49,7 @@ class TaskUpdateView(APIView):
     def patch(self, request, task_id):
         new_status = request.data.get("status")
 
-        if not ObjectId.is_valid(task_id):
+        if not task_id:
             return Response({
                 "message": f"Task status updated to {new_status}",
                 "_id": task_id,
@@ -94,7 +93,7 @@ class AssignStaffView(APIView):
     """
 
     def post(self, request, task_id):
-        if not isinstance(task_id, str) or not ObjectId.is_valid(task_id):
+        if not task_id:
             return Response(
                 {"error": f"Invalid task_id format: '{task_id}'"},
                 status=status.HTTP_400_BAD_REQUEST,

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from staff_app.mongo_operations import create_staff
+from staff_app.services import create_staff
 from datetime import datetime, timedelta, timezone
 
 User = get_user_model()
@@ -36,7 +36,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
-        # Sync staff record into MongoDB staff collection
+        # Sync staff record into Staff model
         try:
             full_name = f"{user.first_name} {user.last_name}".strip() or user.username
             now_utc = datetime.now(timezone.utc)

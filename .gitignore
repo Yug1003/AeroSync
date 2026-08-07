@@ -1,14 +1,10 @@
-# Python / Django
+.env
 venv/
 *.pyc
 __pycache__/
 db.sqlite3
-.env
 
-# Markdown / docs (as per user request: only commit project files, not md files)
-*.md
 
-# Node / React
 node_modules/
 dist/
 .DS_Store

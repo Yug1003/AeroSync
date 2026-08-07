@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from django.core.management.base import BaseCommand
-from tasks.mongo_operations import get_all_tasks
-from flights.mongo_operations import get_flight_by_id
+from tasks.services import get_all_tasks
+from flights.services import get_flight_by_id
 from notifications.models import Notification
 
 

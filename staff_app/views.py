@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework import status
-from staff_app.mongo_operations import create_staff, get_all_staff, update_staff_assignment, get_staff_by_id
+from staff_app.services import create_staff, get_all_staff, update_staff_assignment, get_staff_by_id
 from auditlog.utils import log_action
 
 

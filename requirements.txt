@@ -1,8 +1,9 @@
 django>=5.0,<6.0
 djangorestframework
 django-cors-headers
-pymongo
 python-dotenv
 djangorestframework-simplejwt
 pandas
+dj-database-url
+psycopg2-binary
 

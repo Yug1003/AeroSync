@@ -5,13 +5,20 @@ from datetime import datetime, timedelta, timezone
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "aerosync_backend.settings")
 django.setup()
 
-from db.mongo_client import db
-from gates.mongo_operations import create_gate
-from flights.mongo_operations import create_aircraft, create_flight
-from tasks.mongo_operations import create_tasks_for_flight, update_task_status, update_task_assignment
-from staff_app.mongo_operations import create_staff
-from incidents.mongo_operations import create_incident
-from weather.mongo_operations import update_weather
+from gates.models import Gate
+from flights.models import Aircraft, Flight, GSE
+from staff_app.models import Staff
+from tasks.models import Task
+from incidents.models import Incident
+from weather.models import Weather
+from users.models import User
+
+from gates.services import create_gate
+from flights.services import create_aircraft, create_flight
+from tasks.services import create_tasks_for_flight, update_task_status, update_task_assignment
+from staff_app.services import create_staff
+from incidents.services import create_incident
+from weather.services import update_weather
 from auditlog.models import AuditLog
 from auditlog.utils import log_action
 from notifications.models import Notification
@@ -21,16 +28,33 @@ from django.core.management import call_command
 def seed_ahmedabad():
     print("--- Seeding Real-World Data for Sardar Vallabhbhai Patel International Airport, Ahmedabad (AMD / VAAH) ---")
 
-    # 1. Clear Mongo collections & ORM tables
-    db["gates"].delete_many({})
-    db["aircraft"].delete_many({})
-    db["flights"].delete_many({})
-    db["tasks"].delete_many({})
-    db["staff"].delete_many({})
-    db["incidents"].delete_many({})
-    db["weather"].delete_many({})
+    # 1. Clear Django ORM tables
+    User.objects.all().delete()
+    Gate.objects.all().delete()
+    Aircraft.objects.all().delete()
+    Flight.objects.all().delete()
+    GSE.objects.all().delete()
+    Staff.objects.all().delete()
+    Task.objects.all().delete()
+    Incident.objects.all().delete()
+    Weather.objects.all().delete()
     AuditLog.objects.all().delete()
     Notification.objects.all().delete()
+
+    # 1.5. Seed Default User Credentials (Admin & Staff)
+    User.objects.create_superuser(
+        username="admin",
+        email="admin@aerosync.com",
+        password="admin123",
+        role="admin",
+    )
+    User.objects.create_user(
+        username="staff",
+        email="staff@aerosync.com",
+        password="admin123",
+        role="ground_crew",
+    )
+    print("Created Default User Credentials: admin (@admin / adminpassword123), staff (@staff / staffpassword123)")
 
     # 2. Seed Ahmedabad Gates (Terminal 1 Domestic & Terminal 2 International)
     gate_data = [
@@ -74,78 +98,10 @@ def seed_ahmedabad():
     created_staff = [create_staff(s) for s in staff_data]
     print(f"Created {len(created_staff)} AMD Ground Operations Staff.")
 
-    # 5. Real-Time Dynamic Flight Schedule for Ahmedabad (AMD)
-    # Schedule flights relative to current real-time UTC timestamp
-    routes = [
-        ("6E 214", "AMD -> DEL (New Delhi)"),
-        ("AI 011", "BOM (Mumbai) -> AMD"),
-        ("QP 1102", "AMD -> BLR (Bengaluru)"),
-        ("SG 531", "AMD -> JAI (Jaipur)"),
-        ("UK 945", "AMD -> CCU (Kolkata)"),
-        ("EK 539", "AMD -> DXB (Dubai Int)"),
-        ("SQ 531", "AMD -> SIN (Singapore)"),
-        ("6E 6108", "HYD (Hyderabad) -> AMD"),
-        ("AI 472", "AMD -> MAA (Chennai)"),
-        ("QP 1341", "GOI (Goa) -> AMD"),
-    ]
-
-    created_flights = []
-    
-    # 15 Historical & Upcoming Real-World Flight Slots relative to NOW
-    time_offsets = [
-        -36, -30, -24, -18, -12, -6, -4, -2,
-        0.5, 1.5, 3.0, 4.5, 6.0, 8.0, 12.0
-    ]
-
-    for idx, offset in enumerate(time_offsets):
-        ac = created_aircraft[idx % len(created_aircraft)]
-        gate = created_gates[idx % 5] # Distribute across 5 active AMD gates
-        route_code, route_name = routes[idx % len(routes)]
-
-        arr_time = now_utc + timedelta(hours=offset)
-        dep_time = arr_time + timedelta(hours=2)
-
-        if offset < -2:
-            status = "departed"
-        elif offset <= 0.5:
-            status = "in_progress"
-        elif idx % 4 == 0:
-            status = "delayed"
-        else:
-            status = "scheduled"
-
-        flight = create_flight({
-            "aircraft_id": ac["_id"],
-            "arrival_time": arr_time,
-            "departure_time": dep_time,
-            "gate_id": gate["_id"],
-            "status": status,
-            "callsign": route_code,
-            "route": route_name,
-            "airline": ac["airline"],
-            "tailNumber": ac["tail_number"],
-            "airport_code": "AMD",
-        })
-        created_flights.append(flight)
-
-        # Generate 4 Turnaround Tasks
-        tasks = create_tasks_for_flight(flight["_id"])
-
-        if status == "departed":
-            for t in tasks:
-                update_task_status(t["_id"], "completed")
-                dept_staff = [s for s in created_staff if s["department"] in t["task_type"]]
-                if dept_staff:
-                    update_task_assignment(t["_id"], dept_staff[0]["_id"])
-
-        log_action(None, "create_flight", "Flight", flight["_id"], {"route": route_name, "tail_number": ac["tail_number"]})
-
-    print(f"Created {len(created_flights)} Real-Time Synchronized Flights for Ahmedabad Airport (AMD).")
-
-    # 6. Real-World Incidents for Ahmedabad (AMD)
+    # 5. Real-World Incidents for Ahmedabad (AMD)
     incidents_data = [
-        {"description": "Baggage carousel 2 motor trip at Terminal 1 Arrivals", "priority": "medium", "status": "open", "flight_id": created_flights[1]["_id"]},
-        {"description": "Fuel hydrant coupling pressure valve check at Gate T2-INT1", "priority": "low", "status": "resolved", "flight_id": created_flights[5]["_id"]},
+        {"description": "Baggage carousel 2 motor trip at Terminal 1 Arrivals", "priority": "medium", "status": "open", "flight_id": None},
+        {"description": "Fuel hydrant coupling pressure valve check at Gate T2-INT1", "priority": "low", "status": "resolved", "flight_id": None},
         {"description": "Bird strike inspection required on Runway 23 after EK 539 departure", "priority": "high", "status": "open", "flight_id": None},
     ]
     for inc in incidents_data:

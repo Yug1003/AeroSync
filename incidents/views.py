@@ -1,8 +1,7 @@
-from bson.objectid import ObjectId
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from incidents.mongo_operations import (
+from incidents.services import (
     create_incident,
     get_all_incidents,
     get_incident_by_id,
@@ -42,7 +41,7 @@ class IncidentUpdateView(APIView):
     """
 
     def patch(self, request, incident_id):
-        if not isinstance(incident_id, str) or not ObjectId.is_valid(incident_id):
+        if not incident_id:
             return Response(
                 {"error": f"Invalid incident_id format: '{incident_id}'"},
                 status=status.HTTP_400_BAD_REQUEST,
