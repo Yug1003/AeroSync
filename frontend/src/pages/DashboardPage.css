@@ -103,7 +103,9 @@
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
-  padding: 0.35rem 0.65rem;
+  padding: 0 0.65rem;
+  height: 32px;
+  box-sizing: border-box;
   font-size: 0.8125rem;
   display: flex;
   align-items: center;
@@ -373,6 +375,14 @@
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
   padding: 0.5rem 0.75rem;
+}
+
+.viewport-tabs {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .tab-group {

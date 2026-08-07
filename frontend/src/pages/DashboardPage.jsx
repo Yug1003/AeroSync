@@ -44,6 +44,8 @@ import {
   Trash2,
   Filter,
   X,
+  Truck,
+  Package,
 } from 'lucide-react';
 import RadarMapComponent from '../components/RadarMapComponent';
 import GanttTimelineComponent from '../components/GanttTimelineComponent';
@@ -873,7 +875,9 @@ function DashboardPageContent() {
               >
                 <CloudSun size={14} />
                 <span>{weather.temp_c}°C</span>
-                <span className="weather-desc">{weather.condition}</span>
+                <span className="weather-desc">
+                  {weather.condition ? weather.condition.replace(/([A-Z]{3}|Ahmedabad|Mumbai|Delhi|Bengaluru|Chennai|Kolkata|Hyderabad|Jaipur|Goa|Cochin|Pune|Lucknow|Varanasi|Guwahati|Bhubaneswar|Indore|Surat|Thiruvananthapuram|Bagdogra|Amritsar|Calicut|Bhopal|Coimbatore|Visakhapatnam|Patna|Chandigarh|Raipur|Ranchi|Mangalore|Trichy|Agartala|Udaipur|Dehradun|Vadodara|Imphal|Hubli|Silchar|Dimapur|Jammu|Srinagar|Leh|Port Blair|Madurai|Jodhpur|Rajkot|Belgaum|Vijayawada|Tirupati|Aurangabad|Dibrugarh|Tuticorin|Jabalpur|Gwalior|Gaya|Rajahmundry|Khajuraho|Agra|Kullu|Shimla|Kandla|Porbandar|Bhuj|Jamnagar|Keshod|Bhavnagar|Diu|Jaisalmer|Bikaner|Kota|Pantnagar|Pithoragarh|Bareilly|Kanpur|Gorakhpur|Prayagraj|Jhansi|Kushinagar|Aligarh|Chitrakoot|Azamgarh|Shravasti|Muirpur|Faizabad|Hindan|Moradabad|Saharanpur|Jewar)/gi, '').trim() : ''}
+                </span>
                 <span className={`wx-dot ${weather.severity}`} />
               </button>
             </div>
@@ -1181,6 +1185,20 @@ function DashboardPageContent() {
               >
                 <Calendar size={14} />
                 <span>Gantt Schedule</span>
+              </button>
+              <button
+                className={`viewport-tab ${viewportTab === 'gse' ? 'active' : ''}`}
+                onClick={() => setViewportTab('gse')}
+              >
+                <Truck size={14} />
+                <span>GSE Telemetry</span>
+              </button>
+              <button
+                className={`viewport-tab ${viewportTab === 'baggage' ? 'active' : ''}`}
+                onClick={() => setViewportTab('baggage')}
+              >
+                <Package size={14} />
+                <span>Baggage Belts</span>
               </button>
             </div>
 
@@ -1496,14 +1514,16 @@ function DashboardPageContent() {
                 onReassignGate={handleReassignGate}
               />
             )}
+
+            {viewportTab === 'gse' && (
+              <GseTelemetryComponent selectedAirportCode={selectedAirport} />
+            )}
+
+            {viewportTab === 'baggage' && (
+              <BaggageCarouselComponent selectedAirportCode={selectedAirport} />
+            )}
           </div>
         </section>
-
-        {/* Live Ground Support Equipment (GSE) Vehicle & Dispatch Telemetry */}
-        <GseTelemetryComponent selectedAirportCode={selectedAirport} />
-
-        {/* Passenger Baggage Carousel & Claim Belt Allocation Matrix */}
-        <BaggageCarouselComponent selectedAirportCode={selectedAirport} />
 
         <section className="shadcn-card table-section">
           <div className="section-title-bar">

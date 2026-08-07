@@ -233,48 +233,6 @@ export default function StaffRosterPage() {
 
       {/* Main Roster Body */}
       <main className="staff-roster-main">
-        {/* KPI Summary Cards */}
-        <div className="kpi-grid">
-          <div className="kpi-card">
-            <div className="kpi-icon text-cyan">
-              <UserCheck size={26} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-title">Total Active Staff</span>
-              <span className="kpi-value">{staffList.length}</span>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon text-emerald">
-              <Plane size={26} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-title">Assigned to Aircraft</span>
-              <span className="kpi-value">{onDutyCount}</span>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon text-amber">
-              <Briefcase size={26} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-title">Standby / Available</span>
-              <span className="kpi-value">{standbyCount}</span>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon text-indigo">
-              <MapPin size={26} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-title">Aircraft Standing ({selectedAirport})</span>
-              <span className="kpi-value">{standingFlights.length}</span>
-            </div>
-          </div>
-        </div>
 
         {/* Notifications */}
         {error && (

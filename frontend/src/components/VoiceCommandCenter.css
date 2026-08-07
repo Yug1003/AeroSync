@@ -141,9 +141,9 @@
 }
 
 .voice-chip:hover {
-  background-color: rgba(14, 165, 233, 0.15);
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
+  background-color: rgba(134, 239, 172, 0.12);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
 }
 
 .command-input-row {
@@ -170,16 +170,16 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: rgba(14, 165, 233, 0.1);
-  border: 1px solid rgba(14, 165, 233, 0.25);
+  background-color: rgba(134, 239, 172, 0.08);
+  border: 1px solid rgba(74, 222, 128, 0.3);
   padding: 0.5rem 0.85rem;
   border-radius: var(--radius-sm);
   font-size: 0.8rem;
-  color: var(--accent-cyan);
+  color: var(--accent-green);
 }
 
 .voice-history-console {
-  background-color: #0b1329;
+  background-color: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;

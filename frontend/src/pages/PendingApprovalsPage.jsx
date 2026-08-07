@@ -104,38 +104,6 @@ export default function PendingApprovalsPage() {
 
       {/* Main Container */}
       <main className="pending-approvals-main">
-        {/* KPI Cards Section */}
-        <div className="kpi-grid">
-          <div className="kpi-card">
-            <div className="kpi-icon text-cyan">
-              <UserCheck size={28} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-title">Total Pending Requests</span>
-              <span className="kpi-value">{pendingStaff.length}</span>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon text-amber">
-              <Briefcase size={28} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-title">Ops Managers Pending</span>
-              <span className="kpi-value">{opsCount}</span>
-            </div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-icon text-emerald">
-              <User size={28} />
-            </div>
-            <div className="kpi-info">
-              <span className="kpi-title">Ground Crew Pending</span>
-              <span className="kpi-value">{crewCount}</span>
-            </div>
-          </div>
-        </div>
 
         {/* Notifications */}
         {error && (
